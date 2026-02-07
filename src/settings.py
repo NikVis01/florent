@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from src.config import PROJECT_ROOT
 from src.services.logging import get_logger
 
@@ -10,6 +11,9 @@ class Settings:
 
     def __init__(self):
         """Initialize settings from environment variables."""
+        # Load environment variables from .env
+        load_dotenv(os.path.join(PROJECT_ROOT, ".env"), override=False)
+        
         # LLM Settings
         self.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
         self.LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
