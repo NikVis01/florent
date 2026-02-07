@@ -1,16 +1,15 @@
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from pydantic import BaseModel, Field, field_validator
 
-from src.models.base import OperationType, Sectors, StrategicFocus, Country, get_valid_country_codes
+from src.models.base import OperationType, Sectors, StrategicFocus, Country
 
-# Represents a business entity with its active regions, services, and strategic goals.
+# --- Business Entities ---
+
 class Firm(BaseModel):
     id: str
     name: str
-    
-    # Contains a fair amount of information about the firm
     description: str
-    countries_active: List[Country] # List of Country objects
+    countries_active: List[Country]
     sectors: List[Sectors]
     services: List[OperationType]
     strategic_focuses: List[StrategicFocus]
@@ -18,25 +17,21 @@ class Firm(BaseModel):
     
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
 
-
-# Requirements for starting a project (Entry point)
 class ProjectEntry(BaseModel):
     pre_requisites: List[str] = Field(description="Mandatory conditions to be met before project start")
     mobilization_time: int = Field(description="Time in months required to start operations")
     entry_node_id: str = Field(description="ID of the first node in the infrastructure DAG")
 
-# Criteria for successfully completing a project (Exit point)
 class ProjectExit(BaseModel):
     success_metrics: List[str] = Field(description="KPIs or deliverables required for successful completion")
     mandate_end_date: Optional[str] = Field(None, description="ISO date for mandate completion")
     exit_node_id: str = Field(description="ID of the final/sink node in the infrastructure DAG")
 
-# Describes a specific business project or requirement within a country and sector.
 class Project(BaseModel):
     id: str
     name: str
     description: str
-    country: Country # Full Country metadata
+    country: Country
     sector: str
     service_requirements: List[str]
     timeline: int # in months
@@ -47,12 +42,42 @@ class Project(BaseModel):
     
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
 
-
-# Defines a set of risk characteristics or thresholds for an entity or project.
 class RiskProfile(BaseModel):
     id: str
     name: str
     risk_level: int = Field(ge=1, le=5, description="how detrimental is the failure of this node/operation")
     influence_level: int = Field(ge=1, le=5, description="how much can the firm control or influence the success of this node/operation")
     description: str
+
+# --- Analysis Output Models (Client Facing) ---
+
+class CriticalChain(BaseModel):
+    chain_id: str
+    nodes: List[str] = Field(description="Sequence of node IDs forming a critical path")
+    aggregate_risk: float = Field(description="Cumulative failure probability across the chain")
+    impact_description: str
+
+class PivotalNode(BaseModel):
+    node_id: str
+    contribution_score: float = Field(description="Percentage weight this node adds to downstream risk")
+    strategic_reason: str = Field(description="Why this node is a linchpin (e.g., high centrality + high local risk)")
+
+class AnalysisOutput(BaseModel):
+    project_id: str
+    firm_id: str
     
+    # Technical depth for simulations
+    risk_tensors: Dict[str, Any] = Field(default_factory=dict, description="PyTorch tensors of risk distributions")
+    
+    # Business value for the client
+    overall_bankability: float = Field(ge=0, le=1)
+    critical_chains: List[CriticalChain] = Field(default_factory=list)
+    pivotal_nodes: List[PivotalNode] = Field(default_factory=list)
+    
+    # SPICE-inspired spreads
+    optimal_score: float
+    worst_case_score: float
+    scenario_spread: List[float] = Field(default_factory=list, description="Distribution of probable outcomes")
+
+    class Config:
+        arbitrary_types_allowed = True # Needed for Torch Tensors

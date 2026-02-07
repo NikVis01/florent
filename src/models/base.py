@@ -7,6 +7,14 @@ import os
 COUNTRIES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "countries.json")
 # Reverse mapping of affiliations to countries
 AFFILIATIONS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "affiliations.json")
+# Normalized registry of services
+SERVICES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "services.json")
+# Registry of service categories
+CATEGORIES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "categories.json")
+# Registry of industry sectors
+SECTORS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "sectors.json")
+# Registry of strategic focus areas
+STRATEGIC_FOCUS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "strategic_focus.json")
 
 def load_countries_data() -> List[Dict]:
     """Loads the country data from the JSON file."""
@@ -22,66 +30,82 @@ def load_affiliations_data() -> Dict[str, List[str]]:
     with open(AFFILIATIONS_DATA_PATH, "r") as f:
         return json.load(f)
 
-# Cache for country codes to speed up validation
-_COUNTRY_A3_CODES: Set[str] = set()
+def load_services_data() -> List[Dict]:
+    """Loads the normalized services registry."""
+    if not os.path.exists(SERVICES_DATA_PATH):
+        return []
+    with open(SERVICES_DATA_PATH, "r") as f:
+        return json.load(f)
 
-def get_valid_country_codes() -> Set[str]:
-    global _COUNTRY_A3_CODES
-    if not _COUNTRY_A3_CODES:
-        data = load_countries_data()
-        _COUNTRY_A3_CODES = {c["a3"] for c in data if "a3" in c}
-    return _COUNTRY_A3_CODES
+def load_registry_list(path: str, key: Optional[str] = None) -> List[str]:
+    """Loads a list registry from a JSON file, optionally from a specific key."""
+    if not os.path.exists(path):
+        return []
+    with open(path, "r") as f:
+        data = json.load(f)
+        if key and isinstance(data, dict):
+            return data.get(key, [])
+        return data
+
+# Cache for registries
+_CATEGORIES: Optional[Set[str]] = None
+_SECTORS: Optional[Set[str]] = None
+_FOCUSES: Optional[Set[str]] = None
+
+def get_categories() -> Set[str]:
+    global _CATEGORIES
+    if _CATEGORIES is None:
+        _CATEGORIES = set(load_registry_list(CATEGORIES_DATA_PATH, key="service_types"))
+    return _CATEGORIES
+
+def get_sectors() -> Set[str]:
+    global _SECTORS
+    if _SECTORS is None:
+        _SECTORS = set(load_registry_list(SECTORS_DATA_PATH, key="sectors"))
+    return _SECTORS
+
+def get_focuses() -> Set[str]:
+    global _FOCUSES
+    if _FOCUSES is None:
+        _FOCUSES = set(load_registry_list(STRATEGIC_FOCUS_DATA_PATH, key="focuses"))
+    return _FOCUSES
 
 # Type of operations requirement or business need
-# Represents a specific type of business or operational requirement.
 class OperationType(BaseModel):
     name: str
-    category: Literal[
-        "transportation",
-        "financing",
-        "insurance",
-        "guarantee",
-        "recruitment",
-        "materials",
-        "equipment",
-        "other",
-    ]
+    category: str = Field(description="Service category from categories.json")
     description: str
 
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v: str) -> str:
+        if v not in get_categories():
+            raise ValueError(f"Category '{v}' not in registry: {get_categories()}")
+        return v
 
 # Defines the industry sectors a firm or project can belong to.
 class Sectors(BaseModel):
     name: str
-    description: Literal[
-        "energy",
-        "technology",
-        "healthcare",
-        "finance",
-        "manufacturing",
-        "construction",
-        "agriculture",
-        "retail",
-        "services",
-        "education",
-        "public",
-        "defence",
-        "other",
-    ]
+    description: str = Field(description="Sector identifier from sectors.json")
 
+    @field_validator("description")
+    @classmethod
+    def validate_sector(cls, v: str) -> str:
+        if v not in get_sectors():
+            raise ValueError(f"Sector '{v}' not in registry: {get_sectors()}")
+        return v
 
 # Categorizes the strategic goals or focus areas of a firm.
 class StrategicFocus(BaseModel):
     name: str
-    description: Literal[
-        "growth",
-        "innovation",
-        "sustainability",
-        "efficiency",
-        "expansion",
-        "public_private_partnership",
-        "digital_transformation",
-        "other",
-    ]
+    description: str = Field(description="Strategic focus area from strategic_focus.json")
+
+    @field_validator("description")
+    @classmethod
+    def validate_focus(cls, v: str) -> str:
+        if v not in get_focuses():
+            raise ValueError(f"Strategic focus '{v}' not in registry: {get_focuses()}")
+        return v
 
 
 # Detailed representation of a country with ISO codes and regional metadata.

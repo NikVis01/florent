@@ -1,0 +1,53 @@
+{
+    "id": "proj_001",
+    "name": "Amazonas Smart Grid Phase I",
+    "description": "Development of a decentralized renewable energy grid to stabilize power supply in the northern Amazonas region.",
+    "country": {
+        "name": "Brazil",
+        "a2": "BR",
+        "a3": "BRA",
+        "num": "076",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "BRICS",
+            "G20",
+            "MERCOSUR"
+        ]
+    },
+    "sector": "energy",
+    "service_requirements": [
+        "Environmental Impact Assessment",
+        "Grid Integrity Verification",
+        "Public-Private Partnership Management"
+    ],
+    "timeline": 36,
+    "ops_requirements": [
+        {
+            "name": "Capital Mobilization",
+            "category": "financing",
+            "description": "Securing upfront funding for grid hardware."
+        },
+        {
+            "name": "Industrial Equipment Supply",
+            "category": "equipment",
+            "description": "Sourcing and deploying transformers and substations."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Environmental Permit Approved",
+            "Regional Gvt Agreement Signed"
+        ],
+        "mobilization_time": 6,
+        "entry_node_id": "node_site_survey"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Grid Uptime > 99%",
+            "Zero Major Safety Incidents"
+        ],
+        "mandate_end_date": "2029-12-31",
+        "exit_node_id": "node_operations_handover"
+    }
+}

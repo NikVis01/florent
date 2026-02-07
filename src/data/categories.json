@@ -1,0 +1,20 @@
+{
+    "service_types": [
+        "transportation",
+        "financing",
+        "advisory",
+        "risk",
+        "environmental",
+        "technical",
+        "management",
+        "logistics",
+        "legal",
+        "operations",
+        "insurance",
+        "guarantee",
+        "recruitment",
+        "materials",
+        "equipment",
+        "other"
+    ]
+}

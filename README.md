@@ -73,6 +73,36 @@ The system maps every node n into one of four quadrants for the Consultant/Bidde
 | **Q3: The "Cooked" Zone** | High Risk, Low Influence | Critical project dependencies outside the firm's control. | **Contingency**: Buy insurance or demand legal indemnification. |
 | **Q4: The Basic Shit** | Low Risk, Low Influence | Minor peripheral tasks. | **Delegate**: Subcontract or monitor minimally. |
 
+## Future Direction: Iterative Optimization (The "SPICE" Method)
+
+To reach the high-impact threshold, we are building an **Optimization Layer** that treats the infrastructure DAG as a dynamic circuit:
+
+1.  **PyTorch Topology**: We generate a PyTorch module whose internal neural structure is a 1:1 topological map of the project DAG.
+2.  **Iterative Simulation**: Using an approach inspired by SPICE (Simulation Program with Integrated Circuit Emphasis), the system performs iterative passes over the graph.
+3.  **Combinatorial Search**: It simulates a range of realistic project alterations and recommended customizations (e.g., extended timelines, adjusted budget allocations, or phased mobilizations).
+4.  **Risk Minimization & Scenario Generation**: The model weights metrics across these iterations to find the **Optimal Outcome** while also identifying the **Worst-Case Scenario**. It returns a distribution of different outcomes/scenarios, allowing stakeholders to visualize the variance between the safest and riskiest paths.
+
+This makes the system not just an "analyzer" but a "simulator" capable of prescribing the safest path and stress-testing the project against a spread of probable outcomes.
+
+## The I/O Contract (Proof of Concept)
+
+To ensure the system provides actionable insights and rich visualizations, we follow a strict I/O contract:
+
+### 1. Ingestion (Input)
+We use standardized JSON payloads for the **Firm** (bidder) and **Project** (requirements):
+- **`firm.json`**: Portfolio data including regional footprint, sector expertise, and service offerings.
+- **`project.json`**: Infrastructure DAG requirements, including topological constraints, budget/timeline bounds, and entry/exit criteria.
+
+### 2. Intelligent Output (Client-Centric Insights)
+The system returns a high-value **Analysis Output Object** designed for both automated dashboards and strategic advisory:
+
+- **Risk Tensors**: Raw PyTorch tensors representing the multi-dimensional distribution of risk across the topological manifold.
+- **Critical Failure Chains**: Identified sequences of dependent nodes where a single failure propagates a non-recoverable project state.
+- **Pivotal Linchpins**: High-importance nodes that have the highest mathematical weight in determining downstream project integrity.
+- **Stress-Test Spreads**: Simulations showing the gap between the **Optimal Path** and the **Systemic Worst-Case**.
+
+This makes Florent a "Decision Support Engine" rather than a simple data visualizer, providing the Firm with the exact levers they need to pull to secure project success.
+
 ## Implementation Architecture
 
 *   **Primitives (base.py)**: The ground-truth metadata (ISO Country codes, Sector enums).

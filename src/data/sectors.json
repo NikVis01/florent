@@ -1,0 +1,21 @@
+{
+    "sectors": [
+        "energy",
+        "technology",
+        "healthcare",
+        "finance",
+        "manufacturing",
+        "construction",
+        "agriculture",
+        "retail",
+        "services",
+        "education",
+        "public",
+        "defence",
+        "infrastructure",
+        "mining",
+        "telecoms",
+        "water",
+        "other"
+    ]
+}

@@ -1,0 +1,66 @@
+{
+    "id": "firm_001",
+    "name": "Nexus Global Infrastructure",
+    "description": "A premier infrastructure consultant specializing in renewable energy and smart-city grid systems across emerging markets.",
+    "countries_active": [
+        {
+            "name": "United Arab Emirates",
+            "a2": "AE",
+            "a3": "ARE",
+            "num": "784",
+            "region": "Asia",
+            "sub_region": "Western Asia",
+            "affiliations": [
+                "AL",
+                "OIC",
+                "OPEC"
+            ]
+        },
+        {
+            "name": "Brazil",
+            "a2": "BR",
+            "a3": "BRA",
+            "num": "076",
+            "region": "Americas",
+            "sub_region": "South America",
+            "affiliations": [
+                "BRICS",
+                "G20",
+                "MERCOSUR"
+            ]
+        }
+    ],
+    "sectors": [
+        {
+            "name": "Energy",
+            "description": "energy"
+        },
+        {
+            "name": "Construction",
+            "description": "construction"
+        }
+    ],
+    "services": [
+        {
+            "name": "Strategic Financing",
+            "category": "financing",
+            "description": "Provision of capital and credit guarantees for long-term infrastructure."
+        },
+        {
+            "name": "Heavy Equipment Logistics",
+            "category": "equipment",
+            "description": "Procurement and transport of specialized machinery."
+        }
+    ],
+    "strategic_focuses": [
+        {
+            "name": "Green Energy Transition",
+            "description": "sustainability"
+        },
+        {
+            "name": "Operational Efficiency",
+            "description": "efficiency"
+        }
+    ],
+    "prefered_project_timeline": 48
+}

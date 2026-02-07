@@ -1,0 +1,188 @@
+[
+    {
+        "id": "srv_fin_001",
+        "name": "Strategic Financing",
+        "category": "financing",
+        "description": "Provision of capital and credit guarantees for long-term infrastructure."
+    },
+    {
+        "id": "srv_fin_002",
+        "name": "Public-Private Partnership Advisory",
+        "category": "financing",
+        "description": "Structuring or managing joint ventures between public and private sectors."
+    },
+    {
+        "id": "srv_fin_003",
+        "name": "Bankability Assessment",
+        "category": "financing",
+        "description": "Evaluating project viability for international lenders and investors."
+    },
+    {
+        "id": "srv_fin_004",
+        "name": "Guarantor Outreach",
+        "category": "financing",
+        "description": "Identifying and securing sovereign or multilateral credit guarantees."
+    },
+    {
+        "id": "srv_fin_005",
+        "name": "Financial Modeling",
+        "category": "financing",
+        "description": "Developing complex revenue and cost projections for CAPEX/OPEX."
+    },
+    {
+        "id": "srv_adv_001",
+        "name": "Feasibility Assessment",
+        "category": "advisory",
+        "description": "Comprehensive technical and economic viability studies."
+    },
+    {
+        "id": "srv_adv_002",
+        "name": "Risk Analysis",
+        "category": "risk",
+        "description": "Identifying and quantifying project-specific and systemic risks."
+    },
+    {
+        "id": "srv_adv_003",
+        "name": "Asset Planning and Prioritization",
+        "category": "advisory",
+        "description": "Strategic selection of infrastructure assets based on portfolio goals."
+    },
+    {
+        "id": "srv_adv_004",
+        "name": "Urban Planning",
+        "category": "advisory",
+        "description": "Developing master plans for city growth and mobility."
+    },
+    {
+        "id": "srv_adv_005",
+        "name": "Sustainability Advisory",
+        "category": "environmental",
+        "description": "Integrating green energy and sustainable practices into project design."
+    },
+    {
+        "id": "srv_eng_001",
+        "name": "Civil Engineering",
+        "category": "technical",
+        "description": "Design and oversight of public works, roads, and utilities."
+    },
+    {
+        "id": "srv_eng_002",
+        "name": "Structural Engineering",
+        "category": "technical",
+        "description": "Ensuring the integrity and stability of complex structures."
+    },
+    {
+        "id": "srv_eng_003",
+        "name": "Geotechnical Engineering",
+        "category": "technical",
+        "description": "Soil and rock mechanics analysis for foundation stability."
+    },
+    {
+        "id": "srv_eng_004",
+        "name": "Digital Engineering (BIM)",
+        "category": "technical",
+        "description": "Building Information Modeling and digital twin integration."
+    },
+    {
+        "id": "srv_eng_005",
+        "name": "Value Engineering",
+        "category": "technical",
+        "description": "Optimizing project value through cost-effective design refinements."
+    },
+    {
+        "id": "srv_mgt_001",
+        "name": "Project Management",
+        "category": "management",
+        "description": "Full lifecycle delivery management from conception to completion."
+    },
+    {
+        "id": "srv_mgt_002",
+        "name": "Construction Supervision",
+        "category": "management",
+        "description": "On-site monitoring for adherence to plans and quality standards."
+    },
+    {
+        "id": "srv_mgt_003",
+        "name": "Procurement Strategy",
+        "category": "management",
+        "description": "Optimizing supply chain and subcontractor selection."
+    },
+    {
+        "id": "srv_mgt_004",
+        "name": "Cost and Schedule Control",
+        "category": "management",
+        "description": "Managing budgets and timelines to prevent overruns."
+    },
+    {
+        "id": "srv_mgt_005",
+        "name": "Lean Construction Advisory",
+        "category": "management",
+        "description": "Implementing efficiency techniques to improve productivity."
+    },
+    {
+        "id": "srv_env_001",
+        "name": "Environmental Impact Assessment (EIA)",
+        "category": "environmental",
+        "description": "Evaluating potential environmental effects of project implementation."
+    },
+    {
+        "id": "srv_env_002",
+        "name": "Climate Resilience Planning",
+        "category": "environmental",
+        "description": "Designing infrastructure to withstand changing climate conditions."
+    },
+    {
+        "id": "srv_env_003",
+        "name": "ESG Compliance",
+        "category": "environmental",
+        "description": "Ensuring adherence to Environmental, Social, and Governance standards."
+    },
+    {
+        "id": "srv_risk_001",
+        "name": "Claims Analysis and Prevention",
+        "category": "risk",
+        "description": "Resolving disputes and implementing litigation prevention strategies."
+    },
+    {
+        "id": "srv_risk_002",
+        "name": "Geopolitical Risk Advisory",
+        "category": "risk",
+        "description": "Assessing impact of regional political instability on asset integrity."
+    },
+    {
+        "id": "srv_ops_001",
+        "name": "Operations and Maintenance Advisory",
+        "category": "operations",
+        "description": "Strategies for long-term asset performance and maintenance efficiency."
+    },
+    {
+        "id": "srv_log_001",
+        "name": "Heavy Equipment Logistics",
+        "category": "logistics",
+        "description": "Procurement and transport of specialized machinery."
+    },
+    {
+        "id": "srv_log_002",
+        "name": "Cross-Border Transportation",
+        "category": "logistics",
+        "description": "Multi-modal transport solutions across international boundaries."
+    },
+    {
+        "id": "srv_legal_001",
+        "name": "Regulatory Compliance",
+        "category": "legal",
+        "description": "Ensuring project alignment with local and international law."
+    },
+    {
+        "id": "srv_due_001",
+        "name": "Technical Due Diligence",
+        "category": "advisory",
+        "description": "Deep-dive technical audits for acquisition or investment."
+    },
+    {
+        "id": "srv_cap_001",
+        "name": "Capacity Building",
+        "category": "advisory",
+        "description": "Training and knowledge transfer to local infrastructure authorities."
+    }
+]
