@@ -85,6 +85,7 @@ typing-extensions==4.15.0
 typing-inspection==0.4.2
 tzdata==2025.3 ; sys_platform == 'win32'
 urllib3==2.6.3
+uvicorn==0.40.0
 xxhash==3.6.0
 yarl==1.22.0
 zipp==3.23.0

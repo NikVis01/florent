@@ -1,11 +1,15 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from src.services.logging import get_logger
 
-# Load environment variables from .env file
+# Load environment variables from .env file in project root
 try:
-    load_dotenv()
-except (AssertionError, Exception):
+    # Get project root directory (where .env is located)
+    project_root = Path(__file__).parent.parent
+    dotenv_path = project_root / ".env"
+    load_dotenv(dotenv_path=dotenv_path, override=True)
+except (AssertionError, Exception) as e:
     # Handle cases where dotenv fails (e.g., in test contexts)
     pass
 
