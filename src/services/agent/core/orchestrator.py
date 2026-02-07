@@ -1,8 +1,8 @@
 from typing import List, Dict, Set
 from src.models.graph import Graph, Node
-from src.services.agent.traversal import NodeStack, NodeHeap
-from src.services.agent.signatures import NodeSignature
-from src.services.agent.tensor_ops import calculate_influence_tensor
+from src.services.agent.core.traversal import NodeStack, NodeHeap
+from src.services.agent.models.signatures import NodeSignature
+from src.services.agent.ops.tensor_ops import calculate_influence_tensor
 
 class AgentOrchestrator:
     """

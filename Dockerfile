@@ -11,7 +11,7 @@ WORKDIR /build
 
 # Copy build files
 COPY Makefile ./
-COPY src/services/agent/tensor_ops.cpp src/services/agent/tensor_ops.cpp
+COPY src/services/agent/ops/tensor_ops.cpp src/services/agent/ops/tensor_ops.cpp
 
 # Compile shared library
 RUN make build

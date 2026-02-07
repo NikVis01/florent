@@ -3,7 +3,7 @@
 CXX = g++
 CXXFLAGS = -fPIC -O3 -shared
 TARGET = libtensor_ops.so
-SRC = src/services/agent/tensor_ops.cpp
+SRC = src/services/agent/ops/tensor_ops.cpp
 
 all: $(TARGET)
 
