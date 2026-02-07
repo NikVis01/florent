@@ -22,6 +22,7 @@ src/services/logging/decorators.py
 src/services/logging/logger.py
 tests/test_ai_client.py
 tests/test_base.py
+tests/test_e2e_workflow.py
 tests/test_entities.py
 tests/test_geo.py
 tests/test_graph.py
