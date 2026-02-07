@@ -2,33 +2,51 @@
 
 This project represents a synthesis of Traditional Graph Theory (symbolic, deterministic) and Neuro-Symbolic Agentic Intelligence (probabilistic, contextual). By mapping a Firm's capabilities against a Project's DAG topology, we can move beyond simple risk matrices to a dynamic, multi-hop risk assessment.
 
-## The Objective
+## Primary Objectives
 
-To determine the Strategic Alignment and Operational Risk between a Firm Object (the Bidder/Consultant) and a Project Object (the Infrastructure DAG).
+The system focuses on two critical pillars of infrastructure analysis:
 
-By traversing the project’s dependencies through the lens of the firm’s specific service portfolio and regional context, the system classifies every node into a 2x2 Risk-Influence Matrix, identifying what is manageable, what is critical, and what is a potential "deal-breaker."
+1.  **Risk Profiling**: Determining the Strategic Alignment and Operational Risk between a Firm Object (the Bidder/Consultant) and a Project Object (the Infrastructure DAG).
+2.  **Dependency Mapping & Propagation (Critical)**: Identifying nodes most critical to project success and those that pose systemic risks to the firm. The system predicts and visualizes how a failure in a single upstream node propagates down the chain, potentially blocking entire project routes.
+
+By traversing the project dependencies, the system classifies every node into a 2x2 Risk-Influence Matrix, identifying manageable tasks, critical dependencies, and potential deal-breakers.
 
 ## The Methodology: Agents & Cross-Attention
 
 We utilize DSPy-powered Agents to perform "Context-Aware Traversal." Unlike a standard Breadth-First Search (BFS), our agents use Cross-Attention to weight the importance of nodes based on the intersection of Firm and Project attributes.
 
-### 1. Cross-Attention Mechanism (The Weighting)
+### Logical End-to-End Flow
 
-We treat the Firm Portfolio as the Query (Q) and the Project Requirements as the Keys (K).
+The system processes data through the following pipeline:
 
-*   **Query (Q)**: Firm's "Strategic Focus" + "Sectors" + "Active Regions."
-*   **Key (K)**: Node's "Operation Type" + "Technical Requirements" + "ISO Metadata."
-*   **Value (V)**: The base risk/impact score of the node.
+1.  **Data Ingestion**: Loading `firm.json` (bidder portfolio) and `project.json` (infrastructure requirements) into our Entity models.
+2.  **Topological Construction**: Initializing the `Graph` object and building the DAG where each node is enriched with embeddings from the entity's attributes.
+3.  **Agentic Weighting (DSPy)**: 
+    *   Deploying the **Extractor Agent** to pull deep context from project requirements and country-specific registries.
+    *   Using the **Evaluator Agent** with a BGE-M3 Cross-Encoder to perform "Cross-Attention" between the Firm’s Query and the Node’s Key, generating a raw Influence Score ($I_n$).
+4.  **Graph Traversal & Propagation**: 
+    *   Navigating the DAG to find all paths/chains from the primary project entry point.
+    *   The **Propagator Agent** applies the mathematical formulas from `risk.py` to calculate the Cascading Risk Score ($R_{total}$) across every downstream dependency.
+5.  **Risk Clustering & Evaluation**:
+    *   Using K-Means Clustering on the resulting node vectors to identify systemically risky sectors.
+    *   The system identifies "Critical Chains"—sequences of tasks that, if failed, block the entire project.
+6.  **Matrix Output**: Mapping findings to the 2x2 Action Matrix to determine Strategic Actions (Mitigate, Automate, Contingency, Delegate).
 
-The "Attention" score determines how much the Firm’s specific DNA influences a particular node. High attention means the firm has high Influence over that task.
+### Dependency & Inference Deployment
 
-### 2. DSPy Agent Traversal (The Risk Scouts)
+For the "Cross-Attention" weighting, we utilize the **BGE-M3 Cross-Encoder** (Re-ranker) via a high-performance inference container.
 
-We deploy agents using DSPy Signatures to navigate the Graph Topology:
+**Docker Configuration:**
+```yaml
+services:
+  cross-encoder:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    command: --model-id BAAI/bge-reranker-v2-m3
+    ports:
+      - "8080:80"
+```
 
-*   **The Extractor Agent**: Pulls context from the Project requirements and Country metadata.
-*   **The Evaluator Agent**: Uses a Predict module to assign a probability of failure (P_f) to each node by comparing project requirements against firm history.
-*   **The Propagator Agent**: Traverses the DAG to calculate the "Blast Radius." If a high-dependency node fails, how many downstream nodes are "cooked"?
+*Note: For GPU acceleration, use the `gpu-latest` tag.*
 
 ## Mathematical Framework
 

@@ -19,6 +19,18 @@ class Firm(BaseModel):
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
 
 
+# Requirements for starting a project (Entry point)
+class ProjectEntry(BaseModel):
+    pre_requisites: List[str] = Field(description="Mandatory conditions to be met before project start")
+    mobilization_time: int = Field(description="Time in months required to start operations")
+    entry_node_id: str = Field(description="ID of the first node in the infrastructure DAG")
+
+# Criteria for successfully completing a project (Exit point)
+class ProjectExit(BaseModel):
+    success_metrics: List[str] = Field(description="KPIs or deliverables required for successful completion")
+    mandate_end_date: Optional[str] = Field(None, description="ISO date for mandate completion")
+    exit_node_id: str = Field(description="ID of the final/sink node in the infrastructure DAG")
+
 # Describes a specific business project or requirement within a country and sector.
 class Project(BaseModel):
     id: str
@@ -29,6 +41,9 @@ class Project(BaseModel):
     service_requirements: List[str]
     timeline: int # in months
     ops_requirements: List[OperationType]
+    
+    entry_criteria: Optional[ProjectEntry] = None
+    success_criteria: Optional[ProjectExit] = None
     
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
 

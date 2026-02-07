@@ -1,0 +1,21 @@
+{
+    "influence": {
+        "attenuation_factor": 1.2,
+        "description": "Damping factor per degree of separation in the DAG"
+    },
+    "propagation": {
+        "risk_multiplier_critical_path": 1.25,
+        "description": "Scalar weight for nodes identified as critical project dependencies"
+    },
+    "alignment": {
+        "weights": {
+            "growth": 0.25,
+            "innovation": 0.2,
+            "sustainability": 0.2,
+            "efficiency": 0.15,
+            "expansion": 0.1,
+            "public_private_partnership": 0.1
+        },
+        "description": "Static weights for summing normalized agent-interpreted scores"
+    }
+}

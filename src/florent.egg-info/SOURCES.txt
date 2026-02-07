@@ -1,6 +1,6 @@
 README.md
 pyproject.toml
-src/algs/traversal.py
+src/main.py
 src/florent.egg-info/PKG-INFO
 src/florent.egg-info/SOURCES.txt
 src/florent.egg-info/dependency_links.txt
@@ -9,4 +9,10 @@ src/florent.egg-info/top_level.txt
 src/models/base.py
 src/models/entities.py
 src/models/graph.py
+src/services/agent/main.py
+src/services/algs/traversal.py
+src/services/clients/ai_client.py
+src/services/country/geo.py
+src/services/math/risk.py
+src/services/vector/vector_ops.py
 tests/test_graph.py
