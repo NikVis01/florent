@@ -3,18 +3,18 @@ from typing import List, Literal, Set, Dict, Optional
 import json
 import os
 
-# Source of truth for country data
-COUNTRIES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "countries.json")
-# Reverse mapping of affiliations to countries
-AFFILIATIONS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "affiliations.json")
-# Normalized registry of services
-SERVICES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "services.json")
-# Registry of service categories
-CATEGORIES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "categories.json")
-# Registry of industry sectors
-SECTORS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "sectors.json")
-# Registry of strategic focus areas
-STRATEGIC_FOCUS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "strategic_focus.json")
+# Geo-spatial data
+COUNTRIES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "geo", "countries.json")
+AFFILIATIONS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "geo", "affiliations.json")
+
+# Taxonomy and Registries
+SERVICES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "taxonomy", "services.json")
+CATEGORIES_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "taxonomy", "categories.json")
+SECTORS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "taxonomy", "sectors.json")
+STRATEGIC_FOCUS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "taxonomy", "strategic_focus.json")
+
+# Configuration and Metrics
+METRICS_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src", "data", "config", "metrics.json")
 
 def load_countries_data() -> List[Dict]:
     """Loads the country data from the JSON file."""
