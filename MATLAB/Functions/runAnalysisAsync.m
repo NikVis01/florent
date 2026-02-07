@@ -8,9 +8,11 @@ function runAnalysisAsync(app, projectId, firmId, mode, config)
     %   runAnalysisAsync(app, 'proj_001', 'firm_001', 'interactive', config)
     
     % Set running flag
-    app.IsRunning = true;
+    if isprop(app, 'IsRunning')
+        app.IsRunning = true;
+    end
     
-    % Disable controls
+    % Disable controls (already done in callback, but ensure it's done)
     if isprop(app, 'RunAnalysisButton')
         app.RunAnalysisButton.Enable = 'off';
     end
@@ -62,7 +64,9 @@ function runAnalysisAsync(app, projectId, firmId, mode, config)
     end
     
     % Re-enable controls
-    app.IsRunning = false;
+    if isprop(app, 'IsRunning')
+        app.IsRunning = false;
+    end
     if isprop(app, 'RunAnalysisButton')
         app.RunAnalysisButton.Enable = 'on';
     end

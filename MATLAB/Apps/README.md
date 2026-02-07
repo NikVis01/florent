@@ -4,30 +4,62 @@ This directory contains the MATLAB App Designer frontend for the Florent risk an
 
 ## Files
 
-- `florentRiskApp_Template.m` - Programmatic template showing app structure
-- `APP_DESIGNER_SETUP.md` - Detailed setup instructions for creating the .mlapp file
+- `florentRiskApp.m` - **Main programmatic app** (fully functional, Git-friendly!)
+- `florentRiskApp_Template.m` - Original template (reference/backup)
+- `APP_DESIGNER_SETUP.md` - Setup instructions (for reference)
 - `README.md` - This file
 
 ## Quick Start
 
-### Option 1: Create App in App Designer (Recommended)
+### Launch the App
 
-1. Open MATLAB App Designer:
-   ```matlab
-   appdesigner
-   ```
+The app is fully programmatic - no `.mlapp` binary file needed!
 
-2. Create new app:
-   - Click "New App" → "Blank App"
-   - Save as `florentRiskApp.mlapp` in this directory
+```matlab
+% Initialize paths (if not already done)
+initializeFlorent()
 
-3. Follow `APP_DESIGNER_SETUP.md` for component specifications
+% Launch the app
+app = florentRiskApp
+```
 
-4. Use `florentRiskApp_Template.m` as reference for callbacks
+That's it! The app window will open and you can start using it.
 
-### Option 2: Use Template Programmatically
+### Using the App
 
-The template file can be used as a starting point, but App Designer files (.mlapp) must be created in the GUI.
+1. **Load Demo**: Click "Load Demo" to set quick demo parameters
+2. **Run Analysis**: Click "Run Analysis" to start the analysis
+3. **View Results**: Switch between tabs to see different visualizations:
+   - **2x2 Matrix**: Risk-Influence matrix with confidence ellipses
+   - **3D Landscape**: 3D visualization of risk, influence, and centrality
+   - **Globe**: Geographic visualization of risk
+   - **Stability Network**: Network graph showing stability scores
+
+### Testing
+
+Run the launch test:
+```matlab
+testFlorentAppLaunch()
+```
+
+## Features
+
+### ✅ Implemented (MVP)
+- ✅ Fully programmatic app (no .mlapp binary needed!)
+- ✅ Input panel with firm/project/mode dropdowns
+- ✅ MC iterations slider with live updates
+- ✅ Tabbed interface with 4 visualization types
+- ✅ Progress bar and status updates
+- ✅ Demo mode (one-click demo setup)
+- ✅ Full integration with analysis pipeline
+- ✅ Error handling with user-friendly messages
+
+### 🚀 Ready to Add (Optional Enhancements)
+- Export buttons for figures and reports
+- Results table showing node summary
+- Findings text area with key insights
+- Parameter checkboxes for MC simulation types
+- Help system with tooltips
 
 ## Integration Functions
 
@@ -38,83 +70,45 @@ The app uses these integration functions (in `MATLAB/Functions/`):
 - `appExportFunctions.m` - Export capabilities
 - `runAnalysisAsync.m` - Async analysis execution
 
-## Features
-
-### Phase 1 (MVP) - Completed
-- Basic app structure
-- Input panel with dropdowns
-- Display panel with visualization
-- Run analysis button
-- Progress updates
-- Integration with pipeline
-
-### Phase 2 (Enhanced) - Ready to Implement
-- Tabbed interface for multiple visualizations
-- Parameter controls (sliders, checkboxes)
-- Real-time updates
-- Interactive visualization features
-
-### Phase 3 (Advanced) - Ready to Implement
-- Export capabilities
-- Demo mode
-- Results panel
-- Parameter exploration
-
-### Phase 4-6 (Polish) - Ready to Implement
-- Background execution
-- Loading states
-- Error handling
-- Help system
-- Styling
-
-## Testing
-
-Run the test suite:
-```matlab
-testFlorentApp()
-```
-
-## Usage
-
-Once the app is created:
-
-1. Launch app:
-   ```matlab
-   app = florentRiskApp
-   ```
-
-2. Use the interface:
-   - Select firm/project
-   - Adjust parameters
-   - Click "Run Analysis"
-   - Explore visualizations
-
-3. Export results:
-   - Use export buttons (when implemented)
-   - Or call `appExportFunctions()` directly
-
-## Integration
+## Architecture
 
 The app integrates with the existing Florent pipeline:
 
 ```
-App UI → appIntegration → runAnalysisPipeline → [pipeline functions]
+App UI → runAnalysisAsync → appIntegration → runAnalysisPipeline → [pipeline functions]
 ```
 
 All existing functions work with the app through the integration layer.
 
-## Next Steps
+## Advantages of Programmatic Approach
 
-1. Create the .mlapp file in App Designer (follow `APP_DESIGNER_SETUP.md`)
-2. Test basic functionality
-3. Add Phase 2 features (tabs, controls)
-4. Add Phase 3 features (export, demo mode)
-5. Polish and style
+1. **Git-friendly**: Single `.m` file, no binary merge conflicts
+2. **Fast iteration**: Edit code, run, test - no GUI clicking
+3. **Version control**: Easy to review diffs and track changes
+4. **Debugging**: Set breakpoints, inspect variables easily
+5. **Portable**: Share one file instead of binary
+
+## Troubleshooting
+
+### App won't launch
+- Run `initializeFlorent()` first to set up paths
+- Check that all integration functions exist
+- Verify MATLAB version supports App Designer
+
+### Visualizations don't appear
+- Make sure analysis completed successfully
+- Check that data exists: `app.Data` and `app.StabilityData`
+- Try switching tabs to trigger visualization update
+
+### Analysis fails
+- Check error message in status label
+- Verify Python API is running (if using API)
+- Try demo mode first (uses cached/mock data)
 
 ## Support
 
 See:
-- `APP_DESIGNER_SETUP.md` - Detailed setup guide
 - `../README_FUNCTIONS.md` - Function reference
 - `../SETUP.md` - General setup
+- `APP_DESIGNER_SETUP.md` - Original setup guide (for reference)
 

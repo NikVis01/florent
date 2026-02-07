@@ -1,6 +1,25 @@
 # App Designer Setup Instructions
 
-Since App Designer files (.mlapp) are binary and must be created in the MATLAB App Designer GUI, follow these instructions to create the app.
+**NOTE**: This file is for reference. The app is now fully programmatic!
+
+The Florent app is implemented as a programmatic App Designer application (`florentRiskApp.m`), which means:
+- ✅ No `.mlapp` binary file needed
+- ✅ Fully Git-friendly
+- ✅ Can be edited in any text editor
+- ✅ Faster to iterate on
+
+**To use the app, simply run:**
+```matlab
+app = florentRiskApp
+```
+
+See `README.md` for current usage instructions.
+
+---
+
+## Historical Reference (Original Setup)
+
+The following instructions were for creating a `.mlapp` file, but are no longer needed since we use the programmatic approach.
 
 ## Quick Start
 

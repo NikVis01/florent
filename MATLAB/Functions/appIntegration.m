@@ -185,12 +185,16 @@ function axesHandle = getVisualizationAxes(app, visualizationType)
         case '2x2matrix'
             if isprop(app, 'MatrixAxes')
                 axesHandle = app.MatrixAxes;
+            elseif isfield(app, 'MatrixAxes')
+                axesHandle = app.MatrixAxes;
             elseif isprop(app, 'MainAxes')
                 axesHandle = app.MainAxes;
             end
             
         case '3dlandscape'
             if isprop(app, 'LandscapeAxes')
+                axesHandle = app.LandscapeAxes;
+            elseif isfield(app, 'LandscapeAxes')
                 axesHandle = app.LandscapeAxes;
             elseif isprop(app, 'MainAxes')
                 axesHandle = app.MainAxes;
@@ -199,12 +203,16 @@ function axesHandle = getVisualizationAxes(app, visualizationType)
         case 'globe'
             if isprop(app, 'GlobeAxes')
                 axesHandle = app.GlobeAxes;
+            elseif isfield(app, 'GlobeAxes')
+                axesHandle = app.GlobeAxes;
             elseif isprop(app, 'MainAxes')
                 axesHandle = app.MainAxes;
             end
             
         case 'stabilitynetwork'
             if isprop(app, 'NetworkAxes')
+                axesHandle = app.NetworkAxes;
+            elseif isfield(app, 'NetworkAxes')
                 axesHandle = app.NetworkAxes;
             elseif isprop(app, 'MainAxes')
                 axesHandle = app.MainAxes;
