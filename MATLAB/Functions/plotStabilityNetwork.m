@@ -1,4 +1,4 @@
-function fig = plotStabilityNetwork(data, stabilityData, saveFig)
+function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     % PLOTSTABILITYNETWORK Creates stability network visualization
     %
     % Network graph:
@@ -55,7 +55,7 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig)
     edgeWidths = 0.5 + 3 * (edgeWeights / (max(edgeWeights) + eps));
     
     % Plot graph
-    p = plot(G, 'Layout', 'force', 'NodeLabel', stabilityData.nodeIds, ...
+    p = plot(ax, G, 'Layout', 'force', 'NodeLabel', stabilityData.nodeIds, ...
         'NodeFontSize', 8, 'ArrowSize', 8);
     
     % Set node sizes
@@ -85,7 +85,7 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig)
     end
     
     % Title
-    title('Stability Network: Node Size = Stability, Color = Quadrant', ...
+    title(ax, 'Stability Network: Node Size = Stability, Color = Quadrant', ...
         'FontSize', 14, 'FontWeight', 'bold');
     
     % Add colorbar for stability (if needed)
@@ -107,8 +107,8 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig)
         'BackgroundColor', 'white', 'EdgeColor', 'red', ...
         'VerticalAlignment', 'top');
     
-    % Save figure
-    if saveFig
+    % Save figure (only if not using provided axes)
+    if saveFig && isempty(axesHandle)
         figDir = fullfile(pwd, 'MATLAB', 'Figures');
         if ~exist(figDir, 'dir')
             mkdir(figDir);
@@ -120,5 +120,12 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig)
     fprintf('Stability network visualization created\n');
     fprintf('Unstable nodes: %d (%.1f%%)\n', length(unstableIdx), ...
         100*length(unstableIdx)/nNodes);
+    
+    % Return figure handle (or empty if using provided axes)
+    if isempty(axesHandle)
+        % Return figure handle
+    else
+        fig = []; % Don't return figure if using provided axes
+    end
 end
 

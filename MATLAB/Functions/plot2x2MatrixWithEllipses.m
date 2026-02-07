@@ -1,4 +1,4 @@
-function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
+function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig, axesHandle)
     % PLOT2X2MATRIXWITHELLIPSES Creates 2x2 matrix with confidence ellipses
     %
     % Scatter: nodes in Risk vs Influence space
@@ -16,6 +16,9 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
     
     if nargin < 3
         saveFig = true;
+    end
+    if nargin < 4
+        axesHandle = [];
     end
     
     % Get scores
@@ -42,9 +45,15 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
     % Classify quadrants
     quadrants = classifyQuadrant(risk, influence);
     
-    % Create figure
-    fig = figure('Position', [100, 100, 1200, 900]);
-    hold on;
+    % Create figure or use provided axes
+    if isempty(axesHandle)
+        fig = figure('Position', [100, 100, 1200, 900]);
+        ax = axes('Parent', fig);
+    else
+        ax = axesHandle;
+        fig = ax.Parent;
+    end
+    hold(ax, 'on');
     
     % Define quadrant colors
     colors = containers.Map();
@@ -64,9 +73,9 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
         
         % Plot ellipse with transparency
         quad = quadrants{i};
-        plot(ellipse_x, ellipse_y, '-', 'Color', colors(quad), ...
+        plot(ax, ellipse_x, ellipse_y, '-', 'Color', colors(quad), ...
             'LineWidth', 0.5, 'LineStyle', '--');
-        fill(ellipse_x, ellipse_y, colors(quad), 'FaceAlpha', 0.1, ...
+        fill(ax, ellipse_x, ellipse_y, colors(quad), 'FaceAlpha', 0.1, ...
             'EdgeColor', 'none');
     end
     
@@ -75,7 +84,7 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
         quadrant = q{1};
         idx = strcmp(quadrants, quadrant);
         if any(idx)
-            scatter(influence(idx), risk(idx), 100, colors(quadrant), ...
+            scatter(ax, influence(idx), risk(idx), 100, colors(quadrant), ...
                 'filled', 'MarkerEdgeColor', 'k', 'LineWidth', 1.5, ...
                 'DisplayName', sprintf('%s - %s', quadrant, getActionFromQuadrant(quadrant)));
         end
@@ -85,12 +94,12 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
     riskThreshold = median(risk);
     influenceThreshold = median(influence);
     
-    xlims = xlim;
-    ylims = ylim;
+    xlims = xlim(ax);
+    ylims = ylim(ax);
     
-    plot([influenceThreshold, influenceThreshold], ylims, 'k--', ...
+    plot(ax, [influenceThreshold, influenceThreshold], ylims, 'k--', ...
         'LineWidth', 2, 'DisplayName', 'Influence Threshold');
-    plot(xlims, [riskThreshold, riskThreshold], 'k--', ...
+    plot(ax, xlims, [riskThreshold, riskThreshold], 'k--', ...
         'LineWidth', 2, 'DisplayName', 'Risk Threshold');
     
     % Annotate unstable nodes (large ellipses)
@@ -100,21 +109,21 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig)
     
     for i = 1:min(length(unstableIdx), 10) % Limit annotations
         idx = unstableIdx(i);
-        text(influence(idx), risk(idx), stabilityData.nodeIds{idx}, ...
+        text(ax, influence(idx), risk(idx), stabilityData.nodeIds{idx}, ...
             'FontSize', 8, 'Color', 'red', 'FontWeight', 'bold', ...
             'BackgroundColor', 'white', 'EdgeColor', 'red');
     end
     
     % Labels and formatting
-    xlabel('Influence Score', 'FontSize', 12, 'FontWeight', 'bold');
-    ylabel('Risk Score', 'FontSize', 12, 'FontWeight', 'bold');
-    title('2x2 Risk-Influence Matrix with Confidence Ellipses', ...
+    xlabel(ax, 'Influence Score', 'FontSize', 12, 'FontWeight', 'bold');
+    ylabel(ax, 'Risk Score', 'FontSize', 12, 'FontWeight', 'bold');
+    title(ax, '2x2 Risk-Influence Matrix with Confidence Ellipses', ...
         'FontSize', 14, 'FontWeight', 'bold');
     
-    legend('Location', 'best', 'FontSize', 10);
-    grid on;
-    axis equal;
-    hold off;
+    legend(ax, 'Location', 'best', 'FontSize', 10);
+    grid(ax, 'on');
+    axis(ax, 'equal');
+    hold(ax, 'off');
     
     % Save figure
     if saveFig

@@ -1,4 +1,4 @@
-function fig = displayGlobe(data, stabilityData, config)
+function fig = displayGlobe(data, stabilityData, config, axesHandle)
     % DISPLAYGLOBE Creates globe visualization with risk analysis data
     %
     % Replaces displayGlobe.mlx with enhanced functionality
@@ -17,6 +17,9 @@ function fig = displayGlobe(data, stabilityData, config)
     
     if nargin < 3
         config = loadFlorentConfig();
+    end
+    if nargin < 4
+        axesHandle = [];
     end
     
     fprintf('Creating globe visualization...\n');
@@ -45,12 +48,17 @@ function fig = displayGlobe(data, stabilityData, config)
     colors('Q3') = [0.9, 0.6, 0.1]; % Orange
     colors('Q4') = [0.5, 0.5, 0.5]; % Gray
     
-    % Create figure
-    fig = figure('Position', [100, 100, config.visualization.figureSize], ...
-        'Name', 'Florent Globe Risk Map');
+    % Create figure or use provided axes
+    if isempty(axesHandle)
+        fig = figure('Position', [100, 100, config.visualization.figureSize], ...
+            'Name', 'Florent Globe Risk Map');
+        ax = axes('Parent', fig);
+    else
+        ax = axesHandle;
+        fig = ax.Parent;
+    end
     
     % Create 3D axes for globe
-    ax = axes('Parent', fig);
     hold(ax, 'on');
     
     % Generate node positions on sphere
@@ -143,8 +151,8 @@ function fig = displayGlobe(data, stabilityData, config)
     
     hold(ax, 'off');
     
-    % Save figure if configured
-    if config.report.exportPDF || any(strcmp(config.visualization.saveFormats, 'fig'))
+    % Save figure if configured (only if not using provided axes)
+    if isempty(axesHandle) && (config.report.exportPDF || any(strcmp(config.visualization.saveFormats, 'fig')))
         figDir = config.paths.figuresDir;
         if ~exist(figDir, 'dir')
             mkdir(figDir);
@@ -165,5 +173,12 @@ function fig = displayGlobe(data, stabilityData, config)
     end
     
     fprintf('Globe visualization created\n');
+    
+    % Return figure handle (or empty if using provided axes)
+    if isempty(axesHandle)
+        % Return figure handle
+    else
+        fig = []; % Don't return figure if using provided axes
+    end
 end
 
