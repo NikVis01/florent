@@ -10,7 +10,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 class TestSettings(unittest.TestCase):
     """Test Settings configuration."""
 
-    @patch('dotenv.load_dotenv')
     @patch.dict(os.environ, {
         'OPENAI_API_KEY': 'test-key-123',
         'LLM_MODEL': 'gpt-4',
@@ -19,7 +18,7 @@ class TestSettings(unittest.TestCase):
         'MAX_TRAVERSAL_DEPTH': '20',
         'LOG_LEVEL': 'DEBUG'
     })
-    def test_settings_initialization_with_env_vars(self, mock_load_dotenv):
+    def test_settings_initialization_with_env_vars(self):
         """Test Settings initialization with environment variables."""
         # Clear cached module
         if 'src.settings' in sys.modules:
@@ -106,9 +105,8 @@ class TestSettings(unittest.TestCase):
         self.assertIn('taxonomy', settings.TAXONOMY_DIR)
         self.assertIn('config', settings.CONFIG_DIR)
 
-    @patch('dotenv.load_dotenv')
     @patch.dict(os.environ, {'BGE_M3_MODEL': 'custom-model'})
-    def test_settings_bge_model(self, mock_load_dotenv):
+    def test_settings_bge_model(self):
         """Test BGE model configuration."""
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
@@ -119,9 +117,8 @@ class TestSettings(unittest.TestCase):
 
         self.assertEqual(settings.BGE_M3_MODEL, 'custom-model')
 
-    @patch('dotenv.load_dotenv')
     @patch.dict(os.environ, {'DEFAULT_ATTENUATION_FACTOR': 'invalid'})
-    def test_settings_invalid_float_conversion(self, mock_load_dotenv):
+    def test_settings_invalid_float_conversion(self):
         """Test Settings with invalid float value."""
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
@@ -130,9 +127,8 @@ class TestSettings(unittest.TestCase):
             from src.settings import Settings
             Settings()
 
-    @patch('dotenv.load_dotenv')
     @patch.dict(os.environ, {'MAX_TRAVERSAL_DEPTH': 'not-a-number'})
-    def test_settings_invalid_int_conversion(self, mock_load_dotenv):
+    def test_settings_invalid_int_conversion(self):
         """Test Settings with invalid int value."""
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
@@ -177,13 +173,12 @@ class TestSettings(unittest.TestCase):
             # Should have warned about missing data directory
             # Note: Actual warning behavior depends on path existence check
 
-    @patch('dotenv.load_dotenv')
     @patch.dict(os.environ, {
         'OPENAI_API_KEY': 'test-key',
         'DEFAULT_ATTENUATION_FACTOR': '2.5',
         'MAX_TRAVERSAL_DEPTH': '50'
     })
-    def test_numeric_conversions(self, mock_load_dotenv):
+    def test_numeric_conversions(self):
         """Test that numeric environment variables are converted correctly."""
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']

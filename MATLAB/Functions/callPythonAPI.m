@@ -1,10 +1,18 @@
 function response = callPythonAPI(endpoint, method, payload)
-    % CALLPYTHONAPI Sends a request to a Python REST API
-    % 
+    % CALLPYTHONAPI Sends a request to a Python REST API using manual HTTP calls
+    %
+    % This function uses webread/webwrite for direct HTTP calls to the Python API.
+    % For a higher-level interface, use FlorentAPIClientWrapper which automatically
+    % falls back to manual HTTP calls when the generated client is not available.
+    %
     % Usage:
-    %   resp = callPythonAPI('http://192.168.1.50:8000/data', 'GET')
-    %   resp = callPythonAPI('http://192.168.1.50:8000/add', 'POST', struct('x', 10))
-
+    %   resp = callPythonAPI('http://localhost:8000/', 'GET')
+    %   resp = callPythonAPI('http://localhost:8000/analyze', 'POST', struct('firm_path', '...', 'project_path', '...', 'budget', 100))
+    %
+    % Alternative (recommended):
+    %   client = FlorentAPIClientWrapper('http://localhost:8000');
+    %   data = client.analyzeProject('proj_001', 'firm_001', 100);
+    
     % 1. Setup Options
     % We set a timeout (20s) and specify we are sending/receiving JSON
     options = weboptions(...

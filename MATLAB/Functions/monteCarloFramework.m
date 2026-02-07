@@ -38,6 +38,29 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
                 pool = parpool('local');
             end
             useParallel = true;
+            
+            % Add Functions directory to path on all workers
+            % This ensures all functions are accessible in parfor loops
+            % Get absolute path to Functions directory
+            scriptPath = mfilename('fullpath');
+            scriptDir = fileparts(scriptPath);
+            functionsDir = scriptDir; % monteCarloFramework.m is already in Functions directory
+            
+            % Add path to all workers using spmd (must be done before parfor)
+            spmd
+                if ~isempty(functionsDir) && exist(functionsDir, 'dir')
+                    addpath(functionsDir);
+                end
+            end
+            
+            % Also attach required function files to parallel pool
+            % These functions are called within the parfor loop
+            addAttachedFiles(pool, {
+                fullfile(functionsDir, 'riskCalculations.m'), ...
+                fullfile(functionsDir, 'calculateEigenvectorCentrality.m'), ...
+                fullfile(functionsDir, 'getParentNodes.m'), ...
+                fullfile(functionsDir, 'classifyQuadrant.m')
+            });
         catch
             warning('Parallel Computing Toolbox not available, running sequentially');
             useParallel = false;
@@ -65,7 +88,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     if useParallel
         % Parallel execution
         parfor iter = 1:nIterations
-            [perturbedData, params] = perturbFunc(data, iter);
+            [perturbedData, params] = feval(perturbFunc, data, iter);
             
             % Calculate risk scores with perturbed parameters
             scores = calculateScoresForIteration(perturbedData);

@@ -41,10 +41,14 @@ initializeFlorent(true)
 **Manual Setup:**
 If automatic setup fails, manually add paths:
 ```matlab
-addpath(genpath('path/to/florent/MATLAB/Functions'))
-addpath(genpath('path/to/florent/MATLAB/Scripts'))
-addpath(genpath('path/to/florent/MATLAB/Config'))
+% Replace 'path/to/florent' with your actual path
+basePath = 'path/to/florent/MATLAB';
+addpath(genpath(fullfile(basePath, 'Functions')))
+addpath(genpath(fullfile(basePath, 'Scripts')))
+addpath(genpath(fullfile(basePath, 'Config')))
 ```
+
+**Note:** `genpath` recursively adds all subdirectories. If you prefer to add only specific directories, use `addpath()` without `genpath()`.
 
 ### Step 2: Verify Installation
 
@@ -84,8 +88,15 @@ This checks:
 2. If that fails, you may need administrator privileges
 3. Alternatively, add to your `startup.m` file:
    ```matlab
-   % In your startup.m
-   run('path/to/florent/MATLAB/initializeFlorent.m')
+   % In your startup.m (located in userpath or MATLAB startup directory)
+   % Replace 'path/to/florent' with your actual path
+   cd('path/to/florent/MATLAB')
+   initializeFlorent(false)  % false = don't save path (already in startup)
+   ```
+   
+   To find your `startup.m` location:
+   ```matlab
+   userpath  % Shows user path directory
    ```
 
 ### Case Sensitivity Issues (Linux)
@@ -107,17 +118,50 @@ MATLAB/
 ├── Functions/     # Core functions (automatically added to path)
 ├── Scripts/       # Analysis scripts (automatically added to path)
 ├── Config/        # Configuration files (automatically added to path)
+├── Apps/          # App Designer frontend (optional, see Apps/README.md)
 ├── Data/          # Data files and cache
 ├── Figures/      # Generated visualizations
 └── Reports/      # Generated reports
 ```
+
+**Note:** The `Apps/` directory contains the App Designer frontend (`florentRiskApp.m`). This is optional and not required for command-line usage. See `Apps/README.md` for App Designer setup instructions.
+
+## API Client Setup (Automatic - No Setup Required!)
+
+The MATLAB frontend automatically uses manual HTTP calls (`webread`/`webwrite`) to communicate with the Python API. **No additional setup is required!**
+
+### Using the API Client
+
+The `FlorentAPIClientWrapper` class automatically handles all API communication:
+
+```matlab
+% Create client (uses manual HTTP calls automatically)
+client = FlorentAPIClientWrapper('http://localhost:8000')
+
+% Health check
+health = client.healthCheck()
+
+% Run analysis
+data = client.analyzeProject('proj_001', 'firm_001', 100)
+```
+
+The wrapper provides:
+- Automatic retry logic
+- Error handling
+- Response validation
+- Data transformation
+
+**Note:** The codebase works perfectly with manual HTTP calls. OpenAPI client generation is completely optional and only provides minor benefits (type safety, IntelliSense). You can skip it entirely.
 
 ## Next Steps
 
 After setup:
 1. Try the demo: `runFlorentDemo()`
 2. Run full analysis: `runFlorentAnalysis()`
-3. Check documentation: See `README_FUNCTIONS.md`
+3. Launch the App Designer frontend (optional): `app = florentRiskApp`
+4. Check documentation: See `README_FUNCTIONS.md` and `Apps/README.md`
+
+**That's it!** The API client uses manual HTTP calls automatically - no additional setup needed.
 
 ## Getting Help
 
@@ -126,4 +170,11 @@ If you encounter issues:
 2. Run `verifyFlorentCodebase()` for detailed analysis
 3. Check error messages for specific function names
 4. Verify paths are set correctly: `path`
+5. Check if function exists: `which functionName` (should return file path, not empty)
+
+## Additional Resources
+
+- **Function Reference**: `README_FUNCTIONS.md` - Complete function documentation
+- **App Designer Setup**: `Apps/README.md` - Frontend application guide
+- **App Designer Details**: `Apps/APP_DESIGNER_SETUP.md` - Detailed App Designer information
 

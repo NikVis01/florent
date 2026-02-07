@@ -28,7 +28,12 @@ function runAnalysisAsync(app, projectId, firmId, mode, config)
     % For true background execution, consider using parallel workers
     
     try
+        % Update progress - using new OpenAPI client
+        updateAppProgress(app, 'api', 20, 'Calling Python API...');
+        drawnow; % Ensure UI updates
+        
         % Run analysis (this will block, but updateProgress calls drawnow)
+        % The new implementation uses OpenAPI client which handles async/timeouts better
         results = appIntegration('runAnalysis', app, projectId, firmId, mode, config);
         
         % Store results

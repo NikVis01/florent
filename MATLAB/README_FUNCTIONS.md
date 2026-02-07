@@ -15,8 +15,12 @@ These functions are in `Functions/` and can be called from anywhere:
 - `florentConfig()` - Get configuration structure
 
 **Data Access:**
-- `getRiskData()` - Load risk analysis data
-- `callPythonAPI()` - Call Python API
+- `getRiskData()` - Load risk analysis data (uses OpenAPI client)
+- `FlorentAPIClientWrapper` - OpenAPI client wrapper class
+- `buildAnalysisRequest()` - Build API request from IDs
+- `parseAnalysisResponse()` - Transform API response to MATLAB structure
+- `validateAnalysisResponse()` - Validate API response structure
+- `callPythonAPI()` - Call Python API (DEPRECATED - use FlorentAPIClientWrapper)
 
 **Risk Calculations:**
 - `calculate_influence_score()` - Calculate influence score
@@ -80,7 +84,9 @@ runFlorentAnalysis()
   └─> runAnalysisPipeline()
       ├─> loadAnalysisData()
       │   └─> getRiskData()
-      │       └─> callPythonAPI()
+      │       └─> FlorentAPIClientWrapper.analyzeProject()
+      │           ├─> buildAnalysisRequest()
+      │           └─> parseAnalysisResponse()
       ├─> runMCSimulations()
       │   ├─> mc_parameterSensitivity()
       │   ├─> mc_crossEncoderUncertainty()
@@ -213,6 +219,30 @@ results = runFlorentAnalysis('proj_001', 'firm_001', 'production', customConfig)
 1. Check dependencies before modifying
 2. Run tests after changes
 3. Update documentation if signature changes
+
+## API Client Functions
+
+The codebase includes API client integration that automatically uses manual HTTP calls:
+
+- **`FlorentAPIClientWrapper`** - Main client wrapper class (uses webread/webwrite automatically)
+  - `analyzeProject(projectId, firmId, budget)` - Run analysis with IDs
+  - `analyzeProjectWithData(firmData, projectData, budget)` - Run with inline data
+  - `healthCheck()` - Check API health
+
+- **`callPythonAPI(endpoint, method, payload)`** - Direct manual HTTP API calls
+
+- **`buildAnalysisRequest(projectId, firmId, budget)`** - Build API request structure
+
+- **`parseAnalysisResponse(response, projectId, firmId)`** - Transform API response
+
+- **`validateAnalysisResponse(response)`** - Validate response structure
+
+**Optional OpenAPI Client Generation:**
+- **`verifyRESTAPIClient()`** - Verify MATLAB REST API Client Generator availability (optional)
+- **`generateFlorentClient()`** - Generate MATLAB client from OpenAPI spec (optional)
+- **`testFlorentAPIClient()`** - Test the API client integration
+
+**Note:** The wrapper automatically uses manual HTTP calls when the generated client is not available. OpenAPI client generation is completely optional. For setup, see `SETUP.md` (no additional setup needed!).
 
 ## See Also
 

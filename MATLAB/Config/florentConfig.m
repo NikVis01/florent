@@ -24,9 +24,15 @@ function config = florentConfig(mode)
     % API Configuration
     config.api = struct();
     config.api.baseUrl = 'http://localhost:8000';
-    config.api.timeout = 20;
+    config.api.timeout = 120; % Increased for long-running analysis (10-60 seconds typical)
     config.api.retryAttempts = 3;
     config.api.retryDelay = 2; % seconds
+    
+    % OpenAPI Client Configuration
+    config.api.client = struct();
+    config.api.client.useGeneratedClient = true; % Use generated OpenAPI client if available
+    config.api.client.fallbackToManual = true; % Fallback to manual HTTP if client not available
+    config.api.client.clientPath = fullfile(matlabDir, 'Classes', 'FlorentAPIClient'); % Path to generated client
     
     % Monte Carlo Configuration
     config.monteCarlo = struct();
