@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     volumes:
       - ../src:/app/src:ro
-      - ../data:/app/data:ro
+      - ../src/data:/app/src/data:ro
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
@@ -32,7 +32,7 @@ services:
           memory: 512M
 
   bge-m3:
-    image: mdelapenya/bge-m3:latest
+    image: mdelapenya/bge-m3:0.3.13-567m
     ports:
       - "8080:8080"
     restart: unless-stopped

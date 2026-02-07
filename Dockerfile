@@ -17,7 +17,7 @@ COPY src/services/agent/ops/tensor_ops.cpp src/services/agent/ops/tensor_ops.cpp
 RUN make build
 
 # --- Stage 2: Python Runtime ---
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -31,7 +31,9 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python dependencies
 COPY requirements.txt pyproject.toml ./
-RUN pip install --no-cache-dir -r requirements.txt litestar uvicorn
+# Strip '.' from requirements.txt to avoid installation failure before source is copied
+RUN sed -i '/^\.$/d' requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY src/ ./src/

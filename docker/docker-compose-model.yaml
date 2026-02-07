@@ -1,6 +1,6 @@
 services:
   bge-m3:
-    image: mdelapenya/bge-m3:latest
+    image: mdelapenya/bge-m3:0.3.13-567m
     ports:
       - "8080:8080"
     restart: unless-stopped
