@@ -5,7 +5,7 @@ Implements cascading risk propagation through a DAG using topological sort.
 Risk flows from parent nodes to children, accumulating through the graph.
 """
 
-from typing import Dict, List, Set
+from typing import Dict, List
 from collections import deque
 import logging
 

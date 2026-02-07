@@ -3,3 +3,4 @@ dspy-ai>=2.0.0
 structlog>=25.5.0
 dotenv>=0.9.9
 litestar>=2.0.0
+rich>=14.3.2

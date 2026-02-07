@@ -8,11 +8,16 @@ src/florent.egg-info/SOURCES.txt
 src/florent.egg-info/dependency_links.txt
 src/florent.egg-info/requires.txt
 src/florent.egg-info/top_level.txt
+src/models/analysis.py
 src/models/base.py
 src/models/entities.py
 src/models/graph.py
 src/services/pipeline.py
+src/services/agent/analysis/__init__.py
+src/services/agent/analysis/critical_chain.py
+src/services/agent/analysis/matrix_classifier.py
 src/services/agent/core/orchestrator.py
+src/services/agent/core/orchestrator_v2.py
 src/services/agent/core/traversal.py
 src/services/agent/models/signatures.py
 src/services/agent/ops/tensor_ops_cpp.py

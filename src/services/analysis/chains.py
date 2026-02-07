@@ -7,7 +7,6 @@ Calculates cumulative risk for each path from entry to exit nodes.
 
 from typing import Dict, List
 from src.models.graph import Graph, Node
-from src.services.agent.core.traversal import NodeStack
 
 
 def find_critical_chains(

@@ -119,3 +119,7 @@ Thumbs.db
 # --- Docker ---
 .docker/
 # Note: Keep Dockerfile and docker-compose.yaml in git
+
+
+# random
+*.egg-info

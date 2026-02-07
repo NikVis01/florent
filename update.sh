@@ -3,7 +3,7 @@ set -e
 
 echo "--- 1. Updating requirements.txt from uv.lock ---"
 if command -v uv &> /dev/null; then
-    uv export --format requirements-txt --output-file requirements.txt --no-hashes
+    uv export --format requirements-txt --output-file requirements.txt --no-hashes --no-editable
 else
     echo "Warning: 'uv' not found. Skipping requirements export."
 fi

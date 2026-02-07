@@ -190,5 +190,11 @@
         "name": "Capacity Building",
         "category": "advisory",
         "description": "Training and knowledge transfer to local infrastructure authorities."
+    },
+    {
+        "id": "srv_tech_001",
+        "name": "Grid Integrity Verification",
+        "category": "technical",
+        "description": "Testing and validation of electrical grid infrastructure for reliability and safety."
     }
 ]

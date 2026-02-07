@@ -1,7 +1,7 @@
 import json
 import os
 from typing import Any, Dict, Optional
-from litestar import Litestar, Post, get
+from litestar import Litestar, post, get
 from pydantic import BaseModel
 
 from src.services.clients.ai_client import AIClient
@@ -72,7 +72,7 @@ def parse_project(project_data: Dict[str, Any]) -> Project:
         success_criteria=exit_criteria
     )
 
-@Post("/analyze")
+@post("/analyze")
 async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
     """
     Main endpoint for risk analysis.

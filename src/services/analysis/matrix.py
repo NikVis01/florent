@@ -4,7 +4,7 @@
 Classifies nodes into strategic quadrants based on influence and risk scores.
 """
 
-from typing import Dict, List
+from typing import Dict
 
 
 def classify_node(influence: float, risk: float) -> str:
