@@ -1,864 +1,345 @@
-# Florent Setup Guide
+# Florent Developer Setup
 
-**Complete installation and configuration guide for Project Florent**
+**Get up and running on the Florent codebase in 10 minutes**
 
-**Version**: 1.0.0
+**Version**: 2.0 (Developer-Focused)
 **Last Updated**: 2026-02-07
-**Estimated Setup Time**: 15-30 minutes
+**Estimated Setup Time**: 10-15 minutes
+**Audience**: Developers joining the project or setting up a new machine
+
+> **Assumption**: You already have the repository on your machine. This guide gets you from "I have the code" to "I'm running the server and tests."
 
 ---
 
 ## 📋 Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Quick Start](#quick-start)
-3. [Detailed Installation](#detailed-installation)
-4. [Configuration](#configuration)
-5. [Running the Application](#running-the-application)
-6. [Testing](#testing)
-7. [Development Setup](#development-setup)
-8. [Production Deployment](#production-deployment)
-9. [Troubleshooting](#troubleshooting)
-10. [Next Steps](#next-steps)
+1. [Quick Start](#quick-start-5-minutes)
+2. [Prerequisites](#prerequisites)
+3. [Environment Setup](#environment-setup)
+4. [Development Workflow](#development-workflow)
+5. [Running & Testing](#running--testing)
+6. [IDE Configuration](#ide-configuration)
+7. [Docker Development](#docker-development)
+8. [Troubleshooting](#troubleshooting)
+9. [Daily Workflow](#daily-workflow)
 
 ---
 
 ## ⚡ Quick Start (5 Minutes)
 
-**For experienced developers who want to get running immediately:**
+**TL;DR - Get running now:**
 
 ```bash
-# Clone repository
-git clone <repository-url>
-cd florent
+# 1. Install uv (if needed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install dependencies with uv
-curl -LsSf https://astral.sh/uv/install.sh | sh  # Install uv if needed
+# 2. Install dependencies
 uv sync
 
-# Set environment variables
-export OPENAI_API_KEY="sk-your-key-here"
+# 3. Set API key
+export OPENAI_API_KEY="sk-proj-your-key-here"
 
-# Run tests to verify installation
+# 4. Verify everything works
 uv run pytest tests/ -v
 
-# Start server
-uv run litestar run --host 0.0.0.0 --port 8000 --reload
+# 5. Start server
+uv run litestar run --reload
 
-# Test API (in another terminal)
+# 6. Test it
 curl http://localhost:8000/
 ```
 
-**Access**:
-- API: http://localhost:8000
-- Swagger UI: http://localhost:8000/schema/swagger
-- Health Check: http://localhost:8000/
+**Done!** Server is at http://localhost:8000, Swagger UI at http://localhost:8000/schema/swagger
 
-**Done!** Skip to [Testing](#testing) or [Next Steps](#next-steps).
+**Skip the rest if everything worked.** Otherwise, read on.
 
 ---
 
 ## 📦 Prerequisites
 
-### Required Software
+**What you need before starting:**
 
-#### 1. **Python 3.11+**
+### Required (Can't develop without these)
+
+✅ **Python 3.11+**
 ```bash
-# Check Python version
-python --version  # Should be 3.11 or higher
+python --version  # Must be 3.11 or higher
+```
 
-# If not installed:
-# Ubuntu/Debian
+✅ **uv** (Package manager - better than pip)
+```bash
+uv --version  # If not installed: curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+✅ **OpenAI API Key** (For AI features)
+- Get one: https://platform.openai.com/api-keys
+- Cost: ~$0.01-0.10 per analysis
+- **Without this, AI features won't work** (tests will fail)
+
+### Optional (Nice to have)
+
+⚠️ **Docker** (If you want to run containerized)
+```bash
+docker --version && docker-compose --version
+```
+
+⚠️ **Make** (For running `make all` build command)
+```bash
+make --version
+```
+
+### Don't Have These? Install Now
+
+<details>
+<summary><b>Ubuntu/Debian</b></summary>
+
+```bash
+# Python 3.11
 sudo apt update && sudo apt install python3.11 python3.11-venv
 
-# macOS (with Homebrew)
-brew install python@3.11
-
-# Windows
-# Download from https://www.python.org/downloads/
-```
-
-#### 2. **uv** (Package Manager)
-```bash
-# Install uv (recommended)
+# uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Verify installation
-uv --version
+# Docker
+curl -fsSL https://get.docker.com | sh
 
-# Alternative: Use pip if you prefer
-# pip install uv
+# Make
+sudo apt install build-essential
 ```
+</details>
 
-#### 3. **Git**
+<details>
+<summary><b>macOS</b></summary>
+
 ```bash
-# Check if installed
-git --version
+# Python 3.11
+brew install python@3.11
 
-# If not installed:
-# Ubuntu/Debian
-sudo apt install git
+# uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# macOS
-brew install git
-
-# Windows
-# Download from https://git-scm.com/downloads
-```
-
-#### 4. **OpenAI API Key** (Required for AI features)
-- Sign up at https://platform.openai.com/
-- Generate API key at https://platform.openai.com/api-keys
-- **Pricing**: Pay-as-you-go (~$0.01-0.10 per analysis)
-- **Alternative**: Use mock mode for development (see Configuration)
-
-### Optional Software
-
-#### 5. **Docker & Docker Compose** (For containerized deployment)
-```bash
-# Check if installed
-docker --version
-docker-compose --version
-
-# Install Docker:
-# Ubuntu/Debian
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-
-# macOS
+# Docker
 brew install --cask docker
 
-# Windows
-# Download Docker Desktop from https://www.docker.com/products/docker-desktop
-```
-
-#### 6. **Make** (For build automation)
-```bash
-# Check if installed
-make --version
-
-# Ubuntu/Debian
-sudo apt install build-essential
-
-# macOS (usually pre-installed)
+# Make (usually pre-installed)
 xcode-select --install
+```
+</details>
 
-# Windows
-# Install via MSYS2 or use WSL
+<details>
+<summary><b>Windows</b></summary>
+
+**Recommendation**: Use WSL2 (Windows Subsystem for Linux)
+
+```powershell
+# Enable WSL2
+wsl --install
+
+# Then follow Ubuntu instructions inside WSL
 ```
 
-### System Requirements
-
-**Minimum**:
-- CPU: 2 cores
-- RAM: 4 GB
-- Disk: 2 GB free space
-- OS: Linux, macOS, Windows (with WSL recommended)
-
-**Recommended**:
-- CPU: 4+ cores
-- RAM: 8 GB+
-- Disk: 5 GB+ free space
-- OS: Linux or macOS
+Or install directly on Windows:
+- Python: https://www.python.org/downloads/
+- Docker Desktop: https://www.docker.com/products/docker-desktop
+- Git for Windows: https://git-scm.com/downloads
+</details>
 
 ---
 
-## 🚀 Detailed Installation
+## 🛠️ Environment Setup
 
-### Step 1: Clone Repository
+**You're in the repo directory. Now set up your environment.**
 
+### Step 1: Install Dependencies
+
+**Using uv (recommended)**:
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd florent
-
-# Verify you're in the right directory
-ls -la
-# Should see: src/, tests/, docs/, README.md, etc.
-```
-
-### Step 2: Install Dependencies
-
-#### Option A: Using `uv` (Recommended)
-
-```bash
-# Install all dependencies
+# Install everything from uv.lock
 uv sync
 
-# This creates a virtual environment at .venv/
-# and installs all packages from uv.lock
-
-# Verify installation
-uv run python --version
-uv run python -c "import litestar; print(litestar.__version__)"
+# Creates .venv/ and installs all packages
+# Takes ~30 seconds
 ```
 
-#### Option B: Using `pip` + `venv`
-
+**Alternative - using pip** (if you don't have uv):
 ```bash
-# Create virtual environment
 python -m venv .venv
-
-# Activate virtual environment
-# Linux/macOS:
-source .venv/bin/activate
-# Windows:
-.venv\Scripts\activate
-
-# Install dependencies
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-# Verify installation
-python --version
-python -c "import litestar; print(litestar.__version__)"
 ```
 
-### Step 3: Verify Installation
+### Step 2: Verify Installation
 
 ```bash
-# Check installed packages
-uv pip list
+# Quick check
+uv run python -c "import litestar, dspy, pydantic; print('✅ All dependencies OK')"
 
-# Should see key packages:
-# - litestar
-# - dspy-ai
-# - pydantic
-# - structlog
-# - pytest
-# - numpy
+# If that works, you're good. If not, run:
+uv pip list | grep -E "litestar|dspy|pydantic"
 ```
 
-### Step 4: Set Up Environment Variables
+### Step 3: Configure Environment Variables
 
-#### Option A: Create `.env` file (Recommended)
+**Option A: `.env` file** (recommended for dev):
 
 ```bash
-# Copy example environment file
-cp .env.example .env
-
-# Edit .env file
-nano .env  # or use your preferred editor
-```
-
-**Add to `.env`**:
-```bash
-# Required
-OPENAI_API_KEY=sk-your-actual-api-key-here
-
-# Optional (defaults shown)
+# Create .env file
+cat > .env << 'EOF'
+OPENAI_API_KEY=sk-proj-your-actual-key-here
 LOG_LEVEL=INFO
 HOST=0.0.0.0
 PORT=8000
 PYTHONPATH=.
+EOF
+
+# Or copy from example if it exists
+cp .env.example .env
+# Then edit with: nano .env
 ```
 
-#### Option B: Export Environment Variables
+**Option B: Shell export** (quick & dirty):
 
 ```bash
-# Linux/macOS
-export OPENAI_API_KEY="sk-your-actual-api-key-here"
-export LOG_LEVEL="INFO"
-export HOST="0.0.0.0"
-export PORT="8000"
+# Add to your shell profile for persistence
+export OPENAI_API_KEY="sk-proj-your-key-here"
+export LOG_LEVEL="DEBUG"  # Use DEBUG for development
 
-# Add to ~/.bashrc or ~/.zshrc for persistence
-echo 'export OPENAI_API_KEY="sk-your-key"' >> ~/.bashrc
-source ~/.bashrc
-
-# Windows (PowerShell)
-$env:OPENAI_API_KEY="sk-your-actual-api-key-here"
-$env:LOG_LEVEL="INFO"
+# Verify it's set
+echo $OPENAI_API_KEY  # Should print your key
 ```
 
-### Step 5: Verify OpenAI API Key
+**Get an OpenAI API key**:
+1. Go to https://platform.openai.com/api-keys
+2. Click "Create new secret key"
+3. Copy the key (starts with `sk-proj-...`)
+4. Paste into `.env` or export command
+
+### Step 4: Verify Everything Works
 
 ```bash
-# Test API key
-uv run python -c "
-import os
-from openai import OpenAI
+# Run a subset of fast tests
+uv run pytest tests/test_base.py -v
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-print('✅ OpenAI API key is valid')
-"
-
-# If this fails, check your API key
-```
-
----
-
-## ⚙️ Configuration
-
-### Environment Variables Reference
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | **Yes** | None | OpenAI API key for DSPy agents |
-| `LOG_LEVEL` | No | `INFO` | Logging level: DEBUG, INFO, WARNING, ERROR |
-| `HOST` | No | `0.0.0.0` | Server host address |
-| `PORT` | No | `8000` | Server port |
-| `PYTHONPATH` | No | `.` | Python module search path |
-
-### Configuration Files
-
-#### `src/settings.py`
-Main configuration file for application settings:
-
-```python
-# View current settings
-uv run python -c "
-from src.settings import get_settings
-settings = get_settings()
-print(f'Log Level: {settings.log_level}')
-print(f'Host: {settings.host}')
-print(f'Port: {settings.port}')
-"
-```
-
-#### `pyproject.toml`
-Project metadata and dependencies:
-
-```bash
-# View project info
-cat pyproject.toml
-```
-
-#### `uv.lock`
-Locked dependency versions (don't edit manually):
-
-```bash
-# Update dependencies
-uv sync --upgrade
-
-# Export to requirements.txt
-uv export --format requirements-txt --output-file requirements.txt --no-hashes
-```
-
----
-
-## 🏃 Running the Application
-
-### Development Server (With Auto-Reload)
-
-```bash
-# Start development server
-uv run litestar run --host 0.0.0.0 --port 8000 --reload
-
-# Server will start at http://localhost:8000
-# Auto-reloads on code changes
-```
-
-**Output**:
-```
-INFO:     Started server process [12345]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-```
-
-### Production Server (No Auto-Reload)
-
-```bash
-# Using uvicorn directly
-uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
-
-# Or using gunicorn (for better production performance)
-uv run gunicorn src.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-### Using the Run Script
-
-```bash
-# Make script executable
-chmod +x run.sh
-
-# Run server
-./run.sh
-
-# Or with custom port
-PORT=9000 ./run.sh
-```
-
-### Verify Server Is Running
-
-```bash
-# Health check
-curl http://localhost:8000/
-
-# Expected output:
-# "Project Florent: OpenAI-Powered Risk Analysis Server is RUNNING."
-
-# Check OpenAPI documentation
-curl http://localhost:8000/schema/openapi.json
-
-# Open Swagger UI in browser
-open http://localhost:8000/schema/swagger  # macOS
-xdg-open http://localhost:8000/schema/swagger  # Linux
-start http://localhost:8000/schema/swagger  # Windows
-```
-
----
-
-## 🧪 Testing
-
-### Run All Tests
-
-```bash
-# Run complete test suite (264 tests)
+# If that passes, run everything (takes ~3 seconds)
 uv run pytest tests/ -v
 
-# Expected output:
-# ======================== 264 passed in 2.50s ========================
+# Expected: 264 passed in 2-3 seconds
 ```
 
-### Run Specific Test Modules
-
-```bash
-# API tests only (19 tests)
-uv run pytest tests/test_api.py -v
-
-# Core logic tests
-uv run pytest tests/test_orchestrator.py -v
-
-# Graph tests
-uv run pytest tests/test_graph.py -v
-
-# End-to-end tests
-uv run pytest tests/test_e2e_workflow.py -v
-```
-
-### Run Tests with Coverage
-
-```bash
-# Generate coverage report
-uv run pytest tests/ --cov=src --cov-report=html --cov-report=term
-
-# View HTML coverage report
-open htmlcov/index.html  # macOS
-xdg-open htmlcov/index.html  # Linux
-start htmlcov/index.html  # Windows
-```
-
-### Run Tests in Watch Mode
-
-```bash
-# Install pytest-watch
-uv add --dev pytest-watch
-
-# Run tests on file changes
-uv run ptw tests/
-```
-
-### Run API Tests (Shell Script)
-
-```bash
-# Make script executable
-chmod +x test_api.sh
-
-# Run API tests
-./test_api.sh
-
-# Expected output:
-# ✅ Health check passed
-# ✅ Analysis endpoint works
-# ✅ All tests passed
-```
+**If tests pass, you're done with setup!** ✅
 
 ---
 
-## 💻 Development Setup
+## 🔧 Development Workflow
 
-### IDE Configuration
-
-#### **Visual Studio Code**
-
-1. **Install Python Extension**
-   ```bash
-   code --install-extension ms-python.python
-   ```
-
-2. **Configure Python Interpreter**
-   - Press `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Windows/Linux)
-   - Type "Python: Select Interpreter"
-   - Choose `.venv/bin/python`
-
-3. **Recommended Settings** (`.vscode/settings.json`):
-   ```json
-   {
-     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-     "python.testing.pytestEnabled": true,
-     "python.testing.unittestEnabled": false,
-     "python.linting.enabled": true,
-     "python.linting.ruffEnabled": true,
-     "python.formatting.provider": "black",
-     "[python]": {
-       "editor.formatOnSave": true,
-       "editor.codeActionsOnSave": {
-         "source.organizeImports": true
-       }
-     }
-   }
-   ```
-
-#### **PyCharm**
-
-1. **Open Project**: File → Open → Select `florent/` directory
-2. **Configure Interpreter**:
-   - Settings → Project → Python Interpreter
-   - Add Interpreter → Existing Environment
-   - Select `.venv/bin/python`
-3. **Enable pytest**:
-   - Settings → Tools → Python Integrated Tools
-   - Testing → Default test runner → pytest
-
-### Linting and Formatting
+### Daily Commands You'll Use
 
 ```bash
-# Run ruff linter
+# Start development server (auto-reloads on code changes)
+uv run litestar run --reload
+
+# Run tests (do this before committing)
+uv run pytest tests/ -v
+
+# Run specific test file
+uv run pytest tests/test_api.py -v
+
+# Lint code (check for issues)
 uv run ruff check src/
 
 # Auto-fix linting issues
 uv run ruff check --fix src/
 
-# Format code
-uv run ruff format src/
-
-# Check types (if using mypy)
-uv run mypy src/
+# Update everything (dependencies, tests, OpenAPI spec, Docker)
+./update.sh
 ```
 
-### Pre-commit Hooks (Optional)
+### Project Structure (What's Where)
 
-```bash
-# Install pre-commit
-uv add --dev pre-commit
-
-# Install hooks
-uv run pre-commit install
-
-# Run hooks manually
-uv run pre-commit run --all-files
+```
+florent/
+├── src/                      # All source code
+│   ├── main.py              # API entry point (Litestar app)
+│   ├── models/              # Data models (Firm, Project, Graph)
+│   ├── services/            # Business logic
+│   │   ├── agent/           # DSPy AI orchestration
+│   │   ├── math/            # Risk calculations
+│   │   └── logging/         # Structured logging
+│   └── settings.py          # Configuration
+├── tests/                   # All tests (264 tests)
+│   ├── test_api.py         # REST API tests (19 tests)
+│   ├── test_orchestrator.py # Agent tests
+│   └── ...                 # More test files
+├── docs/                    # Documentation
+├── scripts/                 # Utility scripts
+│   ├── generate_openapi.py # Generate OpenAPI spec
+│   └── validate_data.py    # Validate JSON data
+├── examples/               # Example firm/project JSONs
+├── .env                    # Your environment vars (create this)
+├── requirements.txt        # Python dependencies
+├── uv.lock                # Locked versions (don't edit)
+└── update.sh              # Run this to update everything
 ```
 
-### Development Workflow
+### Configuration Files
 
+**Environment Variables** (`.env`):
 ```bash
-# 1. Create feature branch
-git checkout -b feature/my-feature
+OPENAI_API_KEY=sk-proj-...    # Required for AI
+LOG_LEVEL=DEBUG               # DEBUG in dev, INFO in prod
+HOST=0.0.0.0                 # Server host
+PORT=8000                    # Server port
+PYTHONPATH=.                 # Python module path
+```
 
-# 2. Make changes to code
-# ... edit files ...
-
-# 3. Run tests
-uv run pytest tests/ -v
-
-# 4. Lint code
-uv run ruff check src/
-
-# 5. Commit changes
-git add .
-git commit -m "feat: Add my feature"
-
-# 6. Push and create PR
-git push -u origin feature/my-feature
+**View current config**:
+```bash
+uv run python -c "from src.settings import get_settings; print(get_settings())"
 ```
 
 ---
 
-## 🐳 Production Deployment
+## 🏃 Running & Testing
 
-### Docker Deployment
+### Start the Server
 
-#### Build Docker Image
-
+**Development mode** (auto-reloads on changes):
 ```bash
-# Build image
-docker build -t florent-engine .
-
-# Verify image
-docker images | grep florent
-```
-
-#### Run Docker Container
-
-```bash
-# Run container
-docker run -d \
-  --name florent \
-  -p 8000:8000 \
-  -e OPENAI_API_KEY="sk-your-key" \
-  -e LOG_LEVEL="INFO" \
-  florent-engine
-
-# Check logs
-docker logs -f florent
-
-# Stop container
-docker stop florent
-
-# Remove container
-docker rm florent
-```
-
-#### Docker Compose (Recommended)
-
-```bash
-# Start services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f florent
-
-# Stop services
-docker-compose down
-
-# Rebuild and restart
-docker-compose up -d --build
-```
-
-**`docker-compose.yml`** (already included):
-```yaml
-version: '3.8'
-
-services:
-  florent:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
-
-### Cloud Deployment
-
-#### **AWS (EC2 + Docker)**
-
-```bash
-# 1. Launch EC2 instance (Ubuntu 22.04, t3.medium)
-# 2. SSH into instance
-ssh -i key.pem ubuntu@<instance-ip>
-
-# 3. Install Docker
-sudo apt update
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-
-# 4. Clone and run
-git clone <repo-url>
-cd florent
-export OPENAI_API_KEY="sk-your-key"
-docker-compose up -d
-
-# 5. Configure security group to allow port 8000
-```
-
-#### **Google Cloud Run**
-
-```bash
-# 1. Build and push to GCR
-gcloud builds submit --tag gcr.io/PROJECT_ID/florent
-
-# 2. Deploy to Cloud Run
-gcloud run deploy florent \
-  --image gcr.io/PROJECT_ID/florent \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars OPENAI_API_KEY=sk-your-key
-```
-
-#### **DigitalOcean App Platform**
-
-```bash
-# 1. Connect GitHub repository
-# 2. Add environment variable: OPENAI_API_KEY
-# 3. Deploy automatically on git push
-```
-
-### Reverse Proxy (NGINX)
-
-```nginx
-# /etc/nginx/sites-available/florent
-
-server {
-    listen 80;
-    server_name florent.example.com;
-
-    location / {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-```bash
-# Enable site
-sudo ln -s /etc/nginx/sites-available/florent /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-### SSL/TLS (Let's Encrypt)
-
-```bash
-# Install certbot
-sudo apt install certbot python3-certbot-nginx
-
-# Obtain certificate
-sudo certbot --nginx -d florent.example.com
-
-# Auto-renewal is configured automatically
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### 1. **"ModuleNotFoundError: No module named 'litestar'"**
-
-**Problem**: Dependencies not installed
-
-**Solution**:
-```bash
-# Reinstall dependencies
-uv sync
-
-# Or if using pip
-pip install -r requirements.txt
-
-# Verify installation
-uv run python -c "import litestar; print('✅ OK')"
-```
-
-#### 2. **"OpenAI API key not found"**
-
-**Problem**: Environment variable not set
-
-**Solution**:
-```bash
-# Check if set
-echo $OPENAI_API_KEY
-
-# If empty, set it
-export OPENAI_API_KEY="sk-your-key"
-
-# Add to .env file for persistence
-echo "OPENAI_API_KEY=sk-your-key" >> .env
-```
-
-#### 3. **"Address already in use (port 8000)"**
-
-**Problem**: Another process using port 8000
-
-**Solution**:
-```bash
-# Find process using port
-lsof -i :8000  # macOS/Linux
-netstat -ano | findstr :8000  # Windows
-
-# Kill process
-kill -9 <PID>  # macOS/Linux
-taskkill /PID <PID> /F  # Windows
-
-# Or use different port
-uv run litestar run --port 8001
-```
-
-#### 4. **Tests failing with "Connection refused"**
-
-**Problem**: Server not running or wrong port
-
-**Solution**:
-```bash
-# Make sure server is running
-curl http://localhost:8000/
-
-# If not running, start it in another terminal
 uv run litestar run --reload
 
-# Then run tests
-uv run pytest tests/test_api.py -v
+# Server starts at http://localhost:8000
+# Logs show in terminal
+# Press Ctrl+C to stop
 ```
 
-#### 5. **"ImportError: cannot import name 'X' from 'src.Y'"**
-
-**Problem**: PYTHONPATH not set correctly
-
-**Solution**:
+**Different port**:
 ```bash
-# Set PYTHONPATH
-export PYTHONPATH=.
-
-# Or add to .env
-echo "PYTHONPATH=." >> .env
-
-# Or run with explicit path
-PYTHONPATH=. uv run pytest tests/
+uv run litestar run --port 9000 --reload
 ```
 
-#### 6. **Docker build fails**
-
-**Problem**: Missing dependencies or network issues
-
-**Solution**:
+**Using the run script**:
 ```bash
-# Clear Docker cache
-docker system prune -a
-
-# Rebuild with no cache
-docker build --no-cache -t florent-engine .
-
-# Check Dockerfile
-cat Dockerfile
+./run.sh  # Starts on port 8000
 ```
 
-#### 7. **High memory usage**
+### Test the API
 
-**Problem**: Large graphs or memory leak
-
-**Solution**:
+**Quick health check**:
 ```bash
-# Limit budget parameter
-# In analysis request, set budget=50 instead of 100
-
-# Monitor memory
-docker stats florent  # If using Docker
-
-# Restart server periodically
-```
-
----
-
-## 🎯 Next Steps
-
-### After Installation
-
-✅ **You're all set!** Here's what to do next:
-
-#### 1. **Test the API**
-```bash
-# Test health endpoint
 curl http://localhost:8000/
-
-# View API docs
-open http://localhost:8000/schema/swagger
+# Should return: "Project Florent: OpenAI-Powered Risk Analysis Server is RUNNING."
 ```
 
-#### 2. **Run Example Analysis**
+**Interactive API docs** (best way to explore):
 ```bash
-# Test with example data
+# Open Swagger UI
+open http://localhost:8000/schema/swagger
+
+# Or just paste in browser: http://localhost:8000/schema/swagger
+```
+
+**Run example analysis**:
+```bash
 curl -X POST http://localhost:8000/analyze \
   -H "Content-Type: application/json" \
   -d '{
@@ -868,102 +349,366 @@ curl -X POST http://localhost:8000/analyze \
   }'
 ```
 
-#### 3. **Explore Documentation**
-- [API Reference](API.md) - Complete API documentation
-- [System Audit](audit.md) - Implementation status
-- [Technical Roadmap](ROADMAP.md) - Mathematical foundations
-- [INDEX](INDEX.md) - Documentation hub
+### Run Tests
 
-#### 4. **Integrate with MATLAB** (Optional)
-- [MATLAB Setup Guide](../MATLAB/SETUP.md)
-- [MATLAB Functions](../MATLAB/README_FUNCTIONS.md)
-
-#### 5. **Generate Client SDKs** (Optional)
+**All tests** (takes ~3 seconds):
 ```bash
-# Generate Python client
-openapi-generator-cli generate \
-  -i docs/openapi.json \
-  -g python \
-  -o clients/python
+uv run pytest tests/ -v
+# Expected: 264 passed
 ```
 
-### Learning Resources
+**Specific test file**:
+```bash
+uv run pytest tests/test_api.py -v        # API tests (19 tests)
+uv run pytest tests/test_graph.py -v      # Graph tests
+uv run pytest tests/test_orchestrator.py -v  # Orchestrator tests
+```
 
-**Tutorials**:
-- [Quick Start Tutorial](#quick-start)
-- [API Usage Examples](API.md#examples)
-- [Testing Guide](../tests/TESTING_GUIDE.md)
+**With coverage report**:
+```bash
+uv run pytest tests/ --cov=src --cov-report=term
+# Shows coverage percentage
+```
 
-**API Documentation**:
-- Interactive Swagger UI: http://localhost:8000/schema/swagger
-- OpenAPI Spec: http://localhost:8000/schema/openapi.json
-- ReDoc: http://localhost:8000/schema/redoc
+**Fast tests only** (skip slow E2E):
+```bash
+uv run pytest tests/ -m "not slow" -v
+```
 
-**Development**:
-- [Contributing Guide](../CONTRIBUTING.md) (if exists)
-- [Development Workflow](#development-workflow)
-- [Code Style Guide](../CODE_STYLE.md) (if exists)
+**Watch mode** (re-run on file changes):
+```bash
+uv add --dev pytest-watch  # Install if needed
+uv run ptw tests/
+```
+
+### API Test Script
+
+```bash
+chmod +x test_api.sh  # Make executable
+./test_api.sh         # Run all API tests
+
+# Output shows:
+# ✅ Health check
+# ✅ Analysis endpoint
+# ✅ All tests passed
+```
 
 ---
 
-## 📞 Support
+## 💻 IDE Configuration
 
-### Getting Help
+### VS Code Setup (Recommended)
 
-**If you encounter issues**:
+**Quick setup**:
+```bash
+# Install Python extension
+code --install-extension ms-python.python
 
-1. **Check this guide** - Most issues covered in [Troubleshooting](#troubleshooting)
-2. **Check logs** - Look for error messages:
-   ```bash
-   # View server logs
-   docker-compose logs -f florent  # If using Docker
+# Configure interpreter
+# Press Cmd+Shift+P → "Python: Select Interpreter" → Choose .venv/bin/python
+```
 
-   # Or check console output if running directly
-   ```
-3. **Run diagnostics**:
-   ```bash
-   # Verify Python version
-   python --version
+**Create `.vscode/settings.json`**:
+```json
+{
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.linting.ruffEnabled": true,
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.rulers": [88, 120]
+  }
+}
+```
 
-   # Verify dependencies
-   uv run python -c "import litestar, dspy, pydantic; print('✅ All OK')"
+**Recommended extensions**:
+- Python (ms-python.python)
+- Ruff (charliermarsh.ruff)
+- REST Client (humao.rest-client) - for testing API
+- Error Lens (usernamehw.errorlens) - inline errors
 
-   # Run tests
-   uv run pytest tests/ -v
-   ```
-4. **Open an issue** - Include:
-   - Error message
-   - Steps to reproduce
-   - Python version
-   - OS information
+### PyCharm Setup
+
+1. **File → Open** → Select florent directory
+2. **Settings → Project → Python Interpreter**
+   - Add Interpreter → Existing → `.venv/bin/python`
+3. **Settings → Tools → Python Integrated Tools**
+   - Default test runner → pytest
+
+### Code Quality Tools
+
+**Linting** (find issues):
+```bash
+uv run ruff check src/         # Check for issues
+uv run ruff check --fix src/   # Auto-fix what's possible
+```
+
+**Formatting** (make pretty):
+```bash
+uv run ruff format src/  # Format all code
+```
+
+**Pre-commit hooks** (optional but good):
+```bash
+uv add --dev pre-commit
+uv run pre-commit install
+# Now linting runs automatically on git commit
+```
+
+---
+
+## 🐳 Docker Development
+
+**Want to run in Docker instead?**
+
+### Quick Docker Start
+
+```bash
+# Build image
+docker build -t florent-engine .
+
+# Run container
+docker run -d \
+  --name florent \
+  -p 8000:8000 \
+  -e OPENAI_API_KEY="sk-your-key" \
+  florent-engine
+
+# View logs
+docker logs -f florent
+
+# Stop
+docker stop florent && docker rm florent
+```
+
+### Docker Compose (Better)
+
+```bash
+# Start everything
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop everything
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+**docker-compose.yml** (already in repo):
+```yaml
+services:
+  florent:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=INFO
+```
+
+### Develop Inside Container
+
+```bash
+# Start with shell access
+docker-compose run --rm florent /bin/bash
+
+# Inside container, run commands:
+pytest tests/ -v
+litestar run --reload
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Quick Fixes
+
+**1. "Module not found" errors**
+```bash
+uv sync  # Reinstall everything
+```
+
+**2. "OpenAI API key not found"**
+```bash
+echo $OPENAI_API_KEY  # Check if set
+export OPENAI_API_KEY="sk-your-key"  # Set it
+# Or add to .env file
+```
+
+**3. "Port 8000 already in use"**
+```bash
+lsof -i :8000  # Find what's using port (macOS/Linux)
+kill -9 <PID>  # Kill it
+# Or: uv run litestar run --port 9000  (use different port)
+```
+
+**4. Tests fail with connection errors**
+```bash
+# Start server first in another terminal
+uv run litestar run --reload
+# Then run tests
+uv run pytest tests/ -v
+```
+
+**5. Import errors / PYTHONPATH issues**
+```bash
+export PYTHONPATH=.
+# Or add to .env: echo "PYTHONPATH=." >> .env
+```
+
+**6. Docker won't build**
+```bash
+docker system prune -a  # Clear cache
+docker build --no-cache -t florent-engine .
+```
+
+**7. Everything is broken**
+```bash
+# Nuclear option: start fresh
+rm -rf .venv/
+uv sync
+export OPENAI_API_KEY="sk-your-key"
+uv run pytest tests/ -v
+```
 
 ### Health Check Script
 
+**Save as `check.sh`**:
 ```bash
 #!/bin/bash
-# Save as check_health.sh
-
 echo "🔍 Florent Health Check"
-echo "======================"
-
-# Check Python
-python --version && echo "✅ Python OK" || echo "❌ Python missing"
-
-# Check uv
-uv --version && echo "✅ uv OK" || echo "❌ uv missing"
-
-# Check dependencies
-uv run python -c "import litestar" && echo "✅ Dependencies OK" || echo "❌ Dependencies missing"
-
-# Check API key
-[ -n "$OPENAI_API_KEY" ] && echo "✅ API key set" || echo "❌ API key missing"
-
-# Check server
-curl -s http://localhost:8000/ > /dev/null && echo "✅ Server running" || echo "❌ Server not running"
-
-echo "======================"
-echo "Run 'uv run litestar run' to start server"
+python --version || echo "❌ Python missing"
+uv --version || echo "❌ uv missing"
+uv run python -c "import litestar" && echo "✅ Dependencies OK" || echo "❌ Run: uv sync"
+[ -n "$OPENAI_API_KEY" ] && echo "✅ API key set" || echo "❌ Set OPENAI_API_KEY"
+curl -s http://localhost:8000/ > /dev/null && echo "✅ Server running" || echo "⚠️ Start server"
 ```
+
+```bash
+chmod +x check.sh && ./check.sh
+```
+
+---
+
+## 📋 Daily Workflow
+
+**What you'll actually do day-to-day:**
+
+### Morning Routine
+```bash
+# 1. Pull latest changes
+git pull
+
+# 2. Update dependencies (if needed)
+uv sync
+
+# 3. Start server
+uv run litestar run --reload
+
+# Leave this running in terminal 1
+```
+
+### Development Cycle
+```bash
+# In terminal 2:
+
+# 1. Edit code in your IDE
+# (server auto-reloads when you save)
+
+# 2. Run tests after changes
+uv run pytest tests/ -v
+
+# 3. Lint before committing
+uv run ruff check src/
+
+# 4. Commit
+git add src/
+git commit -m "feat: Your change"
+git push
+```
+
+### Before Committing Checklist
+
+- [ ] Tests pass: `uv run pytest tests/ -v`
+- [ ] Linting passes: `uv run ruff check src/`
+- [ ] Code formatted: `uv run ruff format src/`
+- [ ] API still works: `curl http://localhost:8000/`
+
+### Useful Development Commands
+
+```bash
+# Quick test a single file
+uv run pytest tests/test_api.py -v
+
+# Run server on different port
+uv run litestar run --port 9000 --reload
+
+# Update everything (deps, tests, OpenAPI, Docker)
+./update.sh
+
+# Generate OpenAPI spec
+uv run python scripts/generate_openapi.py
+
+# Validate data files
+python scripts/validate_data.py
+
+# Check what's using port 8000
+lsof -i :8000
+
+# View server logs (if Docker)
+docker-compose logs -f
+```
+
+### Working on Features
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/my-feature
+
+# 2. Make changes, test, commit
+# ... development cycle ...
+
+# 3. Run full test suite
+uv run pytest tests/ -v
+
+# 4. Update docs if needed
+nano docs/API.md  # or whatever changed
+
+# 5. Push and create PR
+git push -u origin feature/my-feature
+```
+
+---
+
+## 📚 Key Documentation
+
+**After setup, read these**:
+
+- **[API.md](API.md)** - How to use the API
+- **[audit.md](audit.md)** - What's implemented (264 tests status)
+- **[ROADMAP.md](ROADMAP.md)** - Math/algorithms explained
+- **[INDEX.md](INDEX.md)** - All documentation index
+
+**API endpoints to know**:
+- `GET /` - Health check
+- `POST /analyze` - Main analysis endpoint
+- `GET /schema/swagger` - Interactive API docs
+
+---
+
+## ✅ Setup Complete!
+
+**You should now have**:
+- ✅ Dependencies installed
+- ✅ API key configured
+- ✅ Tests passing (264/264)
+- ✅ Server running on http://localhost:8000
+- ✅ Swagger UI at http://localhost:8000/schema/swagger
+
+**Start coding!** 🚀
 
 ---
 
