@@ -38,15 +38,29 @@ function runAllMCSimulations(apiBaseUrl, projectId, firmId, nIterations)
     fprintf('\n=== Starting parallel MC simulations ===\n');
     tic;
     
-    % Start parallel pool if available
+    % Ensure paths are set up
+    ensurePaths(false);
+    
+    % Start parallel pool if available and setup worker paths
     try
         pool = gcp('nocreate');
         if isempty(pool)
             pool = parpool('local');
+            fprintf('Created parallel pool with %d workers\n', pool.NumWorkers);
+        else
+            fprintf('Using existing parallel pool with %d workers\n', pool.NumWorkers);
         end
-        fprintf('Using %d parallel workers\n', pool.NumWorkers);
-    catch
-        warning('Parallel Computing Toolbox not available, running sequentially');
+        
+        % Setup paths on workers using centralized path manager
+        fprintf('Configuring worker paths...\n');
+        workerPathResult = pathManager('setupWorkerPaths', pool);
+        if workerPathResult.success
+            fprintf('Worker paths configured successfully\n');
+        else
+            warning('Worker path setup had issues: %s', strjoin(workerPathResult.errors, '; '));
+        end
+    catch ME
+        warning('Parallel Computing Toolbox setup failed: %s. Simulations will run sequentially.', ME.message);
     end
     
     % Run simulations

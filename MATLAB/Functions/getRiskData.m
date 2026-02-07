@@ -18,10 +18,10 @@ function data = getRiskData(apiBaseUrl, projectId, firmId, budget)
         apiBaseUrl = 'http://localhost:8000';
     end
     if nargin < 2
-        projectId = 'proj_001';
+        projectId = 'project';
     end
     if nargin < 3
-        firmId = 'firm_001';
+        firmId = 'firm';
     end
     if nargin < 4
         budget = 100;

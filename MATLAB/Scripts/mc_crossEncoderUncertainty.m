@@ -8,6 +8,9 @@ function results = mc_crossEncoderUncertainty(data, nIterations)
     %
     % Output: nodes with high variance (unstable classifications)
     
+    % Ensure paths are set up
+    ensurePaths(false);
+    
     if nargin < 2
         nIterations = 10000;
     end

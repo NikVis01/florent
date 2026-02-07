@@ -110,11 +110,46 @@ webread('http://localhost:8000/')
 
 If that fails, the Python API isn't running. Start it first.
 
+### Parallel Processing Errors (UndefinedFunction on workers)
+
+If you see errors like "An UndefinedFunction error was thrown on the workers for 'calculate_influence_score'", this means parallel workers can't find the functions.
+
+**Fix:** The code now automatically handles this, but if you still see errors:
+
+1. **Close and recreate the parallel pool:**
+   ```matlab
+   delete(gcp('nocreate'))  % Close existing pool
+   initializeFlorent(false, true)  % Setup paths including parallel workers
+   ```
+
+2. **Or manually setup worker paths:**
+   ```matlab
+   pool = gcp('nocreate');
+   if isempty(pool)
+       pool = parpool('local');
+   end
+   pathManager('setupWorkerPaths', pool)
+   ```
+
+3. **Verify worker paths:**
+   ```matlab
+   verifyPaths(true)  % Check worker paths too
+   ```
+
+4. **Test path management:**
+   ```matlab
+   testPathManagement()  % Run comprehensive path tests
+   ```
+
+The system now automatically sets up worker paths when parallel pools are created, so this should rarely be needed.
+
 ### Still Having Issues?
 
-1. Run: `quickHealthCheck()` - tells you what's broken
-2. Run: `verifyFlorentCodebase()` - detailed diagnostics
-3. Check: `which functionName` - should return a file path, not empty
+1. Run: `quickHealthCheck()` - tells you what's broken (now includes parallel path checks)
+2. Run: `verifyPaths(true)` - detailed path diagnostics including workers
+3. Run: `testPathManagement()` - comprehensive path management tests
+4. Run: `verifyFlorentCodebase()` - detailed diagnostics
+5. Check: `which functionName` - should return a file path, not empty
 
 ---
 

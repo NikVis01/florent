@@ -1,11 +1,16 @@
-function report = verifyPaths()
+function report = verifyPaths(checkWorkers)
     % VERIFYPATHS Verify all required directories are on MATLAB path
     %
     % Usage:
-    %   report = verifyPaths()
+    %   report = verifyPaths()              % Check main session paths only
+    %   report = verifyPaths(true)          % Also check parallel worker paths
     %
     % Output:
     %   report - Structure with verification results
+    
+    if nargin < 1
+        checkWorkers = false;
+    end
     
     fprintf('\n=== Verifying MATLAB Path Configuration ===\n\n');
     
@@ -15,21 +20,17 @@ function report = verifyPaths()
     report.missingDirs = {};
     report.shadowingIssues = {};
     report.warnings = {};
+    report.workerVerification = struct();
     
-    % Get MATLAB directory
-    matlabDir = fileparts(fileparts(mfilename('fullpath')));
+    % Use centralized path manager for main session verification
+    mainVerification = pathManager('verifyPaths');
     
-    % Required directories
-    requiredDirs = {
-        fullfile(matlabDir, 'Functions');
-        fullfile(matlabDir, 'Scripts');
-        fullfile(matlabDir, 'Config');
-    };
-    
+    % Get required directories from path manager
+    requiredDirs = pathManager('getRequiredDirs');
     report.requiredDirs = requiredDirs;
     
     % Check each required directory
-    fprintf('Checking required directories...\n');
+    fprintf('Checking required directories (main session)...\n');
     for i = 1:length(requiredDirs)
         dirPath = requiredDirs{i};
         
@@ -41,10 +42,6 @@ function report = verifyPaths()
         end
         
         % Check if on path
-        funcPath = which('verifyPaths'); % Use a known function to test
-        testFile = fullfile(dirPath, 'test_file_that_should_not_exist.m');
-        
-        % Try to find a function in this directory
         if isOnPath(dirPath)
             report.foundDirs{end+1} = dirPath;
             fprintf('  [OK] On path: %s\n', dirPath);
@@ -54,8 +51,22 @@ function report = verifyPaths()
         end
     end
     
+    % Check critical functions
+    fprintf('\nChecking critical functions (main session)...\n');
+    report.missingFunctions = mainVerification.missingFunctions;
+    report.accessibleFunctions = mainVerification.accessibleFunctions;
+    
+    for i = 1:length(mainVerification.accessibleFunctions)
+        fprintf('  [OK] %s\n', mainVerification.accessibleFunctions{i});
+    end
+    
+    for i = 1:length(mainVerification.missingFunctions)
+        fprintf('  [MISSING] %s\n', mainVerification.missingFunctions{i});
+    end
+    
     % Check for shadowing issues
     fprintf('\nChecking for shadowing issues...\n');
+    matlabDir = fileparts(fileparts(mfilename('fullpath')));
     commonNames = {'plot', 'figure', 'save', 'load', 'clear', 'close'};
     for i = 1:length(commonNames)
         funcName = commonNames{i};
@@ -69,6 +80,46 @@ function report = verifyPaths()
                     report.shadowingIssues{end+1} = struct('function', funcName, 'path', funcPath);
                     fprintf('  [WARNING] Custom function shadows built-in: %s\n', funcName);
                     fprintf('            Location: %s\n', funcPath);
+                end
+            end
+        end
+    end
+    
+    % Check parallel worker paths if requested
+    if checkWorkers
+        fprintf('\n=== Checking Parallel Worker Paths ===\n');
+        pool = gcp('nocreate');
+        if isempty(pool)
+            fprintf('  [INFO] No parallel pool found. Skipping worker verification.\n');
+            report.workerVerification.available = false;
+        else
+            fprintf('  [INFO] Found parallel pool with %d workers\n', pool.NumWorkers);
+            report.workerVerification.available = true;
+            
+            % Use centralized path manager for worker verification
+            workerVerification = pathManager('verifyWorkerPaths', pool);
+            report.workerVerification = workerVerification;
+            
+            if workerVerification.success
+                fprintf('  [SUCCESS] All workers have correct paths and accessible functions\n');
+            else
+                fprintf('  [WARNING] Worker path verification failed:\n');
+                for i = 1:length(workerVerification.errors)
+                    fprintf('    - %s\n', workerVerification.errors{i});
+                end
+            end
+            
+            % Display per-worker results
+            if isfield(workerVerification, 'workerResults') && ~isempty(workerVerification.workerResults)
+                fprintf('\n  Per-worker status:\n');
+                for i = 1:length(workerVerification.workerResults)
+                    wr = workerVerification.workerResults{i};
+                    if wr.success
+                        fprintf('    Worker %d: [OK] All functions accessible\n', wr.workerId);
+                    else
+                        fprintf('    Worker %d: [FAIL] Missing: %s\n', wr.workerId, ...
+                            strjoin(wr.functionsMissing, ', '));
+                    end
                 end
             end
         end
@@ -98,9 +149,28 @@ function report = verifyPaths()
     fprintf('Required directories: %d\n', length(requiredDirs));
     fprintf('Found on path: %d\n', length(report.foundDirs));
     fprintf('Missing: %d\n', length(report.missingDirs));
+    fprintf('Missing functions: %d\n', length(report.missingFunctions));
     fprintf('Shadowing issues: %d\n', length(report.shadowingIssues));
     
-    if length(report.missingDirs) == 0 && length(report.shadowingIssues) == 0
+    if checkWorkers && isfield(report.workerVerification, 'available') && report.workerVerification.available
+        if report.workerVerification.success
+            fprintf('Worker paths: [OK]\n');
+        else
+            fprintf('Worker paths: [FAIL]\n');
+        end
+    end
+    
+    % Determine overall status
+    mainSessionOk = length(report.missingDirs) == 0 && length(report.missingFunctions) == 0 && ...
+        length(report.shadowingIssues) == 0;
+    
+    if checkWorkers && isfield(report.workerVerification, 'available') && report.workerVerification.available
+        overallOk = mainSessionOk && report.workerVerification.success;
+    else
+        overallOk = mainSessionOk;
+    end
+    
+    if overallOk
         fprintf('\n[SUCCESS] Path configuration is correct!\n');
         report.status = 'success';
     else

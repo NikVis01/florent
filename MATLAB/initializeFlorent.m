@@ -1,13 +1,14 @@
-function initializeFlorent(savePath)
+function initializeFlorent(savePath, setupParallelPaths)
     % INITIALIZEFLORENT Initialize MATLAB path for Florent analysis
     %
     % This function adds all necessary directories to the MATLAB path
     % so that all Florent functions can be found and called.
     %
     % Usage:
-    %   initializeFlorent()              % Add paths for current session
-    %   initializeFlorent(true)          % Add paths and save for future sessions
-    %   initializeFlorent(false)        % Add paths but don't save
+    %   initializeFlorent()                    % Add paths for current session
+    %   initializeFlorent(true)                % Add paths and save for future sessions
+    %   initializeFlorent(false, true)         % Add paths and setup parallel worker paths
+    %   initializeFlorent(true, true)         % Save paths and setup parallel worker paths
     %
     % Output:
     %   Displays confirmation and any warnings
@@ -15,138 +16,119 @@ function initializeFlorent(savePath)
     if nargin < 1
         savePath = false;
     end
+    if nargin < 2
+        setupParallelPaths = false;
+    end
     
     fprintf('\n=== Initializing Florent MATLAB Path ===\n\n');
     
-    % Get the MATLAB directory (where this script is located)
-    matlabDir = fileparts(mfilename('fullpath'));
-    
-    % Directories to add to path
-    directories = {
-        fullfile(matlabDir, 'Functions');
-        fullfile(matlabDir, 'Scripts');
-        fullfile(matlabDir, 'Config');
-    };
-    
-    % Add directories to path
-    addedCount = 0;
-    alreadyOnPath = 0;
-    failedCount = 0;
-    
-    for i = 1:length(directories)
-        dirPath = directories{i};
-        
-        % Check if directory exists
-        if ~exist(dirPath, 'dir')
-            warning('Directory does not exist: %s', dirPath);
-            failedCount = failedCount + 1;
-            continue;
-        end
-        
-        % Check if already on path
-        if isOnPath(dirPath)
-            fprintf('  [OK] Already on path: %s\n', dirPath);
-            alreadyOnPath = alreadyOnPath + 1;
-        else
-            % Add to path
-            try
-                addpath(dirPath);
-                fprintf('  [ADDED] %s\n', dirPath);
-                addedCount = addedCount + 1;
-            catch ME
-                warning('Failed to add directory to path: %s\nError: %s', dirPath, ME.message);
-                failedCount = failedCount + 1;
-            end
+    % Check if pathManager is available (it should be if we're in the right location)
+    if isempty(which('pathManager'))
+        % Try to add Functions directory to path first
+        matlabDir = fileparts(mfilename('fullpath'));
+        functionsDir = fullfile(matlabDir, 'Functions');
+        if exist(functionsDir, 'dir')
+            addpath(functionsDir);
         end
     end
     
-    % Add subdirectories recursively using genpath
-    fprintf('\nAdding subdirectories recursively...\n');
-    for i = 1:length(directories)
-        dirPath = directories{i};
-        if exist(dirPath, 'dir')
+    % Use centralized path manager to setup paths
+    fprintf('Setting up paths using centralized path manager...\n');
+    pathResult = pathManager('setupPaths', savePath);
+    
+    if pathResult.success
+        fprintf('Paths setup successfully\n');
+    else
+        warning('Path setup had some issues:');
+        for i = 1:length(pathResult.errors)
+            warning('  %s', pathResult.errors{i});
+        end
+    end
+    
+    % Display what was added
+    if ~isempty(pathResult.added)
+        fprintf('\nDirectories added to path:\n');
+        for i = 1:length(pathResult.added)
+            fprintf('  [ADDED] %s\n', pathResult.added{i});
+        end
+    end
+    
+    if ~isempty(pathResult.alreadyOnPath)
+        fprintf('\nDirectories already on path:\n');
+        for i = 1:length(pathResult.alreadyOnPath)
+            fprintf('  [OK] %s\n', pathResult.alreadyOnPath{i});
+        end
+    end
+    
+    % Verify paths
+    fprintf('\nVerifying path setup...\n');
+    verification = pathResult.verification;
+    
+    if verification.success
+        fprintf('  [SUCCESS] All required directories and functions are accessible\n');
+    else
+        fprintf('  [WARNING] Some issues detected:\n');
+        if ~isempty(verification.missingDirs)
+            fprintf('    Missing directories: %s\n', strjoin(verification.missingDirs, ', '));
+        end
+        if ~isempty(verification.missingFunctions)
+            fprintf('    Missing functions: %s\n', strjoin(verification.missingFunctions, ', '));
+            fprintf('\n    Solution: Ensure all required files are in the Functions directory.\n');
+        end
+    end
+    
+    % Setup parallel worker paths if requested
+    if setupParallelPaths
+        fprintf('\n=== Setting Up Parallel Worker Paths ===\n');
+        pool = gcp('nocreate');
+        if isempty(pool)
+            fprintf('  [INFO] No parallel pool found. Creating one...\n');
             try
-                subdirs = genpath(dirPath);
-                % genpath returns semicolon-separated paths
-                pathList = strsplit(subdirs, pathsep);
-                for j = 1:length(pathList)
-                    if ~isempty(pathList{j}) && ~isOnPath(pathList{j})
-                        try
-                            addpath(pathList{j});
-                            fprintf('  [ADDED] %s\n', pathList{j});
-                            addedCount = addedCount + 1;
-                        catch
-                            % Skip if fails (e.g., .git directories)
-                        end
-                    end
+                pool = parpool('local');
+                fprintf('  [OK] Created parallel pool with %d workers\n', pool.NumWorkers);
+            catch ME
+                warning('  [WARNING] Could not create parallel pool: %s', ME.message);
+                fprintf('  [INFO] Parallel worker paths will be set up when a pool is created\n');
+            end
+        end
+        
+        if ~isempty(pool)
+            fprintf('  [INFO] Setting up paths on %d workers...\n', pool.NumWorkers);
+            workerResult = pathManager('setupWorkerPaths', pool);
+            
+            if workerResult.success
+                fprintf('  [SUCCESS] Worker paths configured successfully\n');
+            else
+                warning('  [WARNING] Worker path setup had issues:');
+                for i = 1:length(workerResult.errors)
+                    warning('    %s', workerResult.errors{i});
                 end
-            catch ME
-                warning('Failed to add subdirectories for: %s\nError: %s', dirPath, ME.message);
+                fprintf('  [INFO] You may need to run pathManager(''setupWorkerPaths'', pool) manually\n');
             end
-        end
-    end
-    
-    % Verify critical functions are accessible
-    fprintf('\nVerifying critical functions...\n');
-    criticalFunctions = {
-        'loadFlorentConfig';
-        'getRiskData';
-        'runFlorentAnalysis';
-        'runAnalysisPipeline';
-    };
-    
-    allFound = true;
-    for i = 1:length(criticalFunctions)
-        funcName = criticalFunctions{i};
-        funcPath = which(funcName);
-        if isempty(funcPath)
-            fprintf('  [ERROR] Cannot find: %s\n', funcName);
-            allFound = false;
-        else
-            fprintf('  [OK] Found: %s\n', funcName);
-        end
-    end
-    
-    % Save path if requested
-    if savePath
-        try
-            savepath;
-            fprintf('\n[SAVED] Path saved for future MATLAB sessions\n');
-        catch ME
-            warning('Failed to save path: %s\nYou may need administrator privileges.', ME.message);
         end
     end
     
     % Summary
     fprintf('\n=== Path Initialization Summary ===\n');
-    fprintf('Directories added: %d\n', addedCount);
-    fprintf('Already on path: %d\n', alreadyOnPath);
-    fprintf('Failed: %d\n', failedCount);
+    fprintf('Directories added: %d\n', length(pathResult.added));
+    fprintf('Already on path: %d\n', length(pathResult.alreadyOnPath));
+    fprintf('Failed: %d\n', length(pathResult.failed));
     
-    if allFound
+    if verification.success
         fprintf('\n[SUCCESS] All critical functions are accessible!\n');
+        if setupParallelPaths && exist('workerResult', 'var') && workerResult.success
+            fprintf('[SUCCESS] Parallel worker paths are also configured!\n');
+        end
     else
         fprintf('\n[WARNING] Some critical functions are not accessible.\n');
         fprintf('You may need to check your MATLAB path configuration.\n');
+        fprintf('\nTroubleshooting:\n');
+        fprintf('  1. Ensure you are in the correct directory\n');
+        fprintf('  2. Check that all required files exist in Functions/\n');
+        fprintf('  3. Try running: verifyPaths() to see detailed diagnostics\n');
     end
     
     fprintf('\n');
 end
 
-function isOnPath = isOnPath(dirPath)
-    % Check if directory is on MATLAB path
-    
-    % Normalize paths for comparison
-    dirPath = fullfile(dirPath);
-    currentPath = path;
-    pathList = strsplit(currentPath, pathsep);
-    
-    isOnPath = false;
-    for i = 1:length(pathList)
-        if strcmp(fullfile(pathList{i}), dirPath)
-            isOnPath = true;
-            return;
-        end
-    end
-end
 

@@ -117,6 +117,56 @@ If you see warnings about functions shadowing MATLAB built-ins:
 - This is usually harmless
 - If problematic, rename the conflicting function
 
+### Parallel Processing Path Issues
+
+The codebase uses MATLAB's Parallel Computing Toolbox for Monte Carlo simulations. Parallel workers need access to the same functions as the main MATLAB session.
+
+**Automatic Path Setup:**
+The system now automatically sets up paths on parallel workers when pools are created. You typically don't need to do anything manually.
+
+**If you see "UndefinedFunction" errors on workers:**
+
+1. **Verify main session paths are set:**
+   ```matlab
+   verifyPaths()  % Should show all paths OK
+   ```
+
+2. **Setup parallel worker paths:**
+   ```matlab
+   % Option 1: Use initializeFlorent with parallel setup
+   initializeFlorent(false, true)  % Second argument enables parallel path setup
+   
+   % Option 2: Manual setup
+   pool = gcp('nocreate');
+   if isempty(pool)
+       pool = parpool('local');
+   end
+   pathManager('setupWorkerPaths', pool)
+   ```
+
+3. **Verify worker paths:**
+   ```matlab
+   verifyPaths(true)  % true = also check worker paths
+   ```
+
+4. **Test path management:**
+   ```matlab
+   testPathManagement()  % Comprehensive path tests
+   ```
+
+**Best Practices:**
+- Always run `initializeFlorent()` before using parallel processing
+- The system automatically handles worker path setup, but you can verify with `verifyPaths(true)`
+- If you create a parallel pool manually, use `pathManager('setupWorkerPaths', pool)` to configure it
+- Use `quickHealthCheck()` which now includes parallel path verification
+
+**Path Management Functions:**
+- `pathManager('setupPaths')` - Setup main session paths
+- `pathManager('setupWorkerPaths', pool)` - Setup worker paths
+- `pathManager('verifyPaths')` - Verify main session paths
+- `pathManager('verifyWorkerPaths', pool)` - Verify worker paths
+- `ensurePaths()` - Automatically ensure paths are set (called automatically by MC scripts)
+
 ## Directory Structure
 
 ```

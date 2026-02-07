@@ -10,6 +10,9 @@ function results = mc_parameterSensitivity(data, nIterations)
     %
     % Output: sensitivity matrix (parameter × node → variance)
     
+    % Ensure paths are set up
+    ensurePaths(false);
+    
     if nargin < 2
         nIterations = 10000;
     end
