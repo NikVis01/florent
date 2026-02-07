@@ -1,17 +1,11 @@
 import os
-import logging
 from dotenv import load_dotenv
+from src.services.logging import get_logger
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure basic logging
-logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO"),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Settings:
