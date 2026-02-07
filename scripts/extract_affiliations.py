@@ -4,8 +4,8 @@ import os
 def extract_affiliations():
     # Paths
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    input_path = os.path.join(base_dir, "src", "models", "data", "countries.json")
-    output_path = os.path.join(base_dir, "src", "models", "data", "affiliations.json")
+    input_path = os.path.join(base_dir, "src", "data", "countries.json")
+    output_path = os.path.join(base_dir, "src", "data", "affiliations.json")
 
     if not os.path.exists(input_path):
         print(f"Error: Could not find {input_path}")
