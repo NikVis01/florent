@@ -127,12 +127,11 @@ class TestDSPySignatures(unittest.TestCase):
 
     def test_signatures_module_imports(self):
         """Test that signatures module imports correctly."""
-        with patch.dict('sys.modules', {'dspy': self.mock_dspy}):
         try:
-                from src.services.agent.models import signatures
-                self.assertIsNotNone(signatures)
+            from src.services.agent.models import signatures
+            self.assertIsNotNone(signatures)
         except ImportError as e:
-                self.fail(f"Failed to import signatures module: {e}")
+            self.fail(f"Failed to import signatures module: {e}")
 
     def test_field_naming_conventions(self):
         """Test that field names follow proper conventions."""

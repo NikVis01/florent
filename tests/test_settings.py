@@ -35,8 +35,8 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.MAX_TRAVERSAL_DEPTH, 20)
 
     @patch.dict(os.environ, {}, clear=True)
-    @patch.dict(os.environ, {}, clear=True)
-    def test_settings_defaults(self):
+    @patch('dotenv.load_dotenv')
+    def test_settings_defaults(self, mock_load_dotenv):
         """Test Settings with default values."""
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
@@ -214,6 +214,7 @@ class TestLoggingConfiguration(unittest.TestCase):
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
 
+        import src.settings
 
         mock_load_dotenv.assert_called()
 
