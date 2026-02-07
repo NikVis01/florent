@@ -22,6 +22,16 @@ function testFlorentPipeline(verbosity)
     fprintf('  FLORENT PIPELINE TEST SUITE\n');
     fprintf('========================================\n\n');
     
+    % Initialize paths first
+    fprintf('Initializing paths...\n');
+    try
+        initializeFlorent(false);
+        fprintf('  [OK] Paths initialized\n\n');
+    catch ME
+        warning('Path initialization failed: %s', ME.message);
+        fprintf('  [WARNING] Continuing with current path configuration\n\n');
+    end
+    
     testsPassed = 0;
     testsFailed = 0;
     testsTotal = 0;
@@ -194,6 +204,30 @@ function testFlorentPipeline(verbosity)
     try
         geoData = loadGeographicData('BRA', config);
         assert(isfield(geoData, 'coordinates'), 'Geo data missing coordinates');
+        fprintf('  PASSED\n');
+        testsPassed = testsPassed + 1;
+    catch ME
+        fprintf('  FAILED: %s\n', ME.message);
+        testsFailed = testsFailed + 1;
+    end
+    fprintf('\n');
+    
+    % Test 11: Function Callability
+    testsTotal = testsTotal + 1;
+    fprintf('Test 11: Function Callability Check...\n');
+    try
+        % Check critical functions are callable
+        criticalFuncs = {'loadFlorentConfig', 'getRiskData', 'classifyQuadrant', ...
+            'calculate_influence_score', 'plot2x2MatrixWithEllipses'};
+        allCallable = true;
+        for i = 1:length(criticalFuncs)
+            funcPath = which(criticalFuncs{i});
+            if isempty(funcPath)
+                fprintf('    [ERROR] Cannot find: %s\n', criticalFuncs{i});
+                allCallable = false;
+            end
+        end
+        assert(allCallable, 'Some critical functions are not callable');
         fprintf('  PASSED\n');
         testsPassed = testsPassed + 1;
     catch ME
