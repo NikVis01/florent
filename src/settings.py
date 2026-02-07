@@ -8,8 +8,8 @@ try:
     # Get project root directory (where .env is located)
     project_root = Path(__file__).parent.parent
     dotenv_path = project_root / ".env"
-    load_dotenv(dotenv_path=dotenv_path, override=True)
-except (AssertionError, Exception) as e:
+    load_dotenv(dotenv_path=dotenv_path, override=False)
+except (AssertionError, Exception):
     # Handle cases where dotenv fails (e.g., in test contexts)
     pass
 

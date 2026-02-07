@@ -8,8 +8,9 @@ else
     echo "Warning: 'uv' not found. Skipping requirements export."
 fi
 
-echo "--- 2. Building and Testing (C++ Core & Python) ---"
-make all
+echo "--- 2. Building and Testing (C++ Core & Python Unit Tests) ---"
+make build
+uv run pytest tests/
 
 echo "--- 3. Linting with ruff ---"
 uv run ruff check src/
