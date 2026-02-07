@@ -24,6 +24,7 @@ def get_valid_country_codes() -> Set[str]:
     return _COUNTRY_A3_CODES
 
 # Type of operations requirement or business need
+# Represents a specific type of business or operational requirement.
 class OperationType(BaseModel):
     name: str
     category: Literal[
@@ -39,6 +40,7 @@ class OperationType(BaseModel):
     description: str
 
 
+# Defines the industry sectors a firm or project can belong to.
 class Sectors(BaseModel):
     name: str
     description: Literal[
@@ -58,6 +60,7 @@ class Sectors(BaseModel):
     ]
 
 
+# Categorizes the strategic goals or focus areas of a firm.
 class StrategicFocus(BaseModel):
     name: str
     description: Literal[
@@ -72,6 +75,7 @@ class StrategicFocus(BaseModel):
     ]
 
 
+# Detailed representation of a country with ISO codes and regional metadata.
 class Country(BaseModel):
     name: str
     a2: str

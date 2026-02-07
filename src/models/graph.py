@@ -8,6 +8,7 @@ from src.models.base import OperationType
 logger = logging.getLogger(__name__)
 
 # Node class
+# A single point in the graph representing a specific operation or requirement node.
 class Node(BaseModel):
     id: str
     name: str
@@ -22,12 +23,14 @@ class Node(BaseModel):
             return False
         return self.id == other.id
 
+# A directed connection between two nodes with an associated weight and relationship type.
 class Edge(BaseModel):
     source: Node # ptr to node
     target: Node # ptr to node
     weight: float # Essentially Importance to the operation (e.g., cross-encoded similarity)
     relationship: str # e.g., "leads to", "is a prerequisite for", "is a component of"
 
+# A collection of nodes and edges forming a Directed Acyclic Graph (DAG) for business logic.
 class Graph(BaseModel):
     nodes: List[Node] = Field(default_factory=list)
     edges: List[Edge] = Field(default_factory=list)

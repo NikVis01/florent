@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from src.models.base import OperationType, Sectors, StrategicFocus, Country, get_valid_country_codes
 
+# Represents a business entity with its active regions, services, and strategic goals.
 class Firm(BaseModel):
     id: str
     name: str
@@ -18,6 +19,7 @@ class Firm(BaseModel):
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
 
 
+# Describes a specific business project or requirement within a country and sector.
 class Project(BaseModel):
     id: str
     name: str
@@ -29,3 +31,13 @@ class Project(BaseModel):
     ops_requirements: List[OperationType]
     
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
+
+
+# Defines a set of risk characteristics or thresholds for an entity or project.
+class RiskProfile(BaseModel):
+    id: str
+    name: str
+    risk_level: int = Field(ge=1, le=5, description="how detrimental is the failure of this node/operation")
+    influence_level: int = Field(ge=1, le=5, description="how much can the firm control or influence the success of this node/operation")
+    description: str
+    

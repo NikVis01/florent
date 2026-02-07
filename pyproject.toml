@@ -1,0 +1,10 @@
+[project]
+name = "florent"
+version = "0.1.0"
+description = "Business graph modeling and traversal"
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[tool.uv]
+package = true
