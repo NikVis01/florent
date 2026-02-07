@@ -1,5 +1,4 @@
 """Configuration utilities for loading environment variables."""
-import os
 from pathlib import Path
 from dotenv import load_dotenv
 

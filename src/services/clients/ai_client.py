@@ -1,6 +1,5 @@
 import dspy
 import os
-from src.config import PROJECT_ROOT
 
 def init_dspy():
     """
