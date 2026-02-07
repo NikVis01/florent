@@ -68,6 +68,10 @@ def make_api_request(firm_path: str, project_path: str, budget: int, api_url: st
 
         result = response.json()
         print(f"Request successful! Status: {response.status_code}")
+        
+        # Extract analysis result if wrapped by the API
+        if "analysis" in result:
+            return result["analysis"]
         return result
 
     except requests.exceptions.ConnectionError:
@@ -106,7 +110,7 @@ def create_network_graph(analysis: Dict[str, Any], output_dir: Path):
 
     # Build node-to-quadrant mapping
     node_quadrants = {}
-    for quadrant, nodes in analysis["matrix_classifications"].items():
+    for quadrant, nodes in analysis["matrix_classifications" in analysis and analysis["matrix_classifications"] or analysis.get("action_matrix", {})].items():
         for node in nodes:
             node_quadrants[node["node_id"]] = quadrant
 
@@ -239,7 +243,7 @@ def create_risk_matrix_2x2(analysis: Dict[str, Any], output_dir: Path):
         # Quadrant label
         label_x = x_pos + 0.25
         label_y = y_pos + 0.45
-        count = len(analysis["matrix_classifications"].get(quadrant, []))
+        count = len(analysis["matrix_classifications" in analysis and analysis["matrix_classifications"] or analysis.get("action_matrix", {})].get(quadrant, []))
         ax.text(
             label_x, label_y,
             f"{quadrant}\n({count} nodes)",
@@ -321,8 +325,8 @@ def create_critical_chains_viz(analysis: Dict[str, Any], output_dir: Path):
 
     # Prepare data
     chain_labels = [f"Chain {i+1}" for i in range(len(chains))]
-    risks = [chain["cumulative_risk"] * 100 for chain in chains]
-    lengths = [chain["length"] for chain in chains]
+    risks = [(chain.get("aggregate_risk") or chain.get("cumulative_risk", 0)) * 100 for chain in chains]
+    lengths = [chain.get("length") or len(chain.get("nodes", [])) for chain in chains]
 
     # Color by risk level
     colors = ['#e74c3c' if r > 70 else '#f39c12' if r > 40 else '#3498db' for r in risks]
@@ -401,11 +405,16 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
     gs = fig.add_gridspec(3, 3, hspace=0.4, wspace=0.3)
 
     summary = analysis["summary"]
-    recommendation = analysis["recommendation"]
+    recommendation = analysis.get("recommendation") or {
+        "should_bid": summary.get("aggregate_project_score", 0) >= 0.7,
+        "confidence": summary.get("aggregate_project_score", 0),
+        "key_risks": summary.get("recommendations", [])[:2],
+        "key_opportunities": []
+    }
 
     # 1. Aggregate Score (big gauge)
     ax1 = fig.add_subplot(gs[0, :2])
-    score = summary["aggregate_project_score"] * 100
+    score = (summary.get("aggregate_project_score") or summary.get("overall_bankability", 0)) * 100
     score_color = '#2ecc71' if score > 70 else '#f39c12' if score > 40 else '#e74c3c'
 
     ax1.barh([0], [score], color=score_color, alpha=0.8, height=0.5)
@@ -447,7 +456,7 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
     # 3. Quadrant Distribution (pie chart)
     ax3 = fig.add_subplot(gs[1, 0])
     quadrant_counts = {
-        q: len(nodes) for q, nodes in analysis["matrix_classifications"].items()
+        q: len(nodes) for q, nodes in analysis["matrix_classifications" in analysis and analysis["matrix_classifications"] or analysis.get("action_matrix", {})].items()
     }
     colors_pie = ['#2ecc71', '#f39c12', '#3498db', '#e74c3c']
     ax3.pie(
@@ -530,15 +539,15 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
     for node_id, assessment in analysis["node_assessments"].items():
         # Find quadrant
         quadrant = "Unknown"
-        for q, nodes in analysis["matrix_classifications"].items():
+        for q, nodes in analysis["matrix_classifications" in analysis and analysis["matrix_classifications"] or analysis.get("action_matrix", {})].items():
             if any(n["node_id"] == node_id for n in nodes):
                 quadrant = q
                 break
 
         data.append({
-            "Node": assessment["node_name"],
-            "Influence": assessment["influence_score"],
-            "Risk": assessment["risk_level"],
+            "Node": assessment.get("name") or assessment.get("node_name", node_id),
+            "Influence": assessment.get("influence") or assessment.get("influence_score", 0),
+            "Risk": assessment.get("risk") or assessment.get("risk_level", 0),
             "Quadrant": quadrant,
             "Critical Path": "✓" if assessment.get("is_on_critical_path", False) else "",
         })
