@@ -59,7 +59,7 @@ function stabilityData = calculateStabilityScores(mcResults)
             results.stability.coefficientOfVariation.risk;
         stabilityData.coefficientOfVariation.influence = stabilityData.coefficientOfVariation.influence + ...
             results.stability.coefficientOfVariation.influence;
-        stabilityData.flipCount = stabilityData.flipCount + results.flipCount;
+        stabilityData.flipCount = stabilityData.flipCount + results.flipCounts;
         
         % Parameter sensitivity rank
         if isfield(results, 'sensitivityMatrix') && ...
@@ -83,7 +83,7 @@ function stabilityData = calculateStabilityScores(mcResults)
             results.stability.coefficientOfVariation.risk;
         stabilityData.coefficientOfVariation.influence = stabilityData.coefficientOfVariation.influence + ...
             results.stability.coefficientOfVariation.influence;
-        stabilityData.flipCount = stabilityData.flipCount + results.flipCount;
+        stabilityData.flipCount = stabilityData.flipCount + results.flipCounts;
         
         % Store unstable nodes info
         if isfield(results, 'unstableNodes')
@@ -105,7 +105,7 @@ function stabilityData = calculateStabilityScores(mcResults)
             results.stability.coefficientOfVariation.risk;
         stabilityData.coefficientOfVariation.influence = stabilityData.coefficientOfVariation.influence + ...
             results.stability.coefficientOfVariation.influence;
-        stabilityData.flipCount = stabilityData.flipCount + results.flipCount;
+        stabilityData.flipCount = stabilityData.flipCount + results.flipCounts;
         
         % Store critical edges info
         if isfield(results, 'criticalEdges')
@@ -127,7 +127,7 @@ function stabilityData = calculateStabilityScores(mcResults)
             results.stability.coefficientOfVariation.risk;
         stabilityData.coefficientOfVariation.influence = stabilityData.coefficientOfVariation.influence + ...
             results.stability.coefficientOfVariation.influence;
-        stabilityData.flipCount = stabilityData.flipCount + results.flipCount;
+        stabilityData.flipCount = stabilityData.flipCount + results.flipCounts;
         
         % Store distribution info
         if isfield(results, 'distributions')

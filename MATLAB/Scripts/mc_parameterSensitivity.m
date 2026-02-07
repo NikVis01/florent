@@ -10,6 +10,9 @@ function results = mc_parameterSensitivity(data, nIterations)
     %
     % Output: sensitivity matrix (parameter × node → variance)
     
+    % Ensure paths are set up
+    ensurePaths(false);
+    
     if nargin < 2
         nIterations = 10000;
     end
@@ -64,7 +67,12 @@ function [perturbedData, params] = perturbParameters(data, iter)
     end
     
     % Renormalize weights to sum to 1
-    total = sum(struct2array(weights));
+    % Calculate total by iterating through fields (more compatible with parfor)
+    total = 0;
+    for i = 1:length(fields)
+        field = fields{i};
+        total = total + weights.(field);
+    end
     if total > 0
         for i = 1:length(fields)
             field = fields{i};

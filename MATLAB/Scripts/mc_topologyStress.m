@@ -8,6 +8,9 @@ function results = mc_topologyStress(data, nIterations)
     %
     % Output: critical edges (removal causes catastrophic changes)
     
+    % Ensure paths are set up
+    ensurePaths(false);
+    
     if nargin < 2
         nIterations = 10000;
     end

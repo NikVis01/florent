@@ -25,9 +25,28 @@ def load_data(data: Optional[Dict[str, Any]], path: Optional[str]) -> Dict[str, 
     if data:
         return data
     if path:
-        if not os.path.exists(path):
+        # Handle path translation: if path doesn't exist, try converting host path to container path
+        file_path = path
+        
+        # Check if path exists as-is first
+        if not os.path.exists(file_path):
+            # Try to convert host absolute path to container path
+            # Host: /home/user/.../florent/src/data/...
+            # Container: /app/src/data/...
+            if 'src/data' in path:
+                # Extract the part after 'src/data'
+                parts = path.split('src/data', 1)
+                if len(parts) > 1:
+                    # Container path is /app/src/data + rest of path
+                    container_path = f'/app/src/data{parts[1]}'
+                    if os.path.exists(container_path):
+                        file_path = container_path
+                        logger.info(f"Translated host path {path} to container path {file_path}")
+        
+        if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {path}")
-        with open(path, "r") as f:
+        
+        with open(file_path, "r") as f:
             return json.load(f)
     raise ValueError("Missing data or path")
 

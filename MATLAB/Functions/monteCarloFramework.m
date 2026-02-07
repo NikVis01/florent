@@ -30,17 +30,101 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
         useParallel = true;
     end
     
+    % Ensure paths are set BEFORE any processing (critical for both parallel and sequential)
+    ensurePaths(false);  % Quiet mode
+    
+    % Verify that critical functions are accessible by actually testing them
+    % Note: calculate_influence_score is in riskCalculations.m, and which() may not find it
+    % if the first function name doesn't match the filename, so we test by calling it
+    try
+        testResult = calculate_influence_score(0.5, 1.0, 1.2);
+        if ~isnumeric(testResult) || isempty(testResult)
+            error('calculate_influence_score returned invalid result');
+        end
+    catch ME
+        % Function not accessible - try to help user
+        matlabDir = fileparts(fileparts(mfilename('fullpath')));
+        riskCalcFile = fullfile(matlabDir, 'Functions', 'riskCalculations.m');
+        if ~exist(riskCalcFile, 'file')
+            error('riskCalculations.m not found at: %s\nPlease run initializeFlorent() first.', riskCalcFile);
+        end
+        % Force path refresh and try again
+        rehash path;
+        try
+            testResult = calculate_influence_score(0.5, 1.0, 1.2);
+            if ~isnumeric(testResult) || isempty(testResult)
+                error('calculate_influence_score returned invalid result');
+            end
+        catch ME2
+            error('calculate_influence_score is not accessible.\nFile exists at: %s\nError: %s\n\nPlease run initializeFlorent() to set up paths.', riskCalcFile, ME2.message);
+        end
+    end
+    
     % Check if parallel toolbox is available
     if useParallel
         try
-            pool = gcp('nocreate');
-            if isempty(pool)
-                pool = parpool('local');
+            
+            % Verify main session paths
+            mainPathCheck = pathManager('verifyPaths');
+            if ~mainPathCheck.success
+                warning('Main session path verification failed. Missing: %s', ...
+                    strjoin([mainPathCheck.missingDirs, mainPathCheck.missingFunctions], ', '));
+                warning('Attempting to setup paths...');
+                pathManager('setupPaths', false);
+                mainPathCheck = pathManager('verifyPaths');
+                if ~mainPathCheck.success
+                    error('Cannot setup paths. Please run initializeFlorent() first.');
+                end
             end
+            
+            % Close existing pool to ensure fresh configuration
+            existingPool = gcp('nocreate');
+            if ~isempty(existingPool)
+                fprintf('Closing existing parallel pool to apply new configuration...\n');
+                delete(existingPool);
+            end
+            
+            % Create new parallel pool
+            pool = parpool('local');
             useParallel = true;
-        catch
-            warning('Parallel Computing Toolbox not available, running sequentially');
+            
+            % Setup paths on all workers using centralized path manager
+            fprintf('Configuring parallel workers with required paths...\n');
+            workerPathResult = pathManager('setupWorkerPaths', pool);
+            
+            if ~workerPathResult.success
+                warning('Worker path setup had issues: %s', strjoin(workerPathResult.errors, '; '));
+                warning('Attempting verification...');
+                
+                % Verify worker paths
+                workerVerifyResult = pathManager('verifyWorkerPaths', pool);
+                
+                if ~workerVerifyResult.success
+                    warning('Worker path verification failed: %s', strjoin(workerVerifyResult.errors, '; '));
+                    warning('Falling back to sequential execution.');
+                    useParallel = false;
+                    try
+                        delete(pool);
+                    catch
+                    end
+                else
+                    fprintf('Worker paths verified successfully\n');
+                end
+            else
+                fprintf('Worker paths configured successfully\n');
+            end
+            
+        catch ME
+            warning('Parallel Computing Toolbox setup failed: %s. Running sequentially.', ME.message);
             useParallel = false;
+            % Try to close pool if it was created
+            try
+                pool = gcp('nocreate');
+                if ~isempty(pool)
+                    delete(pool);
+                end
+            catch
+            end
         end
     end
     
@@ -65,7 +149,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     if useParallel
         % Parallel execution
         parfor iter = 1:nIterations
-            [perturbedData, params] = perturbFunc(data, iter);
+            [perturbedData, params] = feval(perturbFunc, data, iter);
             
             % Calculate risk scores with perturbed parameters
             scores = calculateScoresForIteration(perturbedData);

@@ -8,6 +8,9 @@ function results = mc_failureProbDist(data, nIterations)
     %
     % Output: confidence intervals (mean ± 2σ) per node
     
+    % Ensure paths are set up
+    ensurePaths(false);
+    
     if nargin < 2
         nIterations = 10000;
     end
