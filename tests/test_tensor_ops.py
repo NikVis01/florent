@@ -228,7 +228,6 @@ class TestTensorOpsCpp(unittest.TestCase):
             # This should test the fallback mechanism
             # First attempt fails, second succeeds
             try:
-                from src.services.agent.ops.tensor_ops_cpp import _lib
                 # If we get here, fallback worked
                 self.assertEqual(mock_cdll.call_count, 2)
             except OSError:

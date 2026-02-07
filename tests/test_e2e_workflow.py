@@ -18,9 +18,8 @@ Test Scenarios:
 import sys
 import os
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 import json
-from typing import Dict, List
 
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -28,8 +27,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.models.base import OperationType, Country, Sectors, StrategicFocus
 from src.models.entities import Firm, Project, ProjectEntry, ProjectExit, AnalysisOutput, CriticalChain, PivotalNode, RiskProfile
 from src.models.graph import Graph, Node, Edge
-from src.services.agent.core.traversal import NodeStack, NodeHeap
-from src.services.country.geo import GeoAnalyzer
 
 
 class TestPOCDataLoading(unittest.TestCase):

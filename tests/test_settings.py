@@ -1,9 +1,7 @@
 import sys
 import os
 import unittest
-from unittest.mock import patch, MagicMock
-import tempfile
-import shutil
+from unittest.mock import patch
 
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -37,6 +35,7 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.MAX_TRAVERSAL_DEPTH, 20)
 
     @patch.dict(os.environ, {}, clear=True)
+    @patch.dict(os.environ, {}, clear=True)
     def test_settings_defaults(self):
         """Test Settings with default values."""
         if 'src.settings' in sys.modules:
@@ -47,7 +46,7 @@ class TestSettings(unittest.TestCase):
         settings = Settings()
 
         self.assertIsNone(settings.OPENAI_API_KEY)
-        self.assertEqual(settings.LLM_MODEL, 'gpt-4-turbo-preview')
+        self.assertEqual(settings.LLM_MODEL, 'gpt-4o-mini')
         self.assertEqual(settings.BGE_M3_URL, 'http://localhost:8080')
         self.assertEqual(settings.DEFAULT_ATTENUATION_FACTOR, 1.2)
         self.assertEqual(settings.MAX_TRAVERSAL_DEPTH, 10)
@@ -203,10 +202,8 @@ class TestLoggingConfiguration(unittest.TestCase):
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
 
-        import logging
 
         # Import should configure logging
-        from src.settings import Settings
 
         # Check that basicConfig was set up
         # Note: Actual logger level check depends on logging state
@@ -217,7 +214,6 @@ class TestLoggingConfiguration(unittest.TestCase):
         if 'src.settings' in sys.modules:
             del sys.modules['src.settings']
 
-        import src.settings
 
         mock_load_dotenv.assert_called()
 

@@ -1,7 +1,7 @@
 import sys
 import os
 import unittest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 from pydantic import ValidationError
 import json
 

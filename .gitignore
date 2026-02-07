@@ -1,9 +1,121 @@
-.venv
-.mlx
-.env
-.__pycache__
-.DS_Store
-.pytest_cache
-.*egg-info
+# ==========================================
+# Project Florent: The Ultimate .gitignore
+# ==========================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
 *.so
-.claude
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+
+# --- Virtual Environments ---
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- C++ & Build Artifacts ---
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.lib
+*.a
+*.exe
+*.out
+*.app
+# Compiled shared library for Project Florent
+libtensor_ops.so
+
+# --- MATLAB ---
+# General MATLAB
+*.asv
+*.bak
+*.m~
+*.slxc
+*.mex*
+*.p
+*.p.lock
+*.fig
+*.mat
+*.mexmaci64
+*.mexa64
+*.mexw64
+*.mexw32
+
+# MATLAB Diagnostics & Logs
+slprj/
+cat_*.m
+ml_*.m
+m_*.m
+output/
+diag/
+logs/
+*.log
+
+# MATLAB Reports & Code Generation
+report/
+html/
+codegen/
+*.jview
+
+# MATLAB Project & App Metadata
+*.prj
+.SimulinkProject/
+_SimulinkProject/
+
+# --- Infrastructure & Tooling ---
+.env
+.env.local
+.env.*.local
+.venv
+.vscode/
+.idea/
+.claude/
+.gemini/
+.agent/
+*.log
+
+# --- OS Specific ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Docker ---
+.docker/
+# Note: Keep Dockerfile and docker-compose.yaml in git

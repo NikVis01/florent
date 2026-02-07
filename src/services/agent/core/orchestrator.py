@@ -1,8 +1,6 @@
-from typing import List, Dict, Set
+from typing import Set
 from src.models.graph import Graph, Node
 from src.services.agent.core.traversal import NodeStack, NodeHeap
-from src.services.agent.models.signatures import NodeSignature
-from src.services.agent.ops.tensor_ops_cpp import calculate_influence_tensor
 
 class AgentOrchestrator:
     """

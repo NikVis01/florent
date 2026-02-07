@@ -14,7 +14,6 @@ import sys
 import os
 import unittest
 import argparse
-from pathlib import Path
 
 
 def discover_tests(pattern='test_*.py', start_dir='tests'):

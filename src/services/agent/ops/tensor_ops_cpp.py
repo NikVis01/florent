@@ -1,6 +1,5 @@
 import ctypes
 import os
-import numpy as np
 from typing import List
 
 # Path to the shared library

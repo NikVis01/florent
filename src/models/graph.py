@@ -1,5 +1,5 @@
 from pydantic import BaseModel, model_validator, Field
-from typing import List, Literal, Optional, Dict, Set
+from typing import List, Dict, Set
 import logging
 
 from src.models.base import OperationType

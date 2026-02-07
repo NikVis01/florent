@@ -1,8 +1,7 @@
 import sys
 import os
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
-import json
+from unittest.mock import patch, MagicMock
 
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -311,8 +310,8 @@ class TestGeoAnalyzerWithEntities(unittest.TestCase):
 
     def test_geo_analyzer_with_firm_countries(self):
         """Test GeoAnalyzer with Firm's active countries."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data), \
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data), \
              patch('src.models.base.get_categories', return_value={"logistics"}), \
              patch('src.models.base.get_sectors', return_value={"manufacturing"}), \
              patch('src.models.base.get_focuses', return_value={"growth"}):
@@ -349,8 +348,8 @@ class TestGeoAnalyzerWithEntities(unittest.TestCase):
 
     def test_geo_analyzer_with_project_country(self):
         """Test GeoAnalyzer with Project country."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
 
             from src.services.country.geo import GeoAnalyzer
 
@@ -399,8 +398,8 @@ class TestCompleteAnalysisPipeline(unittest.TestCase):
 
     def test_full_pipeline_simulation(self):
         """Test simulation of complete analysis pipeline."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value={"ASEAN": ["SGP"]}):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value={"ASEAN": ["SGP"]}):
 
             # 1. Load geo data
             from src.services.country.geo import GeoAnalyzer

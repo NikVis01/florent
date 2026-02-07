@@ -1,8 +1,7 @@
 import sys
 import os
 import unittest
-from unittest.mock import patch, mock_open
-import json
+from unittest.mock import patch
 
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -122,23 +121,23 @@ class TestGeoAnalyzer(unittest.TestCase):
 
     def test_initialization_success(self):
         """Test GeoAnalyzer initialization with valid data."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             self.assertEqual(len(analyzer.countries_data), 4)
             self.assertEqual(len(analyzer._country_lookup), 4)
 
     def test_initialization_failure(self):
         """Test GeoAnalyzer initialization with error."""
-        with patch('src.models.base.load_countries_data', side_effect=Exception("Load error")):
+        with patch('src.services.country.geo.load_countries_data', side_effect=Exception("Load error")):
             analyzer = GeoAnalyzer()
             self.assertEqual(len(analyzer.countries_data), 0)
             self.assertEqual(len(analyzer._country_lookup), 0)
 
     def test_get_country_success(self):
         """Test retrieving a country by A3 code."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             country = analyzer.get_country("USA")
             self.assertIsNotNone(country)
@@ -147,64 +146,64 @@ class TestGeoAnalyzer(unittest.TestCase):
 
     def test_get_country_not_found(self):
         """Test retrieving a non-existent country."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             country = analyzer.get_country("XXX")
             self.assertIsNone(country)
 
     def test_countries_share_region_true(self):
         """Test countries that share the same region."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             result = analyzer.countries_share_region("USA", "CAN")
             self.assertTrue(result)
 
     def test_countries_share_region_false(self):
         """Test countries that don't share the same region."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             result = analyzer.countries_share_region("USA", "JPN")
             self.assertFalse(result)
 
     def test_countries_share_region_invalid_country(self):
         """Test region check with invalid country."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             result = analyzer.countries_share_region("USA", "XXX")
             self.assertFalse(result)
 
     def test_countries_share_subregion_true(self):
         """Test countries that share the same sub-region."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             result = analyzer.countries_share_subregion("USA", "CAN")
             self.assertTrue(result)
 
     def test_countries_share_subregion_false(self):
         """Test countries that don't share the same sub-region."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             result = analyzer.countries_share_subregion("USA", "FRA")
             self.assertFalse(result)
 
     def test_get_shared_affiliations(self):
         """Test getting shared affiliations between countries."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             shared = analyzer.get_shared_affiliations("USA", "CAN")
             self.assertEqual(shared, {"NATO", "OECD"})
 
     def test_get_shared_affiliations_partial(self):
         """Test getting partial shared affiliations."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             shared = analyzer.get_shared_affiliations("USA", "JPN")
             self.assertEqual(shared, {"OECD"})
@@ -221,24 +220,24 @@ class TestGeoAnalyzer(unittest.TestCase):
             "sub_region": "South America",
             "affiliations": []
         })
-        with patch('src.models.base.load_countries_data', return_value=countries_no_shared), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=countries_no_shared), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             shared = analyzer.get_shared_affiliations("USA", "BRA")
             self.assertEqual(len(shared), 0)
 
     def test_calculate_geo_similarity_same_country(self):
         """Test similarity calculation for same country."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             similarity = analyzer.calculate_geo_similarity("USA", "USA")
             self.assertEqual(similarity, 1.0)
 
     def test_calculate_geo_similarity_high(self):
         """Test similarity calculation for very similar countries."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             similarity = analyzer.calculate_geo_similarity("USA", "CAN")
             # Same region (0.3) + Same sub-region (0.3) + 2 shared affiliations (0.2) = 0.8
@@ -246,8 +245,8 @@ class TestGeoAnalyzer(unittest.TestCase):
 
     def test_calculate_geo_similarity_medium(self):
         """Test similarity calculation for partially similar countries."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             similarity = analyzer.calculate_geo_similarity("USA", "FRA")
             # Different region (0) + Different sub-region (0) + 2 shared affiliations (0.2) = 0.2
@@ -255,8 +254,8 @@ class TestGeoAnalyzer(unittest.TestCase):
 
     def test_calculate_geo_similarity_low(self):
         """Test similarity calculation for dissimilar countries."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             similarity = analyzer.calculate_geo_similarity("USA", "JPN")
             # Different region (0) + Different sub-region (0) + 1 shared affiliation (0.1) = 0.1
@@ -284,8 +283,8 @@ class TestGeoAnalyzer(unittest.TestCase):
                 "affiliations": ["A1", "A2", "A3", "A4", "A5", "A6"]
             }
         ]
-        with patch('src.models.base.load_countries_data', return_value=countries_many_aff), \
-             patch('src.models.base.load_affiliations_data', return_value={}):
+        with patch('src.services.country.geo.load_countries_data', return_value=countries_many_aff), \
+             patch('src.services.country.geo.load_affiliations_data', return_value={}):
             analyzer = GeoAnalyzer()
             similarity = analyzer.calculate_geo_similarity("AAA", "BBB")
             # Same region (0.3) + Same sub-region (0.3) + Max affiliations (0.4) = 1.0
@@ -293,8 +292,8 @@ class TestGeoAnalyzer(unittest.TestCase):
 
     def test_calculate_geo_similarity_invalid_country(self):
         """Test similarity calculation with invalid country."""
-        with patch('src.models.base.load_countries_data', return_value=self.countries_data), \
-             patch('src.models.base.load_affiliations_data', return_value=self.affiliations_data):
+        with patch('src.services.country.geo.load_countries_data', return_value=self.countries_data), \
+             patch('src.services.country.geo.load_affiliations_data', return_value=self.affiliations_data):
             analyzer = GeoAnalyzer()
             similarity = analyzer.calculate_geo_similarity("USA", "XXX")
             self.assertEqual(similarity, 0.0)

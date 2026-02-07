@@ -2,7 +2,6 @@ import sys
 import os
 import unittest
 from unittest.mock import patch, MagicMock
-from pydantic import ValidationError
 
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -96,7 +95,7 @@ class TestAIClient(unittest.TestCase):
         self.assertIsNotNone(client2.lm)
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-api-key'})
-    @patch('dspy.OpenAI', side_effect=Exception("OpenAI initialization failed"))
+    @patch('dspy.LM', side_effect=Exception("OpenAI initialization failed"))
     @patch('dspy.configure')
     def test_ai_client_initialization_failure(self, mock_configure, mock_openai):
         """Test AIClient initialization failure."""
