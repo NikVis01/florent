@@ -6,3 +6,4 @@
 .pytest_cache
 .*egg-info
 *.so
+.claude

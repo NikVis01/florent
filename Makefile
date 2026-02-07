@@ -13,7 +13,7 @@ $(TARGET): $(SRC)
 build: $(TARGET)
 
 test: build
-	pytest tests/
+	uv run pytest tests/
 
 clean:
 	rm -f $(TARGET)

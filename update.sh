@@ -11,12 +11,7 @@ fi
 echo "--- 2. Building and Testing (C++ Core & Python) ---"
 make all
 
-echo "--- 4. Linting with ruff ---"
-if command -v ruff &> /dev/null; then
-    ruff check src/
-else
-    # Fallback to python -m ruff if installed in venv
-    python3 -m ruff check src/ || echo "Warning: ruff not found. Skipping linting."
-fi
+echo "--- 3. Linting with ruff ---"
+uv run ruff check src/
 
 echo "--- Maintenance Complete ---"

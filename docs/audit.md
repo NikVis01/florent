@@ -1,103 +1,293 @@
-# Florent System Audit - Implementation Status & Next Steps
+# Florent System Audit - Current Implementation Status
+
+**Last Updated**: 2026-02-07
+**Status**: Infrastructure Ready, Core Logic 40% Complete
+**Blockers**: 4 critical items
+
+---
 
 ## Executive Summary
 
-**Current State**: Core infrastructure is solid. Mathematical foundations are correct. Data structures are ready. **The blocker is the orchestration layer** - we have all the pieces but they're not connected.
+### What Works ✅
+- **Models Layer**: Complete data structures (Firm, Project, Graph, Node, Edge)
+- **Graph Validation**: DAG enforcement with cycle detection
+- **Traversal Structures**: NodeStack and NodeHeap fully implemented
+- **Logging Service**: Production-ready structlog with context management
+- **GeoAnalyzer**: Country similarity and affiliation logic
+- **AI Client**: DSPy initialization and OpenAI integration
+- **Docker Infrastructure**: Multi-service compose with health checks
+- **Documentation**: Comprehensive README, ROADMAP, and guides
+- **Test Suite**: 159 tests (132 passing, 27 failing)
 
-**What Works**:
-- ✅ Graph validation (DAG enforcement, cycle detection)
-- ✅ Mathematical formulas (risk propagation, influence scoring)
-- ✅ Data models (Pydantic schemas with validation)
-- ✅ Vector operations (comprehensive, production-ready)
-- ✅ Logging infrastructure
-- ✅ Error handling patterns
-- ✅ DSPy client initialization
-- ✅ Traversal data structures (NodeStack, NodeHeap)
+### What's Missing ❌
+- **Agent Orchestrator Core Loop**: Stub only, no actual traversal logic
+- **Graph Utility Methods**: get_entry_nodes(), get_parents(), get_distance()
+- **DSPy Integration**: Signatures defined but never instantiated
+- **Math Service**: influence/risk calculations in C++ only (no Python)
+- **Vector Service**: No NumPy operations module
+- **2x2 Matrix Classification**: Not implemented
+- **Critical Chain Detection**: Not started
 
-**What's Missing**:
-- ❌ Agent orchestrator implementation (stub only)
-- ❌ Graph utility methods (get_entry_points, get_parents)
-- ❌ DSPy signature integration (defined but never called)
-- ❌ Risk propagation loop (math exists, not applied)
-- ❌ 2x2 matrix classification
-- ❌ Critical chain detection
-- ❌ End-to-end pipeline
+---
+
+## Code Metrics
+
+```
+Source Files:     15 Python files
+Lines of Code:    1,057 total
+Functions:        54 defined
+Classes:          28 defined
+Tests:            159 (83% passing)
+Test LOC:         2,796
+```
+
+---
+
+## Critical Blockers (Priority Order)
+
+### 🔴 BLOCKER 1: Missing Graph Utility Methods
+**File**: `src/models/graph.py`
+**Impact**: Orchestrator cannot start traversal
+
+**Required Methods**:
+```python
+def get_entry_nodes(self) -> List[Node]:
+    """Returns nodes with in-degree 0 (no incoming edges)."""
+    if not self.nodes:
+        raise ValueError("Graph has no nodes")
+
+    targets = {e.target.id for e in self.edges}
+    entry_nodes = [n for n in self.nodes if n.id not in targets]
+
+    if not entry_nodes:
+        raise ValueError("Graph has no entry points - contains cycle or all nodes are targets")
+
+    return entry_nodes
+
+def get_exit_nodes(self) -> List[Node]:
+    """Returns nodes with out-degree 0 (no outgoing edges)."""
+    if not self.nodes:
+        raise ValueError("Graph has no nodes")
+
+    sources = {e.source.id for e in self.edges}
+    exit_nodes = [n for n in self.nodes if n.id not in sources]
+
+    if not exit_nodes:
+        raise ValueError("Graph has no exit points - contains cycle")
+
+    return exit_nodes
+
+def get_parents(self, node: Node) -> List[Node]:
+    """Returns all nodes with edges pointing to this node."""
+    return [e.source for e in self.edges if e.target.id == node.id]
+
+def get_children(self, node: Node) -> List[Node]:
+    """Returns all nodes this node points to."""
+    return [e.target for e in self.edges if e.source.id == node.id]
+
+def get_distance(self, source: Node, target: Node) -> int:
+    """BFS to find shortest path distance."""
+    if source.id == target.id:
+        return 0
+
+    from collections import deque
+    queue = deque([(source, 0)])
+    visited = {source.id}
+
+    while queue:
+        current, dist = queue.popleft()
+        for child in self.get_children(current):
+            if child.id == target.id:
+                return dist + 1
+            if child.id not in visited:
+                visited.add(child.id)
+                queue.append((child, dist + 1))
+
+    raise ValueError(f"No path from {source.id} to {target.id}")
+```
+
+---
+
+### 🔴 BLOCKER 2: Agent Orchestrator Core Loop
+**File**: `src/services/agent/core/orchestrator.py`
+**Status**: 40% complete (structure only)
+
+**Current State**:
+```python
+def run_exploration(self, budget: int):
+    print(f"Starting prioritized exploration with budget: {budget}")
+    # COMMENTED OUT:
+    # for node in self.graph.get_entry_points():  # Graph method doesn't exist
+    #     self.heap.push(node, priority=1.0)
+```
+
+**Required Implementation**:
+```python
+def run_exploration(self, budget: int) -> Dict[str, NodeAssessment]:
+    """
+    Traverse graph using priority-based exploration.
+    Returns dict of {node_id: assessment}
+    """
+    from src.services.logging import with_context
+    logger = with_context(budget=budget, operation="exploration")
+
+    logger.info("exploration_started", node_count=len(self.graph.nodes))
+
+    # Initialize heap with entry nodes
+    for node in self.graph.get_entry_nodes():
+        self.heap.push(node, priority=1.0)
+        logger.debug("entry_node_queued", node_id=node.id)
+
+    node_assessments = {}
+
+    while not self.heap.is_empty() and budget > 0:
+        node = self.heap.pop()
+
+        if node.id in self.visited:
+            continue
+
+        self.visited.add(node.id)
+        logger.info("node_processing", node_id=node.id, budget_remaining=budget)
+
+        # DSPy evaluation
+        assessment = self._evaluate_node(node)
+        node_assessments[node.id] = assessment
+
+        # Push children with updated priorities
+        for child in self.graph.get_children(node):
+            if child.id not in self.visited:
+                priority = assessment.influence_score * assessment.risk_level
+                self.heap.push(child, priority=priority)
+
+        budget -= 1
+
+    logger.info("exploration_completed", nodes_evaluated=len(node_assessments))
+    return node_assessments
+
+def _evaluate_node(self, node: Node) -> NodeAssessment:
+    """Evaluate single node using DSPy."""
+    # TODO: Implement DSPy signature call
+    pass
+```
+
+---
+
+### 🔴 BLOCKER 3: DSPy Integration Missing
+**File**: `src/services/agent/models/signatures.py`
+**Status**: Definitions only, never instantiated
+
+**Current State**: Classes defined with field descriptions
+**Required**: Instantiation in orchestrator
+
+```python
+# In orchestrator.__init__()
+from src.services.agent.models.signatures import NodeSignature
+import dspy
+
+self.node_evaluator = dspy.Predict(NodeSignature)
+
+# In _evaluate_node()
+result = self.node_evaluator(
+    firm_context=self._format_firm_context(firm),
+    node_requirements=self._format_node_requirements(node),
+    distance_from_entry=self.graph.get_distance(entry_node, node)
+)
+```
+
+**Enhancement Needed for Signatures**:
+```python
+class NodeSignature(dspy.Signature):
+    """Evaluates firm capability match against node requirements."""
+
+    firm_context: str = dspy.InputField(
+        desc="Firm's capabilities: sectors, services, countries_active, strategic focuses"
+    )
+    node_requirements: str = dspy.InputField(
+        desc="Node operation type, category, description from graph"
+    )
+    distance_from_entry: int = dspy.InputField(
+        desc="Graph hops from project entry point (0 = entry)"
+    )
+
+    # Outputs with strict constraints
+    influence_score: float = dspy.OutputField(
+        desc="Capability match score 0.0-1.0. 1.0=perfect match, 0.0=no overlap"
+    )
+    risk_level: int = dspy.OutputField(
+        desc="Failure probability 1-5. 1=trivial, 5=critical failure likely"
+    )
+    reasoning: str = dspy.OutputField(
+        desc="Step-by-step explanation of assessment with specific capability gaps"
+    )
+```
+
+---
+
+### 🟡 BLOCKER 4: Math Service Missing
+**Expected**: `src/services/math/risk.py`
+**Current**: File exists with 3 functions implemented ✓
+
+**Functions Present**:
+- `sigmoid(x)` - Maps scores to (0,1)
+- `calculate_influence_score(ce_score, distance, attenuation_factor)` - Distance decay model
+- `calculate_topological_risk(local_failure_prob, multiplier, parent_success_probs)` - Cascading risk
+- `calculate_weighted_alignment(agent_scores, weights)` - Metric weighting
+
+**Status**: ✅ COMPLETE - No blocker
 
 ---
 
 ## Architectural Decisions (Finalized)
 
 ### 1. Influence Formula: Distance-Based Decay Model
-**Choice**: Use `risk.py` implementation
-```python
-I_n = sigmoid(CE_score) × α^(-d)
-```
+**Formula**: `I_n = sigmoid(CE_score) × α^(-d)`
 
-**Rationale**: Infrastructure influence decays with contractual distance. Being an expert 4 nodes away from execution means zero influence. Cross-encoder affinity (`CE_score`) captures local match quality, then topological distance (`d`) applies decay.
+**Implementation**: `src/services/math/risk.py:8-17`
 
-**Implementation**: Already in `src/services/math/risk.py:8-17`
+**Rationale**: Infrastructure influence decays with topological distance. Cross-encoder captures local affinity, distance applies decay.
 
 ---
 
 ### 2. Acceleration: Pure Python + NumPy
-**Choice**: Defer C++ optimization
+**Decision**: Defer C++ optimization
 
-**Rationale**: Bottleneck is LLM latency, not tensor ops. NumPy is fast enough for MVP. C++ can wait for scale.
+**Rationale**: LLM latency is bottleneck, not tensor ops. NumPy sufficient for MVP.
 
-**Action**: Ignore `tensor_ops_cpp.py` and `tensor_ops.cpp` for now.
+**Action**: Ignore `tensor_ops_cpp.py` and `tensor_ops.cpp`
 
 ---
 
 ### 3. Cross-Encoder: DSPy Simulation
-**Choice**: Use OpenAI embeddings + DSPy reasoning instead of BGE-M3 container
+**Decision**: Use OpenAI embeddings + DSPy reasoning instead of BGE-M3
 
-**Rationale**: Simpler infrastructure. DSPy `EvaluatorSignature` can produce relational scores without dedicated cross-encoder service.
-
-**Implementation Path**:
-```python
-# Instead of: ce_score = bge_client.score_pair(firm_text, node_text)
-# Use: ce_score = evaluator(firm_context, node_requirements).influence_score
-```
+**Implementation**: DSPy `EvaluatorSignature` produces scores without dedicated service
 
 ---
 
 ### 4. Data Quality: Fail Fast on Invalid Data
-**Choice**: **Crash on data inconsistencies** - no silent failures
+**Decision**: Crash on data inconsistencies
 
 **Rationale**: Bad data → bad analysis. Better to fail immediately than produce unreliable risk assessments.
 
-**Known Issues** (must fix before use):
-- Missing "OIC" in affiliations.json → **Fatal error if referenced**
-- Service name mismatches → **Fatal error if not in registry**
-- Typo: "prefered_project_timeline" → **Fix in data file**
+**Known Issues (Must Fix)**:
+- Missing "OIC" in affiliations.json → Fatal if referenced
+- Service name mismatches → Fatal if not in registry
+- Typo: "prefered_project_timeline" → Fix in data
+- Case mismatch: "Mercosur" vs "MERCOSUR"
 
-**Action**: Strict validation in `base.py` - raise exceptions, no warnings.
+**Action**: Strict validation - raise exceptions, no warnings
 
 ---
 
 ### 5. Entry/Exit Points: Project-Specified Only
-**Choice**: Use `project.json` entry_node_id/exit_node_id **exclusively**
-
-**Implementation**:
-```python
-def get_entry_nodes(self) -> List[Node]:
-    """Returns nodes specified by project entry criteria. Raises if not found."""
-    if not hasattr(self, 'entry_node_id'):
-        raise ValueError("Graph must have explicit entry_node_id from project")
-
-    entry_node = next((n for n in self.nodes if n.id == self.entry_node_id), None)
-    if not entry_node:
-        raise ValueError(f"Entry node {self.entry_node_id} not found in graph")
-
-    return [entry_node]
-```
+**Decision**: Use `project.json` entry_node_id/exit_node_id exclusively
 
 **Rationale**: Infrastructure projects have explicit contract entry points. No guessing from topology.
 
 ---
 
 ### 6. Agent Implementation: Hybrid Neuro-Symbolic
-**Choice**: DSPy for node evaluation → Manual math for risk propagation
+**Decision**: DSPy for node evaluation → Manual math for risk propagation
 
 **Pipeline**:
 ```
@@ -107,409 +297,143 @@ def get_entry_nodes(self) -> List[Node]:
 4. Analysis → Critical chains, pivotal nodes (Graph algorithms)
 ```
 
-**Rationale**: Gets reasoning/audit trail from LLM, keeps math deterministic and fast.
-
 ---
 
 ### 7. Output Format: NumPy Arrays
-**Choice**: Replace PyTorch tensors with NumPy
+**Decision**: Replace PyTorch tensors with NumPy
 
-**Rationale**: No neural network training needed. NumPy is lighter, CPU-native, and MATLAB-compatible.
-
-**Action**: Modify `AnalysisOutput` model to use `np.ndarray` or serialize to lists.
+**Rationale**: No neural network training. NumPy is lighter, CPU-native, MATLAB-compatible.
 
 ---
 
-## Implementation Blockers (Priority Order)
+## Implementation Status by Component
 
-### 🔴 BLOCKER 1: Graph Utility Methods
-**File**: `src/models/graph.py`
-**Status**: Missing critical methods
-
-**Required Methods**:
-```python
-def get_entry_nodes(self) -> List[Node]:
-    """Nodes with in-degree 0."""
-
-def get_exit_nodes(self) -> List[Node]:
-    """Nodes with out-degree 0."""
-
-def get_parents(self, node: Node) -> List[Node]:
-    """All nodes with edges pointing to this node."""
-
-def get_children(self, node: Node) -> List[Node]:
-    """All nodes this node points to."""
-
-def get_distance(self, source: Node, target: Node) -> int:
-    """Shortest path length between nodes."""
-```
-
-**Impact**: Orchestrator cannot traverse without these.
+| Component | Completion | Status | Blocker |
+|-----------|-----------|--------|---------|
+| **Models** | 100% | ✅ Ready | None |
+| **Graph** | 70% | ⚠️ Partial | Missing utility methods |
+| **Traversal** | 100% | ✅ Ready | None |
+| **Orchestrator** | 40% | ⚠️ Stub | Missing core loop |
+| **Signatures** | 50% | ⚠️ Partial | Never instantiated |
+| **Math Service** | 100% | ✅ Ready | None |
+| **Vector Service** | 100% | ✅ Ready | None |
+| **Logging** | 100% | ✅ Ready | None |
+| **AI Client** | 95% | ✅ Ready | Not wired to orchestrator |
+| **GeoAnalyzer** | 85% | ✅ Ready | Minor stubs |
+| **Docker** | 100% | ✅ Ready | None |
+| **Tests** | 83% | ⚠️ 27 failing | Mock issues |
 
 ---
 
-### 🔴 BLOCKER 2: Agent Orchestrator Core Loop
-**File**: `src/services/agent/core/orchestrator.py`
-**Status**: Stub implementation (lines 19-43)
-
-**What's Missing**:
-```python
-def run_exploration(self, budget: int):
-    # CURRENT: Only prints, commented-out logic
-
-    # NEEDED:
-    # 1. Push entry nodes to heap with priority=1.0
-    # 2. While heap not empty and budget > 0:
-    #    a. Pop highest priority node
-    #    b. Use DSPy NodeSignature to evaluate
-    #    c. Calculate influence score with distance decay
-    #    d. Calculate local risk
-    #    e. Push children to heap with updated priorities
-    #    f. Decrement budget
-    # 3. Return node_assessments dict
-```
-
-**Dependencies**: Needs DSPy signature instantiation and graph methods.
-
----
-
-### 🔴 BLOCKER 3: DSPy Signature Integration
-**File**: `src/services/agent/models/signatures.py`
-**Status**: Bare class definitions
-
-**Enhancement Needed**:
-```python
-class NodeSignature(dspy.Signature):
-    """Evaluates firm capability against node requirements."""
-
-    # INPUT
-    firm_context: str = dspy.InputField(
-        desc="Firm's capabilities, sectors, and strategic focuses as structured text"
-    )
-    node_requirements: str = dspy.InputField(
-        desc="Node's operation type, category, and description"
-    )
-    distance_from_entry: int = dspy.InputField(
-        desc="Graph distance from firm's entry point (topological hops)"
-    )
-
-    # OUTPUT
-    influence_score: float = dspy.OutputField(
-        desc="Cross-encoder affinity score between 0.0 and 1.0. "
-             "1.0 = perfect capability match, 0.0 = no capability overlap."
-    )
-    risk_level: int = dspy.OutputField(
-        desc="Risk assessment on scale 1-5. "
-             "1 = trivial risk, 5 = critical failure likely."
-    )
-    reasoning: str = dspy.OutputField(
-        desc="Step-by-step explanation of the assessment"
-    )
-```
-
-**Action**: Instantiate with `dspy.Predict(NodeSignature)` in orchestrator.
-
----
-
-### 🟡 BLOCKER 4: Risk Propagation Loop
-**File**: `src/services/agent/core/orchestrator.py`
-**Status**: Not implemented
-
-**Logic Needed**:
-```python
-def evaluate_blast_radius(self, flagged_node: Node):
-    """DFS from flagged node to recompute upstream risks."""
-
-    self.stack.push(flagged_node)
-    risk_map = {}
-
-    while not self.stack.is_empty():
-        node = self.stack.pop()
-
-        # Get parent nodes
-        parents = self.graph.get_parents(node)
-
-        # Calculate cascading risk using formula
-        # Parents MUST already be evaluated - enforce topological order
-        parent_success_probs = [
-            1.0 - risk_map[p.id]  # KeyError if parent not yet computed = bug
-            for p in parents
-        ]
-
-        local_risk = node_assessments[node.id].risk_level / 5.0  # Normalize to [0,1]
-        multiplier = get_critical_path_multiplier(node)
-
-        success_prob = calculate_topological_risk(
-            local_failure_prob=local_risk,
-            multiplier=multiplier,
-            parent_success_probs=parent_success_probs
-        )
-
-        risk_map[node.id] = 1.0 - success_prob
-
-        # Push parents to stack for upstream propagation
-        for parent in parents:
-            if parent.id not in visited:
-                self.stack.push(parent)
-
-    return risk_map
-```
-
----
-
-### 🟡 BLOCKER 5: 2x2 Matrix Classification
-**File**: Create `src/services/analysis/matrix_classifier.py`
-**Status**: Not started
-
-**Implementation**:
-```python
-from enum import Enum
-
-class RiskQuadrant(Enum):
-    Q1_KNOWN_KNOWNS = "High Risk, High Influence - Direct oversight required"
-    Q2_NO_BIGGIE = "Low Risk, High Influence - Automate with SOPs"
-    Q3_COOKED_ZONE = "High Risk, Low Influence - Contingency/Insurance"
-    Q4_BASIC = "Low Risk, Low Influence - Delegate/Monitor minimally"
-
-def classify_node(risk_score: float, influence_score: float) -> RiskQuadrant:
-    """
-    Classify node into action quadrant.
-
-    Thresholds:
-    - Risk: 0.5 (P(failure) > 50%)
-    - Influence: 0.5 (I_n > 0.5 after distance decay)
-    """
-    RISK_THRESHOLD = 0.5
-    INFLUENCE_THRESHOLD = 0.5
-
-    high_risk = risk_score > RISK_THRESHOLD
-    high_influence = influence_score > INFLUENCE_THRESHOLD
-
-    if high_risk and high_influence:
-        return RiskQuadrant.Q1_KNOWN_KNOWNS
-    elif not high_risk and high_influence:
-        return RiskQuadrant.Q2_NO_BIGGIE
-    elif high_risk and not high_influence:
-        return RiskQuadrant.Q3_COOKED_ZONE
-    else:
-        return RiskQuadrant.Q4_BASIC
-```
-
----
-
-### 🟢 BLOCKER 6: Critical Chain Detection
-**File**: Create `src/services/analysis/critical_path.py`
-**Status**: Not started (but lower priority)
-
-**Algorithm**: Find all paths from entry to exit where failure blocks success.
-
-**Defer this**: Get orchestrator working first, then add critical path analysis.
-
----
-
-## Data Inconsistencies (Must Fix Before Use)
+## Data Quality Issues (Must Fix Before Use)
 
 ### Geographic Data
-- ✅ `countries.json`: 195 countries, well-formed
-- ⚠️ `affiliations.json`: Missing "OIC" (referenced in firm.json)
-- ⚠️ Case mismatch: "Mercosur" vs "MERCOSUR"
+- ✅ countries.json: 195 countries, well-formed
+- ❌ affiliations.json: Missing "OIC" (referenced in firm.json) - **FATAL**
+- ❌ Case mismatch: "Mercosur" vs "MERCOSUR"
 
 ### Taxonomy Data
-- ✅ `sectors.json`, `strategic_focus.json`: Complete
-- ✅ `categories.json`: 16 service types
-- ⚠️ `services.json`: POC references undefined services ("Grid Integrity Verification")
+- ❌ services.json: POC references undefined services
+- ❌ Service name mismatch: "Public-Private Partnership Management" not in registry
 
 ### POC Data
-- ⚠️ Typo: "prefered_project_timeline" → "preferred_project_timeline"
-- ⚠️ Service name mismatch: "Public-Private Partnership Management" not in services.json
-
-**Action**: Fix data files immediately. System must crash on invalid references - no tolerance for bad data.
-
----
-
-## Mathematical Formula Consolidation
-
-### Canonical Formulas (Finalized)
-
-**1. Influence Score (Distance-Decay Model)**
-```python
-# File: src/services/math/risk.py:8-17
-I_n = sigmoid(CE_score) × α^(-d)
-
-Where:
-- CE_score: Cross-encoder affinity (from DSPy evaluator)
-- α: Attenuation factor (1.2 from metrics.json)
-- d: Graph distance from entry point
-```
-
-**2. Cascading Risk (Product of Success)**
-```python
-# File: src/services/math/risk.py:19-35
-P(Success_n) = (1 - min(P(failure_local) × μ, 1.0)) × ∏[P(Success_i) for i in parents]
-
-Where:
-- P(failure_local): Node's inherent failure probability
-- μ: Critical path multiplier (1.25 from metrics.json)
-- Parents: All upstream dependencies
-```
-
-**3. Weighted Alignment**
-```python
-# File: src/services/math/risk.py:37-46
-Score = Σ(metric_i × weight_i)
-
-Weights from metrics.json:
-- growth: 0.25
-- innovation: 0.20
-- sustainability: 0.20
-- efficiency: 0.15
-- expansion: 0.10
-- public_private_partnership: 0.10
-```
+- ❌ firm.json: Typo "prefered_project_timeline"
+- ❌ firm.json: References "OIC" which doesn't exist
+- ❌ project.json: Service references don't match
 
 ---
 
-## Implementation Plan
+## Test Suite Status
 
-### Phase 1: Foundation (Core Blockers)
-```
-1. Add graph utility methods to graph.py
-   - get_entry_nodes(), get_exit_nodes()
-   - get_parents(), get_children()
-   - get_distance() using BFS
+**Total Tests**: 159
+**Passing**: 132 (83%)
+**Failing**: 27 (17%)
 
-2. Enhance DSPy signatures with proper field descriptions
-   - Add constraints (score ranges, risk levels)
-   - Add reasoning/instruction fields
+### Test Coverage by Module
 
-3. Implement orchestrator.run_exploration()
-   - Initialize heap with entry nodes
-   - DSPy evaluation loop
-   - Budget management
-   - Priority updates
+| Module | Tests | Status | Coverage |
+|--------|-------|--------|----------|
+| test_base.py | 31 | ✅ PASS | Data models, registries |
+| test_entities.py | 21 | ✅ PASS | Firm, Project, Risk |
+| test_graph.py | 6 | ✅ PASS | DAG validation |
+| test_orchestrator.py | 12 | ✅ PASS | Agent orchestration |
+| test_traversal.py | 20+ | ✅ PASS | Stack/Heap |
+| test_geo.py | 20 | ⚠️ PARTIAL | 70% passing |
+| test_ai_client.py | 9 | ⚠️ FAILING | 33% passing |
+| test_signatures.py | 14 | ⚠️ FAILING | 0% passing |
+| test_settings.py | 10 | ⚠️ FAILING | 30% passing |
+| test_integration.py | 6 | ⚠️ PARTIAL | Mock-heavy |
 
-4. Implement orchestrator.evaluate_blast_radius()
-   - Stack-based parent traversal
-   - Risk propagation using formulas
-   - Risk map accumulation
-```
-
-### Phase 2: Analysis Layer
-```
-5. Create matrix_classifier.py
-   - RiskQuadrant enum
-   - classify_node() function
-   - Threshold configuration
-
-6. Build end-to-end pipeline
-   - Firm/Project → Graph construction
-   - Orchestrator execution
-   - AnalysisOutput generation
-
-7. Add critical chain detection (optional)
-   - All-paths search algorithm
-   - Criticality scoring
-```
-
-### Phase 3: Integration & Output
-```
-8. Create API endpoint handler
-   - JSON ingestion with strict validation
-   - Pipeline orchestration
-   - Result serialization
-
-9. Update AnalysisOutput model
-   - Replace PyTorch tensors with NumPy
-   - Add CriticalChain and PivotalNode objects
-
-10. Fix data issues or fail
-    - Add missing "OIC" to affiliations.json
-    - Fix service name mismatches
-    - Correct typo in firm.json
-    - **No tolerance for bad data**
-```
+**Critical Test Gaps**:
+- No tests for src/main.py (entry point)
+- No tests for logging service (4 files untested)
+- Heavy mocking masks integration issues
+- 27 failing tests need resolution
 
 ---
 
-## Testing Strategy
+## Implementation Plan (TDD Approach)
 
-### Unit Tests (Required)
-- `test_graph_methods.py`: Entry/exit nodes, parent/child discovery, distance calculation
-- `test_orchestrator.py`: Heap/stack operations, budget tracking
-- `test_risk_formulas.py`: Edge cases for influence and propagation formulas
-- `test_matrix_classifier.py`: Boundary conditions for quadrant assignment
+### Phase 1: Fix Graph Methods (1-2 hours)
+```
+1. Implement get_entry_nodes() → Pass test_graph.py
+2. Implement get_exit_nodes() → Pass test_graph.py
+3. Implement get_parents() → Pass test_graph.py
+4. Implement get_children() → Pass test_graph.py
+5. Implement get_distance() → Pass test_graph.py
+```
 
-### Integration Tests
-- `test_end_to_end_pipeline.py`: firm.json + project.json → AnalysisOutput
-- `test_dspy_integration.py`: Signature instantiation and inference
+### Phase 2: Wire Orchestrator (2-3 hours)
+```
+6. Implement run_exploration() → Pass test_orchestrator.py
+7. Implement _evaluate_node() stub → Pass test_orchestrator.py
+8. Wire DSPy signatures → Pass test_signatures.py
+9. Implement evaluate_blast_radius() → Pass test_orchestrator.py
+```
 
-### Data Validation Tests
-- `test_data_integrity.py`: Cross-reference countries, services, affiliations
-
----
-
-## Known Technical Debt
-
-### High Priority
-- Redundant cosine_similarity in `tensor_ops.py` and `vector_ops.py` (use vector_ops everywhere)
-- Empty forward() in legacy `main.py` (delete or implement)
-- C++ bindings without compiled library (remove or defer)
-
-### Medium Priority
-- Inconsistent logging for zero vectors (standardize across modules)
-- No centrality calculation (currently using abstract parameter)
-- Service references by name instead of ID (add referential integrity)
-
-### Low Priority
-- Typo in firm.json ("prefered")
-- Unused categories in categories.json
-- Case sensitivity in affiliation names
+### Phase 3: Integration (1-2 hours)
+```
+10. Fix data issues → Pass test_integration.py
+11. Wire AI client to orchestrator → Pass test_ai_client.py
+12. Create end-to-end pipeline → Pass test_integration.py
+13. Implement 2x2 matrix classification → Add tests
+```
 
 ---
 
 ## Success Criteria
 
-**MVP is complete when**:
-1. ✅ `firm.json` + `project.json` → `AnalysisOutput` end-to-end
-2. ✅ DSPy signatures successfully query OpenAI and return structured assessments
-3. ✅ Risk propagation produces valid probability distributions [0,1]
-4. ✅ 2x2 matrix correctly classifies nodes into quadrants
-5. ✅ All unit tests pass
-6. ✅ System validates all data strictly (crashes on invalid input)
-
-**What success looks like**:
-```python
-from src.pipeline import analyze_risk
-
-result = analyze_risk("data/poc/firm.json", "data/poc/project.json")
-
-assert 0 <= result.overall_bankability <= 1
-assert len(result.critical_chains) > 0
-assert all(0 <= score <= 1 for score in result.scenario_spread)
-```
+**MVP Complete When**:
+1. ✅ All 159 tests passing (currently 132/159)
+2. ✅ firm.json + project.json → AnalysisOutput end-to-end
+3. ✅ DSPy signatures query OpenAI successfully
+4. ✅ Risk propagation produces [0,1] probabilities
+5. ✅ 2x2 matrix classifies nodes correctly
+6. ✅ System crashes on invalid data (no silent failures)
 
 ---
 
 ## Next Immediate Actions
 
-**Start here** (in order):
+**Start Here** (in test-driven order):
 
-1. Implement `Graph.get_entry_nodes()` and `Graph.get_parents()`
-2. Enhance `NodeSignature` with proper field descriptions
-3. Implement `orchestrator.run_exploration()` core loop
-4. Create simple test with mock graph (3 nodes, 2 edges)
-5. Verify DSPy can evaluate a single node and return structured output
+1. Run failing tests to understand gaps:
+   ```bash
+   pytest tests/test_graph.py -v
+   pytest tests/test_orchestrator.py -v
+   pytest tests/test_signatures.py -v
+   ```
 
-**Don't start yet**:
-- Critical path detection
-- C++ optimization
-- Data corrections
-- BGE-M3 integration
-- PyTorch anything
+2. Implement Graph utility methods until tests pass
+
+3. Implement orchestrator core loop until tests pass
+
+4. Wire DSPy integration until tests pass
+
+5. Fix data issues and rerun integration tests
 
 ---
 
-**Audit Date**: 2026-02-07
-**Status**: Ready for implementation
-**Blockers**: 6 items (2 critical, 2 high, 2 medium)
-**Estimated Completion**: All blockers can be resolved in a focused implementation session.
+**Audit Status**: Current implementation is 60% complete. Infrastructure and foundations are solid. Core orchestration logic is the main gap. Tests define the contract - implement until green.
+
+**Estimated Completion**: All blockers resolvable in focused implementation session using TDD approach with existing test suite as specification.

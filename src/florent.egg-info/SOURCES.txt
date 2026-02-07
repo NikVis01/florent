@@ -25,6 +25,9 @@ tests/test_base.py
 tests/test_entities.py
 tests/test_geo.py
 tests/test_graph.py
+tests/test_integration.py
 tests/test_orchestrator.py
+tests/test_settings.py
+tests/test_signatures.py
 tests/test_tensor_ops.py
 tests/test_traversal.py

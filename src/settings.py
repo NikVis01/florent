@@ -13,7 +13,7 @@ class Settings:
 
     # LLM Settings
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4-turbo-preview")
+    LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
     # BGE-M3 Settings
     BGE_M3_URL = os.getenv("BGE_M3_URL", "http://localhost:8080")
