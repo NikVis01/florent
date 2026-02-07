@@ -9,9 +9,9 @@ class NodeSignature(dspy.Signature):
     firm_context = dspy.InputField(desc="Aggregated capabilities and strategic focus of the firm")
     node_requirements = dspy.InputField(desc="Technical and operational requirements of the project node")
     
-    influence_score = dspy.OutputField(desc="Calculated influence score (0.0 to 1.0)")
-    risk_assessment = dspy.OutputField(desc="Qualitative and quantitative risk assessment")
-    reasoning = dspy.OutputField(desc="Logical steps taken to reach the assessment")
+    influence_score = dspy.OutputField(desc="Numeric influence score between 0.0 and 1.0 (float)")
+    risk_assessment = dspy.OutputField(desc="Numeric risk level between 0.0 and 1.0 (float)")
+    reasoning = dspy.OutputField(desc="Brief explanation of the assessment")
 
 class PropagationSignature(dspy.Signature):
     """

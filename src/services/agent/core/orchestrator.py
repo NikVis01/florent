@@ -65,13 +65,67 @@ class AgentOrchestrator:
                 firm_context=f"Node: {node.name}, Type: {node.type}",
                 node_requirements=f"Evaluating node {node.id}"
             )
-            influence = float(result.influence_score) if hasattr(result, 'influence_score') else 0.5
-            risk = float(result.risk_assessment) if hasattr(result, 'risk_assessment') else 0.5
+
+            # Parse influence score
+            influence = self._parse_numeric_value(
+                result.influence_score if hasattr(result, 'influence_score') else "0.5",
+                default=0.5
+            )
+
+            # Parse risk assessment
+            risk = self._parse_numeric_value(
+                result.risk_assessment if hasattr(result, 'risk_assessment') else "0.5",
+                default=0.5
+            )
+
             reasoning = result.reasoning if hasattr(result, 'reasoning') else "No reasoning provided"
             return NodeAssessment(influence, risk, reasoning)
         except Exception as e:
             print(f"Error evaluating node {node.id}: {e}")
-            return NodeAssessment(0.5, 0.5, f"Error: {str(e)}")
+            return NodeAssessment(0.5, 0.5, "Fallback assessment used due to evaluation error")
+
+    def _parse_numeric_value(self, value, default=0.5):
+        """Parse numeric value from string or float, with fallback."""
+        import re
+
+        # If already a number, return it
+        if isinstance(value, (int, float)):
+            result = float(value)
+            return max(0.0, min(1.0, result))  # Clamp to [0, 1]
+
+        # Convert to string and try to extract number
+        value_str = str(value).strip()
+
+        # Try direct conversion first
+        try:
+            result = float(value_str)
+            return max(0.0, min(1.0, result))  # Clamp to [0, 1]
+        except ValueError:
+            pass
+
+        # Try to extract first number from text (e.g., "0.7" from "Risk: 0.7 - high")
+        match = re.search(r'(\d+\.?\d*)', value_str)
+        if match:
+            try:
+                result = float(match.group(1))
+                # If > 1, assume it's a percentage and divide by 100
+                if result > 1.0:
+                    result = result / 100.0
+                return max(0.0, min(1.0, result))
+            except ValueError:
+                pass
+
+        # Map common words to values
+        value_lower = value_str.lower()
+        if 'high' in value_lower or 'critical' in value_lower:
+            return 0.8
+        elif 'medium' in value_lower or 'moderate' in value_lower:
+            return 0.5
+        elif 'low' in value_lower or 'minimal' in value_lower:
+            return 0.2
+
+        # Fallback to default
+        return default
 
     def evaluate_blast_radius(self, flagged_node: Node):
         """

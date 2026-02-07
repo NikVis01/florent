@@ -1,6 +1,7 @@
 [project]
 name = "florent"
 version = "0.1.0"
+requires-python = ">=3.13"
 description = "Business graph modeling and traversal"
 dependencies = [
     "pydantic>=2.0.0",
