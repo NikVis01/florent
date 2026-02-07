@@ -14,7 +14,14 @@ make all
 echo "--- 3. Linting with ruff ---"
 uv run ruff check src/
 
-echo "--- 4. Rebuilding Docker Image ---"
+echo "--- 4. Generating OpenAPI Specification ---"
+if [ -f "scripts/generate_openapi.py" ]; then
+    python3 scripts/generate_openapi.py -o docs/openapi.json
+else
+    echo "Warning: generate_openapi.py not found. Skipping OpenAPI generation."
+fi
+
+echo "--- 5. Rebuilding Docker Image ---"
 docker build -t florent-engine .
 
 echo "--- Maintenance Complete ---"
