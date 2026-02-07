@@ -224,10 +224,16 @@ class TestTensorOpsCpp(unittest.TestCase):
 
     def test_library_fallback_loading(self):
         """Test that library tries fallback loading path."""
+        import sys
+        # Remove the module if it's already loaded
+        if 'src.services.agent.ops.tensor_ops_cpp' in sys.modules:
+            del sys.modules['src.services.agent.ops.tensor_ops_cpp']
+
         with patch('ctypes.CDLL', side_effect=[OSError("Not found"), MagicMock()]) as mock_cdll:
             # This should test the fallback mechanism
             # First attempt fails, second succeeds
             try:
+                import src.services.agent.ops.tensor_ops_cpp
                 # If we get here, fallback worked
                 self.assertEqual(mock_cdll.call_count, 2)
             except OSError:
