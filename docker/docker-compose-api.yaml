@@ -8,7 +8,7 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LLM_MODEL=${LLM_MODEL:-gpt-4-turbo-preview}
-      - BGE_M3_URL=${BGE_M3_URL:-http://bge-m3:11434}
+      - BGE_M3_URL=${BGE_M3_URL:-http://bge-m3:8080}
     depends_on:
       bge-m3:
         condition: service_healthy
@@ -32,12 +32,12 @@ services:
           memory: 512M
 
   bge-m3:
-    image: mdelapenya/bge-m3:0.3.13-567m
+    image: semitechnologies/transformers-inference:baai-bge-m3-onnx-latest
     ports:
-      - "11434:11434"
+      - "8080:8080"
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:11434/ || exit 1" ]
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
