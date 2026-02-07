@@ -321,19 +321,9 @@ def run_analysis(
         logger.info("step_3_running_exploration", budget=budget)
         node_assessments_raw = orchestrator.run_exploration(budget)
 
-        # Convert NodeAssessment objects to dictionaries
-        node_assessments = {
-            node_id: {
-                "influence": assessment.influence_score,
-                "risk": assessment.risk_level,
-                "reasoning": assessment.reasoning
-            }
-            for node_id, assessment in node_assessments_raw.items()
-        }
-
         logger.info(
             "exploration_complete",
-            nodes_evaluated=len(node_assessments)
+            nodes_evaluated=len(node_assessments_raw)
         )
 
         # Step 4: Propagate risk
@@ -342,7 +332,15 @@ def run_analysis(
 
         # Step 5: Generate action matrix
         logger.info("step_5_generating_matrix")
-        action_matrix = generate_matrix(node_assessments)
+        # Create minimal dict for matrix generation
+        matrix_input = {
+            node_id: {
+                "influence": assessment.influence_score,
+                "risk": assessment.risk_level
+            }
+            for node_id, assessment in node_assessments_raw.items()
+        }
+        action_matrix = generate_matrix(matrix_input)
 
         logger.info(
             "matrix_generated",
@@ -356,6 +354,18 @@ def run_analysis(
         logger.info("step_6_detecting_critical_chains")
         critical_chains = detect_critical_chains(graph, propagated_risk)
 
+        # Step 6.1: Build final enriched node assessments
+        node_assessments = {
+            node_id: {
+                "name": graph.get_node(node_id).name,
+                "influence": assessment.influence_score,
+                "risk": assessment.risk_level,
+                "reasoning": assessment.reasoning,
+                "is_on_critical_path": any(node_id in chain["nodes"] for chain in critical_chains)
+            }
+            for node_id, assessment in node_assessments_raw.items()
+        }
+
         # Step 7: Generate summary
         avg_risk = sum(propagated_risk.values()) / len(propagated_risk) if propagated_risk else 0
         max_risk = max(propagated_risk.values()) if propagated_risk else 0
@@ -368,12 +378,21 @@ def run_analysis(
             "project_id": project.id,
             "nodes_analyzed": len(node_assessments),
             "budget_used": len(node_assessments),
+            "aggregate_project_score": round(bankability, 3),
             "overall_bankability": round(bankability, 3),
             "average_risk": round(avg_risk, 3),
             "maximum_risk": round(max_risk, 3),
             "critical_chains_detected": len(critical_chains),
             "high_risk_nodes": len(action_matrix["mitigate"]) + len(action_matrix["contingency"]),
             "recommendations": _generate_recommendations(action_matrix, critical_chains, bankability)
+        }
+
+        # Add explicit recommendation for visualizer
+        recommendation = {
+            "should_bid": bankability >= 0.7,
+            "confidence": bankability,
+            "key_risks": summary["recommendations"][:2],
+            "key_opportunities": [r for r in summary["recommendations"] if "strong" in r.lower()][:2]
         }
 
         logger.info(
@@ -386,8 +405,10 @@ def run_analysis(
         return {
             "node_assessments": node_assessments,
             "action_matrix": action_matrix,
+            "matrix_classifications": action_matrix,
             "critical_chains": critical_chains,
-            "summary": summary
+            "summary": summary,
+            "recommendation": recommendation
         }
 
     except Exception as e:

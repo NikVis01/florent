@@ -139,6 +139,13 @@ class Graph(BaseModel):
         """Returns all nodes this node points to."""
         return [e.target for e in self.edges if e.source.id == node.id]
 
+    def get_node(self, node_id: str) -> Node:
+        """Find a node by its ID."""
+        for node in self.nodes:
+            if node.id == node_id:
+                return node
+        raise ValueError(f"Node {node_id} not found in graph")
+
     def get_distance(self, source: Node, target: Node) -> int:
         """BFS to find shortest path distance."""
         if source.id == target.id:
