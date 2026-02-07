@@ -1,6 +1,10 @@
 # Florent MATLAB Setup Guide
 
-This guide will help you set up the Florent MATLAB codebase for use.
+**⚠️ NEW USERS: Start with `QUICK_START.md` for a super simple setup guide!**
+
+This is the detailed setup guide. For a quick, no-nonsense setup, see `QUICK_START.md` first.
+
+---
 
 ## Quick Start
 
@@ -18,6 +22,8 @@ This guide will help you set up the Florent MATLAB codebase for use.
    ```matlab
    runFlorentDemo()
    ```
+
+**That's it!** The API client works automatically with manual HTTP calls. No REST API Client Generator needed.
 
 ## Detailed Setup
 
@@ -174,6 +180,7 @@ If you encounter issues:
 
 ## Additional Resources
 
+- **🚀 Quick Start**: `QUICK_START.md` - **START HERE** - Super simple, no-nonsense setup guide
 - **Function Reference**: `README_FUNCTIONS.md` - Complete function documentation
 - **App Designer Setup**: `Apps/README.md` - Frontend application guide
 - **App Designer Details**: `Apps/APP_DESIGNER_SETUP.md` - Detailed App Designer information

@@ -1,9 +1,10 @@
 classdef FlorentAPIClientWrapper < handle
-    % FLORENTAPICLIENTWRAPPER Wrapper for generated OpenAPI MATLAB client
+    % FLORENTAPICLIENTWRAPPER API client wrapper for Florent Python API
     %
-    % This class provides a convenient interface to the Florent Python API
-    % using the generated OpenAPI client. It handles error responses,
-    % timeouts, and data transformation.
+    % This class provides a convenient interface to the Florent Python API.
+    % It automatically uses manual HTTP calls (webread/webwrite) and optionally
+    % uses a generated OpenAPI client if available. It handles error responses,
+    % timeouts, retries, and data transformation.
     %
     % Usage:
     %   client = FlorentAPIClientWrapper()

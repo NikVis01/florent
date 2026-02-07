@@ -15,12 +15,12 @@ These functions are in `Functions/` and can be called from anywhere:
 - `florentConfig()` - Get configuration structure
 
 **Data Access:**
-- `getRiskData()` - Load risk analysis data (uses OpenAPI client)
-- `FlorentAPIClientWrapper` - OpenAPI client wrapper class
+- `getRiskData()` - Load risk analysis data (uses API client wrapper with automatic manual HTTP calls)
+- `FlorentAPIClientWrapper` - API client wrapper class (uses webread/webwrite automatically)
 - `buildAnalysisRequest()` - Build API request from IDs
 - `parseAnalysisResponse()` - Transform API response to MATLAB structure
 - `validateAnalysisResponse()` - Validate API response structure
-- `callPythonAPI()` - Call Python API (DEPRECATED - use FlorentAPIClientWrapper)
+- `callPythonAPI()` - Direct manual HTTP API calls (alternative to wrapper)
 
 **Risk Calculations:**
 - `calculate_influence_score()` - Calculate influence score

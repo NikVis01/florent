@@ -36,8 +36,6 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["apt-get update -qq && apt-get install -y -qq curl >/dev/null 2>&1; exec /bin/ollama serve"]
     healthcheck:
       test: [ "CMD", "python3", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 8080))" ]
       interval: 30s

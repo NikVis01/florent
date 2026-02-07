@@ -28,11 +28,11 @@ function config = florentConfig(mode)
     config.api.retryAttempts = 3;
     config.api.retryDelay = 2; % seconds
     
-    % OpenAPI Client Configuration
+    % API Client Configuration
     config.api.client = struct();
-    config.api.client.useGeneratedClient = true; % Use generated OpenAPI client if available
-    config.api.client.fallbackToManual = true; % Fallback to manual HTTP if client not available
-    config.api.client.clientPath = fullfile(matlabDir, 'Classes', 'FlorentAPIClient'); % Path to generated client
+    config.api.client.useGeneratedClient = true; % Use generated OpenAPI client if available (optional)
+    config.api.client.fallbackToManual = true; % Always fallback to manual HTTP calls (webread/webwrite) - this is the default
+    config.api.client.clientPath = fullfile(matlabDir, 'Classes', 'FlorentAPIClient'); % Path to generated client (if generated)
     
     % Monte Carlo Configuration
     config.monteCarlo = struct();

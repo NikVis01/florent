@@ -1,8 +1,9 @@
 function results = testFlorentAPIClient()
-    % TESTFLORENTAPICLIENT Test the OpenAPI MATLAB client integration
+    % TESTFLORENTAPICLIENT Test the MATLAB API client integration
     %
     % This function tests the FlorentAPIClientWrapper and related functions
-    % to ensure the OpenAPI integration works correctly.
+    % to ensure the API integration works correctly. The wrapper automatically
+    % uses manual HTTP calls (webread/webwrite) when the generated client is not available.
     %
     % Usage:
     %   results = testFlorentAPIClient()
@@ -10,7 +11,7 @@ function results = testFlorentAPIClient()
     % Returns:
     %   results - Structure with test results
     
-    fprintf('\n=== Florent OpenAPI Client Tests ===\n\n');
+    fprintf('\n=== Florent API Client Tests ===\n\n');
     
     results = struct();
     results.passed = 0;
