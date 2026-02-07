@@ -11,7 +11,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 import requests
 
 import matplotlib.pyplot as plt
@@ -22,36 +22,45 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 
-# Set style
-sns.set_theme(style="whitegrid", palette="muted")
-plt.rcParams['figure.figsize'] = (12, 8)
+# Premium Aesthetics Configuration
+COLORS = {
+    "primary": "#1a73e8",    # Google Blue
+    "success": "#0d904f",    # Forest Green
+    "warning": "#f9ab00",    # Amber
+    "danger": "#d93025",     # Crimson
+    "mitigate": "#d93025",   # High Risk
+    "automate": "#0d904f",   # Safe Wins
+    "contingency": "#f9ab00", # Managed Risks
+    "delegate": "#1a73e8",   # Strategic Base
+    "slate": "#3c4043",
+    "light_gray": "#f8f9fa",
+    "border": "#dadce0"
+}
+
+sns.set_theme(style="white", palette="muted")
+plt.rcParams['figure.facecolor'] = 'white'
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['Inter', 'Roboto', 'Arial', 'DejaVu Sans']
+plt.rcParams['axes.labelcolor'] = COLORS['slate']
+plt.rcParams['xtick.color'] = COLORS['slate']
+plt.rcParams['ytick.color'] = COLORS['slate']
+plt.rcParams['axes.edgecolor'] = COLORS['border']
 plt.rcParams['font.size'] = 10
+plt.rcParams['axes.titlesize'] = 14
+plt.rcParams['axes.titleweight'] = 'bold'
 
 
 def make_api_request(firm_path: str, project_path: str, budget: int, api_url: str) -> Dict[str, Any]:
     """Make API request similar to test_api.sh."""
-    print(f"📡 Making API request to {api_url}")
+    print(f"Making API request to {api_url}")
     print(f"   Firm: {firm_path}")
     print(f"   Project: {project_path}")
     print(f"   Budget: {budget}")
 
-    # Load input files
-    try:
-        with open(firm_path, 'r') as f:
-            firm_data = json.load(f)
-        with open(project_path, 'r') as f:
-            project_data = json.load(f)
-    except FileNotFoundError as e:
-        print(f"❌ Error: File not found - {e}")
-        sys.exit(1)
-    except json.JSONDecodeError as e:
-        print(f"❌ Error: Invalid JSON - {e}")
-        sys.exit(1)
-
-    # Construct payload
+    # Construct payload - API now accepts paths directly
     payload = {
-        "firm_data": firm_data,
-        "project_data": project_data,
+        "firm_path": firm_path,
+        "project_path": project_path,
         "budget": budget
     }
 
@@ -66,27 +75,135 @@ def make_api_request(firm_path: str, project_path: str, budget: int, api_url: st
         response.raise_for_status()
 
         result = response.json()
-        print(f"✅ Request successful! Status: {response.status_code}")
+        print(f"Request successful! Status: {response.status_code}")
+
+        # Check for error status
+        if result.get("status") == "error":
+            print(f"Error from API: {result.get('message')}")
+            sys.exit(1)
 
         # Extract analysis from wrapped response
         if "analysis" in result:
-            return result["analysis"]
-        return result
+            return normalize_analysis_format(result["analysis"])
+        return normalize_analysis_format(result)
 
     except requests.exceptions.ConnectionError:
-        print(f"❌ Error: Could not connect to {api_url}")
+        print(f"Error: Could not connect to {api_url}")
         print("   Make sure the API server is running")
         sys.exit(1)
     except requests.exceptions.Timeout:
-        print(f"❌ Error: Request timed out after 5 minutes")
+        print(f"Error: Request timed out after 5 minutes")
         sys.exit(1)
     except requests.exceptions.HTTPError as e:
-        print(f"❌ Error: HTTP {response.status_code}")
+        print(f"Error: HTTP {response.status_code}")
         print(f"   {response.text}")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         sys.exit(1)
+
+
+def normalize_analysis_format(analysis: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize the API response to a consistent format for visualization.
+    Handles both old and new API response formats.
+    """
+    # If it's already in the old format, return as-is
+    if "action_matrix" in analysis and "node_assessments" in analysis:
+        # Old format detected
+        return analysis
+
+    # New format - convert to old format for backward compatibility
+    normalized = {}
+
+    # Convert node_assessments
+    node_assessments = {}
+    for node_id, assessment in analysis.get("node_assessments", {}).items():
+        node_assessments[node_id] = {
+            "name": assessment.get("node_name", node_id),
+            "influence": assessment.get("influence_score", 0.5),
+            "risk": assessment.get("risk_level", 0.5),
+            "reasoning": assessment.get("reasoning", ""),
+            "is_on_critical_path": assessment.get("is_on_critical_path", False),
+        }
+    normalized["node_assessments"] = node_assessments
+
+    # Convert matrix_classifications to action_matrix
+    matrix = analysis.get("matrix_classifications", {})
+    action_matrix = {}
+    for quadrant in ["MITIGATE", "AUTOMATE", "CONTINGENCY", "DELEGATE"]:
+        quadrant_lower = quadrant.lower()
+        action_matrix[quadrant_lower] = [
+            node.get("node_id") if isinstance(node, dict) else node
+            for node in matrix.get(quadrant, [])
+        ]
+    normalized["action_matrix"] = action_matrix
+    normalized["matrix_classifications"] = action_matrix
+
+    # Convert all_chains to critical_chains
+    critical_chains = []
+    for chain in analysis.get("all_chains", []):
+        critical_chains.append({
+            "nodes": chain.get("node_ids", []),
+            "node_names": chain.get("node_names", []),
+            "aggregate_risk": chain.get("cumulative_risk", 0.0),
+            "length": chain.get("length", 0),
+        })
+    normalized["critical_chains"] = critical_chains
+
+    # Convert summary
+    summary = analysis.get("summary", {})
+    firm_data = analysis.get("firm", {})
+    project_data = analysis.get("project", {})
+
+    normalized["summary"] = {
+        "firm_id": firm_data.get("id", "unknown"),
+        "project_id": project_data.get("id", "unknown"),
+        "nodes_analyzed": summary.get("nodes_evaluated", 0),
+        "budget_used": summary.get("nodes_evaluated", 0),
+        "overall_bankability": summary.get("aggregate_project_score", 0.0),
+        "aggregate_project_score": summary.get("aggregate_project_score", 0.0),
+        "average_risk": 1.0 - summary.get("aggregate_project_score", 0.0),
+        "maximum_risk": summary.get("critical_failure_likelihood", 0.0),
+        "critical_chains_detected": len(critical_chains),
+        "high_risk_nodes": summary.get("critical_dependency_count", 0),
+        "recommendations": _generate_recommendations(summary, len(critical_chains), action_matrix),
+    }
+
+    # Convert recommendation
+    recommendation = analysis.get("recommendation", {})
+    normalized["recommendation"] = {
+        "should_bid": recommendation.get("should_bid", False),
+        "confidence": recommendation.get("confidence", 0.0),
+        "key_risks": recommendation.get("key_risks", []),
+        "key_opportunities": recommendation.get("key_opportunities", []),
+    }
+
+    return normalized
+
+
+def _generate_recommendations(summary: Dict[str, Any], chain_count: int, action_matrix: Dict[str, Any]) -> List[str]:
+    """Generate recommendation text from summary metrics."""
+    recommendations = []
+
+    bankability = summary.get("aggregate_project_score", 0.0)
+    if bankability < 0.4:
+        recommendations.append("Project has significant risk - consider restructuring or declining")
+    elif bankability < 0.7:
+        recommendations.append("Project has moderate risk - implement mitigation strategies")
+    else:
+        recommendations.append("Project shows strong bankability - proceed with confidence")
+
+    automate_count = len(action_matrix.get("automate", []))
+    if automate_count > 0:
+        recommendations.append(f"Optimize and automate {automate_count} low-risk, high-influence operations")
+
+    if chain_count == 0:
+        recommendations.append("No critical chains detected - project has good risk distribution")
+    else:
+        recommendations.append(f"Monitor {chain_count} critical dependency chain(s)")
+
+    return recommendations
 
 
 def create_network_graph(analysis: Dict[str, Any], output_dir: Path):
@@ -101,10 +218,10 @@ def create_network_graph(analysis: Dict[str, Any], output_dir: Path):
 
     # Color mapping for action matrix quadrants
     quadrant_colors = {
-        "mitigate": "#e74c3c",      # red - high risk, high influence
-        "automate": "#2ecc71",       # green - low risk, high influence
-        "contingency": "#f39c12",    # orange - high risk, low influence
-        "delegate": "#3498db",       # blue - low risk, low influence
+        "mitigate": COLORS["mitigate"],
+        "automate": COLORS["automate"],
+        "contingency": COLORS["contingency"],
+        "delegate": COLORS["delegate"],
     }
 
     # Build node-to-quadrant mapping from action matrix
@@ -210,8 +327,8 @@ def create_network_graph(analysis: Dict[str, Any], output_dir: Path):
 
     # Save
     output_path = output_dir / "network_graph.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"   ✅ Saved: {output_path}")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
     plt.close()
 
 
@@ -289,15 +406,15 @@ def create_risk_matrix_2x2(analysis: Dict[str, Any], output_dir: Path):
     # Labels and formatting
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel('Influence Score →', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Risk Level →', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Influence Score ->', fontsize=12, color=COLORS['slate'])
+    ax.set_ylabel('Risk Level ->', fontsize=12, color=COLORS['slate'])
     ax.axhline(y=0.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
     ax.axvline(x=0.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
 
     summary = analysis.get("summary", {})
     avg_risk = summary.get("average_risk", 0)
     ax.set_title(
-        f'Action Matrix (2×2)\nAverage Risk: {avg_risk:.1%}',
+        f'Action Matrix (2x2)\nAverage Risk: {avg_risk:.1%}',
         fontsize=16,
         fontweight='bold',
         pad=20
@@ -308,8 +425,8 @@ def create_risk_matrix_2x2(analysis: Dict[str, Any], output_dir: Path):
 
     # Save
     output_path = output_dir / "risk_matrix_2x2.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"   ✅ Saved: {output_path}")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
     plt.close()
 
 
@@ -381,7 +498,7 @@ def create_critical_chains_viz(analysis: Dict[str, Any], output_dir: Path):
     for i, chain in enumerate(chains[:5]):
         nodes = chain.get("nodes", [])
         node_names = [n.replace("node_", "").replace("_", " ").title() for n in nodes[:3]]
-        chain_str = f"Chain {i+1}: {' → '.join(node_names)}"
+        chain_str = f"Chain {i+1}: {' -> '.join(node_names)}"
         if len(nodes) > 3:
             chain_str += "..."
         chain_details.append(chain_str)
@@ -401,8 +518,8 @@ def create_critical_chains_viz(analysis: Dict[str, Any], output_dir: Path):
 
     # Save
     output_path = output_dir / "critical_chains.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"   ✅ Saved: {output_path}")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
     plt.close()
 
 
@@ -418,46 +535,52 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
     # 1. Overall Bankability (big gauge)
     ax1 = fig.add_subplot(gs[0, :2])
     bankability = summary.get("overall_bankability", 0) * 100
-    bankability_color = '#2ecc71' if bankability > 70 else '#f39c12' if bankability > 40 else '#e74c3c'
+    bankability_color = COLORS['success'] if bankability > 70 else COLORS['warning'] if bankability > 40 else COLORS['danger']
 
-    ax1.barh([0], [bankability], color=bankability_color, alpha=0.8, height=0.5)
+    # Background track
+    ax1.barh([0], [100], color=COLORS['light_gray'], height=0.4, alpha=0.5)
+    # Active track
+    ax1.barh([0], [bankability], color=bankability_color, alpha=0.9, height=0.4)
+    
     ax1.set_xlim(0, 100)
     ax1.set_ylim(-0.5, 0.5)
     ax1.set_yticks([])
-    ax1.set_xlabel('Bankability (%)', fontsize=12, fontweight='bold')
-    ax1.set_title(f'Overall Bankability: {bankability:.1f}%', fontsize=14, fontweight='bold')
-    ax1.axvline(x=70, color='green', linestyle='--', alpha=0.5)
-    ax1.axvline(x=40, color='orange', linestyle='--', alpha=0.5)
-    ax1.text(bankability + 2, 0, f'{bankability:.1f}%', va='center', fontsize=14, fontweight='bold')
-    ax1.grid(axis='x', alpha=0.3)
+    ax1.set_xlabel('Bankability Rating (%)', fontsize=11, color=COLORS['slate'])
+    ax1.set_title(f'Overall Project Bankability: {bankability:.1f}%', fontsize=15, pad=15)
+    
+    # Threshold markers
+    ax1.axvline(x=70, color=COLORS['success'], linestyle=':', alpha=0.3)
+    ax1.axvline(x=40, color=COLORS['warning'], linestyle=':', alpha=0.3)
+    
+    # Value label
+    ax1.text(bankability - 2 if bankability > 10 else 2, 0, f'{bankability:.1f}%', 
+             va='center', ha='right' if bankability > 10 else 'left',
+             fontsize=14, fontweight='bold', color='white' if bankability > 10 else COLORS['slate'])
+    
+    sns.despine(ax=ax1, left=True, bottom=False, offset=5)
 
     # 2. Risk Indicator
     ax2 = fig.add_subplot(gs[0, 2])
     avg_risk = summary.get("average_risk", 0) * 100
     max_risk = summary.get("maximum_risk", 0) * 100
 
-    risk_color = '#e74c3c' if avg_risk > 60 else '#f39c12' if avg_risk > 30 else '#2ecc71'
-    risk_status = "🔴 HIGH" if avg_risk > 60 else "🟡 MEDIUM" if avg_risk > 30 else "🟢 LOW"
+    risk_color = COLORS['danger'] if avg_risk > 60 else COLORS['warning'] if avg_risk > 30 else COLORS['success']
+    risk_status = "HIGH" if avg_risk > 60 else "MEDIUM" if avg_risk > 30 else "LOW"
+
+    # Add a card background
+    card = Rectangle((0.05, 0.05), 0.9, 0.9, facecolor=risk_color, alpha=0.1, 
+                    edgecolor=risk_color, linewidth=2, transform=ax2.transAxes, clip_on=False)
+    ax2.add_patch(card)
 
     ax2.text(
-        0.5, 0.6, risk_status,
+        0.5, 0.65, risk_status,
         ha='center', va='center',
-        fontsize=16, fontweight='bold',
+        fontsize=22, fontweight='black',
         color=risk_color,
         transform=ax2.transAxes
     )
-    ax2.text(
-        0.5, 0.35, f'Avg: {avg_risk:.1f}%',
-        ha='center', va='center',
-        fontsize=11,
-        transform=ax2.transAxes
-    )
-    ax2.text(
-        0.5, 0.2, f'Max: {max_risk:.1f}%',
-        ha='center', va='center',
-        fontsize=11,
-        transform=ax2.transAxes
-    )
+    ax2.text(0.5, 0.45, "RISK ASSESSMENT", ha='center', fontsize=9, fontweight='bold', color=COLORS['slate'], transform=ax2.transAxes)
+    ax2.text(0.5, 0.25, f'Avg: {avg_risk:.1f}% | Max: {max_risk:.1f}%', ha='center', fontsize=11, color=COLORS['slate'], transform=ax2.transAxes)
     ax2.set_xlim(0, 1)
     ax2.set_ylim(0, 1)
     ax2.axis('off')
@@ -471,15 +594,20 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
     }
 
     if action_counts:
-        colors_pie = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db']
+        colors_pie = [COLORS[k] for k in action_counts.keys()]
         ax3.pie(
             action_counts.values(),
             labels=[k.title() for k in action_counts.keys()],
             autopct='%1.0f%%',
-            colors=colors_pie[:len(action_counts)],
-            startangle=90
+            colors=colors_pie,
+            startangle=140,
+            pctdistance=0.8,
+            explode=[0.05] * len(action_counts)
         )
-        ax3.set_title('Action Matrix Distribution', fontsize=11, fontweight='bold')
+        # Draw center circle for donut chart
+        centre_circle = plt.Circle((0,0), 0.60, fc='white')
+        ax3.add_artist(centre_circle)
+        ax3.set_title('Strategic Allocation', fontsize=12, fontweight='bold', pad=10)
     else:
         ax3.text(0.5, 0.5, 'No Data', ha='center', va='center', transform=ax3.transAxes)
         ax3.axis('off')
@@ -500,25 +628,25 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
     critical_chains = summary.get("critical_chains_detected", 0)
     high_risk_nodes = summary.get("high_risk_nodes", 0)
 
-    ax5.bar(['Critical\nChains', 'High Risk\nNodes'], [critical_chains, high_risk_nodes],
-            color=['#e74c3c', '#f39c12'], alpha=0.8)
-    ax5.set_ylabel('Count', fontsize=10)
-    ax5.set_title('Risk Indicators', fontsize=11, fontweight='bold')
-    ax5.grid(axis='y', alpha=0.3)
+    ax5.bar(['Chains', 'Risky Nodes'], [critical_chains, high_risk_nodes],
+            color=[COLORS['danger'], COLORS['warning']], alpha=0.8, width=0.6)
+    ax5.set_ylabel('Count', fontsize=9)
+    ax5.set_title('Critical Exposure', fontsize=11, fontweight='bold')
+    sns.despine(ax=ax5)
 
-    # 6. Recommendations (text)
     ax6 = fig.add_subplot(gs[2, :])
     recommendations = summary.get("recommendations", [])
     if recommendations:
-        rec_text = "📋 Recommendations:\n" + "\n".join([
-            f"  • {rec}" for rec in recommendations[:5]
+        rec_text = "Strategic Recommendations:\n" + "\n".join([
+            f"  > {rec}" for rec in recommendations[:4]
         ])
     else:
-        rec_text = "📋 No specific recommendations"
+        rec_text = "No specific strategic recommendations detected."
 
-    ax6.text(0.05, 0.95, rec_text, transform=ax6.transAxes,
-             fontsize=10, verticalalignment='top',
-             bbox=dict(boxstyle='round', facecolor='#fff4e6', alpha=0.8))
+    ax6.text(0.02, 0.9, rec_text, transform=ax6.transAxes,
+             fontsize=12, verticalalignment='top', linespacing=1.8,
+             color=COLORS['slate'],
+             bbox=dict(boxstyle='round,pad=1.5', facecolor=COLORS['light_gray'], alpha=0.3, edgecolor=COLORS['border']))
     ax6.axis('off')
 
     # Main title
@@ -533,8 +661,8 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
 
     # Save
     output_path = output_dir / "summary_dashboard.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"   ✅ Saved: {output_path}")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
     plt.close()
 
 
@@ -558,6 +686,7 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
             "Influence": assessment.get("influence", 0.5),
             "Risk": assessment.get("risk", 0.5),
             "Action": node_to_action.get(node_id, "Unknown"),
+            "Critical": "Yes" if assessment.get("is_on_critical_path", False) else "No",
         })
 
     if not data:
@@ -568,16 +697,15 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
     df = df.sort_values("Risk", ascending=False)
 
     # Create figure
-    fig, ax = plt.subplots(figsize=(14, max(8, len(df) * 0.5)))
+    fig, ax = plt.subplots(figsize=(16, max(8, len(df) * 0.5)))
     ax.axis('tight')
     ax.axis('off')
 
-    # Color mapping
     def get_color(val, column):
         if column == "Influence":
-            return '#2ecc71' if val > 0.7 else '#f39c12' if val > 0.4 else '#e74c3c'
+            return COLORS['success'] if val > 0.7 else COLORS['warning'] if val > 0.4 else COLORS['danger']
         elif column == "Risk":
-            return '#e74c3c' if val > 0.7 else '#f39c12' if val > 0.4 else '#2ecc71'
+            return COLORS['danger'] if val > 0.7 else COLORS['warning'] if val > 0.4 else COLORS['success']
         return 'white'
 
     # Color cells
@@ -588,21 +716,22 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
             get_color(row['Influence'], 'Influence'),
             get_color(row['Risk'], 'Risk'),
             'white',  # Action
+            'white',  # Critical
         ]
         cell_colors.append(row_colors)
 
-    # Format values
-    df['Influence'] = df['Influence'].apply(lambda x: f'{x:.2f}')
-    df['Risk'] = df['Risk'].apply(lambda x: f'{x:.2f}')
+    # Format values for display
+    df_display = df.copy()
+    df_display['Influence'] = df['Influence'].apply(lambda x: f'{x:.2f}')
+    df_display['Risk'] = df['Risk'].apply(lambda x: f'{x:.2f}')
 
-    # Create table
     table = ax.table(
-        cellText=df.values,
-        colLabels=df.columns,
+        cellText=df_display.values,
+        colLabels=df_display.columns,
         cellLoc='center',
         loc='center',
         cellColours=cell_colors,
-        colColours=['#3498db'] * len(df.columns)
+        colColours=[COLORS['primary']] * len(df_display.columns)
     )
 
     table.auto_set_font_size(False)
@@ -610,7 +739,7 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
     table.scale(1, 2)
 
     # Style header
-    for i in range(len(df.columns)):
+    for i in range(len(df_display.columns)):
         table[(0, i)].set_text_props(weight='bold', color='white')
 
     ax.set_title(
@@ -624,20 +753,476 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
 
     # Save
     output_path = output_dir / "node_details_table.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    print(f"   ✅ Saved: {output_path}")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_risk_influence_scatter(analysis: Dict[str, Any], output_dir: Path):
+    """Create detailed scatter plot of risk vs influence."""
+    print("\n📊 Creating risk vs influence scatter plot...")
+
+    fig, ax = plt.subplots(figsize=(14, 10))
+
+    # Collect data
+    nodes_data = []
+    action_matrix = analysis.get("action_matrix", {})
+    node_to_action = {}
+    for action, nodes in action_matrix.items():
+        for node_id in nodes:
+            node_to_action[node_id] = action
+
+    for node_id, assessment in analysis.get("node_assessments", {}).items():
+        influence = assessment.get("influence", 0.5)
+        risk = assessment.get("risk", 0.5)
+        action = node_to_action.get(node_id, "unknown")
+        nodes_data.append({
+            "id": node_id,
+            "name": assessment.get("name", node_id),
+            "influence": influence,
+            "risk": risk,
+            "action": action,
+            "critical": assessment.get("is_on_critical_path", False)
+        })
+
+    if not nodes_data:
+        print("   ⚠️  No data to visualize")
+        return
+
+    # Plot each node
+    for node in nodes_data:
+        color = COLORS.get(node["action"], "#95a5a6")
+        marker = 'D' if node["critical"] else 'o'
+        size = 400 if node["critical"] else 250
+
+        ax.scatter(
+            node["influence"], node["risk"],
+            s=size, c=color, alpha=0.7,
+            edgecolors='black', linewidth=2,
+            marker=marker
+        )
+
+        # Add label
+        ax.annotate(
+            node["name"],
+            (node["influence"], node["risk"]),
+            xytext=(8, 8),
+            textcoords='offset points',
+            fontsize=9,
+            fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.8, edgecolor=color, linewidth=2)
+        )
+
+    # Add quadrant lines
+    ax.axhline(y=0.5, color='black', linestyle='--', linewidth=2, alpha=0.3)
+    ax.axvline(x=0.5, color='black', linestyle='--', linewidth=2, alpha=0.3)
+
+    # Quadrant labels
+    ax.text(0.75, 0.95, 'Mitigate\n(High Risk, High Influence)', ha='center', va='top',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['mitigate'], alpha=0.2))
+    ax.text(0.75, 0.05, 'Automate\n(Low Risk, High Influence)', ha='center', va='bottom',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['automate'], alpha=0.2))
+    ax.text(0.25, 0.95, 'Contingency\n(High Risk, Low Influence)', ha='center', va='top',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['contingency'], alpha=0.2))
+    ax.text(0.25, 0.05, 'Delegate\n(Low Risk, Low Influence)', ha='center', va='bottom',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['delegate'], alpha=0.2))
+
+    ax.set_xlim(-0.05, 1.05)
+    ax.set_ylim(-0.05, 1.05)
+    ax.set_xlabel('Influence Score →', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Risk Level →', fontsize=13, fontweight='bold')
+    ax.set_title('Risk vs Influence Analysis (Detailed)', fontsize=16, fontweight='bold', pad=20)
+    ax.grid(True, alpha=0.2, linestyle=':')
+
+    # Legend
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', markersize=10, label='Standard Node'),
+        Line2D([0], [0], marker='D', color='w', markerfacecolor='gray', markersize=10, label='Critical Path'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
+
+    plt.tight_layout()
+    output_path = output_dir / "risk_influence_scatter.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_distribution_histograms(analysis: Dict[str, Any], output_dir: Path):
+    """Create distribution histograms for risk and influence."""
+    print("\n📊 Creating distribution histograms...")
+
+    node_assessments = analysis.get("node_assessments", {})
+    if not node_assessments:
+        print("   ⚠️  No data to visualize")
+        return
+
+    risks = [a.get("risk", 0.5) for a in node_assessments.values()]
+    influences = [a.get("influence", 0.5) for a in node_assessments.values()]
+
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    # Risk distribution
+    ax1 = axes[0]
+    ax1.hist(risks, bins=15, color=COLORS['danger'], alpha=0.7, edgecolor='black', linewidth=1.5)
+    ax1.axvline(np.mean(risks), color='black', linestyle='--', linewidth=2, label=f'Mean: {np.mean(risks):.2f}')
+    ax1.axvline(np.median(risks), color='blue', linestyle=':', linewidth=2, label=f'Median: {np.median(risks):.2f}')
+    ax1.set_xlabel('Risk Level', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Frequency', fontsize=12, fontweight='bold')
+    ax1.set_title('Risk Distribution', fontsize=14, fontweight='bold')
+    ax1.legend()
+    ax1.grid(axis='y', alpha=0.3)
+
+    # Influence distribution
+    ax2 = axes[1]
+    ax2.hist(influences, bins=15, color=COLORS['success'], alpha=0.7, edgecolor='black', linewidth=1.5)
+    ax2.axvline(np.mean(influences), color='black', linestyle='--', linewidth=2, label=f'Mean: {np.mean(influences):.2f}')
+    ax2.axvline(np.median(influences), color='blue', linestyle=':', linewidth=2, label=f'Median: {np.median(influences):.2f}')
+    ax2.set_xlabel('Influence Score', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Frequency', fontsize=12, fontweight='bold')
+    ax2.set_title('Influence Distribution', fontsize=14, fontweight='bold')
+    ax2.legend()
+    ax2.grid(axis='y', alpha=0.3)
+
+    plt.tight_layout()
+    output_path = output_dir / "distributions.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_radar_chart(analysis: Dict[str, Any], output_dir: Path):
+    """Create radar chart for overall project assessment."""
+    print("\n📊 Creating radar chart...")
+
+    summary = analysis.get("summary", {})
+
+    # Metrics for radar chart
+    categories = ['Bankability', 'Low Risk', 'High Influence', 'Chain Safety', 'Budget Efficiency']
+
+    # Calculate scores (normalized to 0-1)
+    bankability = summary.get("overall_bankability", 0)
+    low_risk = 1 - summary.get("average_risk", 0)
+    high_influence = np.mean([a.get("influence", 0) for a in analysis.get("node_assessments", {}).values()]) if analysis.get("node_assessments") else 0
+    chain_safety = 1.0 if summary.get("critical_chains_detected", 0) == 0 else max(0, 1 - summary.get("critical_chains_detected", 0) / 10)
+    budget_eff = min(1.0, summary.get("nodes_analyzed", 0) / max(1, summary.get("budget_used", 1)))
+
+    values = [bankability, low_risk, high_influence, chain_safety, budget_eff]
+
+    # Number of variables
+    num_vars = len(categories)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    values += values[:1]  # Complete the circle
+    angles += angles[:1]
+
+    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(projection='polar'))
+
+    ax.plot(angles, values, 'o-', linewidth=3, color=COLORS['primary'], label='Project Score')
+    ax.fill(angles, values, alpha=0.25, color=COLORS['primary'])
+
+    # Add reference circle at 0.7 (good threshold)
+    ax.plot(angles, [0.7] * len(angles), '--', linewidth=1.5, color=COLORS['success'], alpha=0.5, label='Target (70%)')
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories, size=11, fontweight='bold')
+    ax.set_ylim(0, 1)
+    ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'])
+    ax.grid(True, linestyle=':', alpha=0.3)
+    ax.set_title('Project Assessment Radar', fontsize=16, fontweight='bold', pad=30)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+
+    plt.tight_layout()
+    output_path = output_dir / "radar_chart.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
+    """Create comparative bar chart for nodes."""
+    print("\n📊 Creating node comparison chart...")
+
+    node_assessments = analysis.get("node_assessments", {})
+    if not node_assessments:
+        print("   ⚠️  No data to visualize")
+        return
+
+    # Prepare data
+    nodes = []
+    influences = []
+    risks = []
+
+    for node_id, assessment in node_assessments.items():
+        name = assessment.get("name", node_id.replace("node_", "").replace("_", " ").title())
+        nodes.append(name)
+        influences.append(assessment.get("influence", 0.5))
+        risks.append(assessment.get("risk", 0.5))
+
+    x = np.arange(len(nodes))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    bars1 = ax.bar(x - width/2, influences, width, label='Influence',
+                   color=COLORS['success'], alpha=0.8, edgecolor='black', linewidth=1.5)
+    bars2 = ax.bar(x + width/2, risks, width, label='Risk',
+                   color=COLORS['danger'], alpha=0.8, edgecolor='black', linewidth=1.5)
+
+    # Add value labels on bars
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{height:.2f}',
+                   ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+    ax.set_xlabel('Nodes', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Score', fontsize=12, fontweight='bold')
+    ax.set_title('Node Comparison: Influence vs Risk', fontsize=16, fontweight='bold', pad=20)
+    ax.set_xticks(x)
+    ax.set_xticklabels(nodes, rotation=45, ha='right')
+    ax.legend(fontsize=11)
+    ax.set_ylim(0, 1.1)
+    ax.grid(axis='y', alpha=0.3)
+
+    plt.tight_layout()
+    output_path = output_dir / "node_comparison.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_recommendation_viz(analysis: Dict[str, Any], output_dir: Path):
+    """Create recommendation visualization."""
+    print("\n📊 Creating recommendation visualization...")
+
+    recommendation = analysis.get("recommendation", {})
+    summary = analysis.get("summary", {})
+
+    should_bid = recommendation.get("should_bid", False)
+    confidence = recommendation.get("confidence", 0) * 100
+
+    fig = plt.figure(figsize=(14, 10))
+    gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
+
+    # 1. Decision Card
+    ax1 = fig.add_subplot(gs[0, :])
+    decision_color = COLORS['success'] if should_bid else COLORS['danger']
+    decision_text = "RECOMMEND BID" if should_bid else "DO NOT BID"
+
+    ax1.text(0.5, 0.6, decision_text, ha='center', va='center',
+            fontsize=32, fontweight='black', color=decision_color,
+            transform=ax1.transAxes)
+    ax1.text(0.5, 0.35, f'Confidence: {confidence:.1f}%', ha='center', va='center',
+            fontsize=18, fontweight='bold', color=COLORS['slate'],
+            transform=ax1.transAxes)
+
+    # Add confidence bar
+    bar_width = 0.6
+    bar_x = 0.5 - bar_width/2
+    rect_bg = Rectangle((bar_x, 0.15), bar_width, 0.08,
+                        facecolor=COLORS['light_gray'], transform=ax1.transAxes)
+    ax1.add_patch(rect_bg)
+
+    rect_fill = Rectangle((bar_x, 0.15), bar_width * (confidence/100), 0.08,
+                          facecolor=decision_color, alpha=0.8, transform=ax1.transAxes)
+    ax1.add_patch(rect_fill)
+
+    ax1.set_xlim(0, 1)
+    ax1.set_ylim(0, 1)
+    ax1.axis('off')
+
+    # 2. Key Risks
+    ax2 = fig.add_subplot(gs[1, 0])
+    key_risks = recommendation.get("key_risks", [])
+
+    if key_risks:
+        risk_text = "Key Risks:\n\n" + "\n\n".join([f"• {risk}" for risk in key_risks])
+    else:
+        risk_text = "No critical risks identified"
+
+    ax2.text(0.05, 0.95, risk_text, transform=ax2.transAxes,
+            fontsize=11, verticalalignment='top', linespacing=1.6,
+            bbox=dict(boxstyle='round,pad=1', facecolor='#ffe6e6', alpha=0.8, edgecolor=COLORS['danger'], linewidth=2))
+    ax2.set_xlim(0, 1)
+    ax2.set_ylim(0, 1)
+    ax2.axis('off')
+    ax2.set_title('Risk Assessment', fontsize=13, fontweight='bold', pad=10)
+
+    # 3. Key Opportunities
+    ax3 = fig.add_subplot(gs[1, 1])
+    key_opportunities = recommendation.get("key_opportunities", [])
+
+    if key_opportunities:
+        opp_text = "Key Opportunities:\n\n" + "\n\n".join([f"• {opp}" for opp in key_opportunities])
+    else:
+        opp_text = "Limited opportunities identified"
+
+    ax3.text(0.05, 0.95, opp_text, transform=ax3.transAxes,
+            fontsize=11, verticalalignment='top', linespacing=1.6,
+            bbox=dict(boxstyle='round,pad=1', facecolor='#e6f7e6', alpha=0.8, edgecolor=COLORS['success'], linewidth=2))
+    ax3.set_xlim(0, 1)
+    ax3.set_ylim(0, 1)
+    ax3.axis('off')
+    ax3.set_title('Strategic Opportunities', fontsize=13, fontweight='bold', pad=10)
+
+    fig.suptitle('Strategic Recommendation', fontsize=18, fontweight='bold', y=0.98)
+
+    output_path = output_dir / "recommendation.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
+    """Create a comprehensive single-page report."""
+    print("\n📊 Creating comprehensive report...")
+
+    fig = plt.figure(figsize=(20, 24))
+    gs = fig.add_gridspec(6, 3, hspace=0.4, wspace=0.3)
+
+    summary = analysis.get("summary", {})
+    recommendation = analysis.get("recommendation", {})
+
+    # Header Section
+    ax_header = fig.add_subplot(gs[0, :])
+    firm_id = summary.get("firm_id", "Unknown")
+    project_id = summary.get("project_id", "Unknown")
+    bankability = summary.get("overall_bankability", 0) * 100
+
+    ax_header.text(0.5, 0.7, f'PROJECT RISK ANALYSIS REPORT',
+                  ha='center', va='center', fontsize=24, fontweight='black',
+                  transform=ax_header.transAxes, color=COLORS['primary'])
+    ax_header.text(0.5, 0.4, f'Firm: {firm_id} | Project: {project_id}',
+                  ha='center', va='center', fontsize=14,
+                  transform=ax_header.transAxes, color=COLORS['slate'])
+    ax_header.text(0.5, 0.15, f'Bankability Rating: {bankability:.1f}%',
+                  ha='center', va='center', fontsize=16, fontweight='bold',
+                  transform=ax_header.transAxes,
+                  color=COLORS['success'] if bankability > 70 else COLORS['warning'] if bankability > 40 else COLORS['danger'])
+    ax_header.axis('off')
+
+    # Executive Summary Metrics
+    metrics_data = [
+        ("Nodes Analyzed", summary.get("nodes_analyzed", 0)),
+        ("Avg Risk", f"{summary.get('average_risk', 0)*100:.1f}%"),
+        ("Max Risk", f"{summary.get('maximum_risk', 0)*100:.1f}%"),
+        ("Critical Chains", summary.get("critical_chains_detected", 0)),
+        ("High Risk Nodes", summary.get("high_risk_nodes", 0)),
+        ("Budget Used", summary.get("budget_used", 0)),
+    ]
+
+    for i, (label, value) in enumerate(metrics_data):
+        row = 1 + i // 3
+        col = i % 3
+        ax = fig.add_subplot(gs[row, col])
+
+        ax.text(0.5, 0.6, str(value), ha='center', va='center',
+               fontsize=28, fontweight='bold', color=COLORS['primary'],
+               transform=ax.transAxes)
+        ax.text(0.5, 0.25, label, ha='center', va='center',
+               fontsize=11, color=COLORS['slate'],
+               transform=ax.transAxes)
+
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis('off')
+        ax.set_facecolor(COLORS['light_gray'])
+
+    # Add more sections...
+    ax_recom = fig.add_subplot(gs[3:5, :])
+    recommendations = summary.get("recommendations", [])
+    rec_text = "Strategic Recommendations:\n\n" + "\n\n".join([f"{i+1}. {rec}" for i, rec in enumerate(recommendations)])
+    ax_recom.text(0.05, 0.95, rec_text, transform=ax_recom.transAxes,
+                 fontsize=12, verticalalignment='top', linespacing=1.8,
+                 bbox=dict(boxstyle='round,pad=1.5', facecolor=COLORS['light_gray'], alpha=0.5))
+    ax_recom.axis('off')
+
+    # Decision box
+    ax_decision = fig.add_subplot(gs[5, :])
+    should_bid = recommendation.get("should_bid", False)
+    decision_color = COLORS['success'] if should_bid else COLORS['danger']
+    decision_text = "✓ RECOMMEND BID" if should_bid else "✗ DO NOT RECOMMEND"
+
+    ax_decision.text(0.5, 0.5, decision_text, ha='center', va='center',
+                    fontsize=22, fontweight='black', color=decision_color,
+                    transform=ax_decision.transAxes,
+                    bbox=dict(boxstyle='round,pad=1', facecolor=decision_color, alpha=0.2,
+                             edgecolor=decision_color, linewidth=3))
+    ax_decision.axis('off')
+
+    output_path = output_dir / "comprehensive_report.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
+    plt.close()
+
+
+def create_heatmap_correlation(analysis: Dict[str, Any], output_dir: Path):
+    """Create correlation heatmap for nodes."""
+    print("\n📊 Creating correlation heatmap...")
+
+    node_assessments = analysis.get("node_assessments", {})
+    if len(node_assessments) < 2:
+        print("   ⚠️  Not enough nodes for correlation")
+        return
+
+    # Prepare data matrix
+    nodes = []
+    data_matrix = []
+
+    for node_id, assessment in node_assessments.items():
+        name = assessment.get("name", node_id.replace("node_", "").replace("_", " ").title())
+        nodes.append(name)
+        data_matrix.append([
+            assessment.get("influence", 0.5),
+            assessment.get("risk", 0.5),
+            1 if assessment.get("is_on_critical_path", False) else 0
+        ])
+
+    # Create correlation matrix
+    df = pd.DataFrame(data_matrix, columns=['Influence', 'Risk', 'Critical'])
+    correlation = df.T.corr()
+
+    fig, ax = plt.subplots(figsize=(12, 10))
+
+    im = ax.imshow(correlation, cmap='RdYlGn', aspect='auto', vmin=-1, vmax=1)
+
+    # Set ticks
+    ax.set_xticks(np.arange(len(nodes)))
+    ax.set_yticks(np.arange(len(nodes)))
+    ax.set_xticklabels(nodes, rotation=45, ha='right')
+    ax.set_yticklabels(nodes)
+
+    # Add correlation values
+    for i in range(len(nodes)):
+        for j in range(len(nodes)):
+            text = ax.text(j, i, f'{correlation.iloc[i, j]:.2f}',
+                         ha="center", va="center", color="black", fontsize=9, fontweight='bold')
+
+    ax.set_title('Node Correlation Heatmap', fontsize=16, fontweight='bold', pad=20)
+
+    # Colorbar
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label('Correlation', rotation=270, labelpad=20, fontweight='bold')
+
+    plt.tight_layout()
+    output_path = output_dir / "correlation_heatmap.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"   Saved: {output_path}")
     plt.close()
 
 
 def save_analysis_json(analysis: Dict[str, Any], output_dir: Path):
     """Save raw analysis JSON."""
-    print("\n💾 Saving analysis JSON...")
+    print("\nSaving analysis JSON...")
     output_path = output_dir / "analysis_output.json"
 
     with open(output_path, 'w') as f:
         json.dump(analysis, f, indent=2)
 
-    print(f"   ✅ Saved: {output_path}")
+    print(f"   Saved: {output_path}")
 
 
 def main():
@@ -679,7 +1264,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 70)
-    print("🎨 Florent Analysis Visualizer")
+    print("Florent Analysis Visualizer")
     print("=" * 70)
 
     # Make API request
@@ -690,27 +1275,50 @@ def main():
 
     # Generate visualizations
     print("\n" + "=" * 70)
-    print("🎨 Generating Visualizations")
+    print("Generating Visualizations")
     print("=" * 70)
 
     try:
+        # Core visualizations
         create_summary_dashboard(analysis, output_dir)
         create_risk_matrix_2x2(analysis, output_dir)
         create_network_graph(analysis, output_dir)
         create_critical_chains_viz(analysis, output_dir)
         create_node_details_table(analysis, output_dir)
 
+        # Enhanced visualizations
+        create_risk_influence_scatter(analysis, output_dir)
+        create_distribution_histograms(analysis, output_dir)
+        create_radar_chart(analysis, output_dir)
+        create_node_comparison_bars(analysis, output_dir)
+        create_recommendation_viz(analysis, output_dir)
+        create_heatmap_correlation(analysis, output_dir)
+        create_comprehensive_report(analysis, output_dir)
+
         print("\n" + "=" * 70)
         print("✅ All visualizations completed!")
         print("=" * 70)
         print(f"\n📁 Output directory: {output_dir.absolute()}")
-        print(f"\nGenerated files:")
-        print(f"  • analysis_output.json - Raw analysis data")
-        print(f"  • summary_dashboard.png - Overview dashboard")
-        print(f"  • risk_matrix_2x2.png - Action matrix (2x2)")
-        print(f"  • network_graph.png - Risk network visualization")
-        print(f"  • critical_chains.png - Critical chains analysis")
-        print(f"  • node_details_table.png - Detailed node assessments")
+        print(f"\n📊 Generated Visualizations:")
+        print(f"\n  Core Analytics:")
+        print(f"    • analysis_output.json - Raw analysis data")
+        print(f"    • summary_dashboard.png - Executive overview dashboard")
+        print(f"    • comprehensive_report.png - Complete analysis report")
+        print(f"\n  Risk Analysis:")
+        print(f"    • risk_matrix_2x2.png - Action matrix (2x2 quadrant)")
+        print(f"    • risk_influence_scatter.png - Detailed scatter plot")
+        print(f"    • distributions.png - Risk & influence distributions")
+        print(f"\n  Network & Chains:")
+        print(f"    • network_graph.png - Risk network visualization")
+        print(f"    • critical_chains.png - Critical dependency chains")
+        print(f"    • correlation_heatmap.png - Node correlation matrix")
+        print(f"\n  Node Details:")
+        print(f"    • node_details_table.png - Detailed assessments table")
+        print(f"    • node_comparison.png - Comparative bar charts")
+        print(f"    • radar_chart.png - Overall project assessment")
+        print(f"\n  Strategic:")
+        print(f"    • recommendation.png - Bid recommendation & insights")
+        print(f"\n🎯 Total: 13 visualizations generated")
 
     except Exception as e:
         print(f"\n❌ Error during visualization: {e}")

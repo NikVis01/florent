@@ -42,7 +42,7 @@ def simple_linear_graph():
 
 @pytest.fixture
 def branching_graph():
-    """
+    r"""
     Graph with multiple paths:
           A
          / \

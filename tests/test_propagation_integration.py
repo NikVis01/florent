@@ -97,7 +97,7 @@ class TestRiskPropagationIntegration:
             print(f"{quadrant.upper():15} | {', '.join(node_list) if node_list else 'None'}")
 
     def test_parallel_paths_risk_amplification(self, sample_operation_type):
-        """
+        r"""
         Test risk amplification when multiple risky parents converge.
 
         Structure:

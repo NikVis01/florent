@@ -3,8 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 from enum import Enum
 
-from src.models.base import Firm
-from src.models.entities import Project
+from src.models.entities import Firm, Project
 from src.services.agent.analysis.matrix_classifier import RiskQuadrant, NodeClassification
 
 
@@ -16,45 +15,45 @@ class TraversalStatus(str, Enum):
 
 
 class NodeAssessment(BaseModel):
-    """Assessment of a single node."""
+    """Assessment of a single node based on Influence vs Importance."""
     node_id: str
     node_name: str
-    influence_score: float = Field(ge=0.0, le=1.0, description="Influence score 0-1")
-    risk_level: float = Field(ge=0.0, le=1.0, description="Risk level 0-1")
+    importance_score: float = Field(ge=0.0, le=1.0, description="Criticality of node to project success")
+    influence_score: float = Field(ge=0.0, le=1.0, description="Firm control/influence over node")
+    risk_level: float = Field(ge=0.0, le=1.0, description="Derived risk: Importance * (1.0 - Influence)")
     reasoning: str
     is_on_critical_path: bool = False
 
 
 class CriticalChain(BaseModel):
-    """A critical chain (high-risk path) through the graph."""
+    """A prioritized sequence of dependencies with its cumulative derived risk."""
     node_ids: List[str]
     node_names: List[str]
-    cumulative_risk: float = Field(ge=0.0, le=1.0)
+    cumulative_risk: float = Field(ge=0.0, le=1.0, description="Path failure probability")
     length: int
 
 
 class SummaryMetrics(BaseModel):
     """Aggregate project-level metrics."""
     aggregate_project_score: float = Field(
-        description="Overall project viability score (0-1, higher is better)"
+        description="Overall project viability score (inverse of average risk)"
     )
     total_token_cost: int = Field(
         description="Total OpenAI API tokens consumed"
     )
     critical_failure_likelihood: float = Field(
         ge=0.0, le=1.0,
-        description="Probability of critical path failure"
+        description="Derived probability of critical path failure"
     )
     nodes_evaluated: int
     total_nodes: int
-    cooked_zone_percentage: float = Field(
-        ge=0.0, le=1.0,
-        description="Percentage of nodes in 'Cooked Zone' (Low I / High R)"
+    critical_dependency_count: int = Field(
+        description="Count of nodes in High Importance / Low Influence quadrant"
     )
 
 
 class BidRecommendation(BaseModel):
-    """Go/No-Go bid recommendation."""
+    """Go/No-Go bid recommendation based on structural risk."""
     should_bid: bool
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
@@ -73,19 +72,19 @@ class AnalysisOutput(BaseModel):
     traversal_status: TraversalStatus
     traversal_message: Optional[str] = None
 
-    # Node assessments
+    # Node assessments (Full Detail)
     node_assessments: Dict[str, NodeAssessment] = Field(
-        description="Map of node_id to assessment"
+        description="Full detailed assessment for every node in the graph"
     )
 
-    # Critical chain analysis
-    critical_chains: List[CriticalChain] = Field(
-        description="Top-3 critical chains (highest risk paths)"
+    # All dependency chains (Ranked)
+    all_chains: List[CriticalChain] = Field(
+        description="Every possible path through the graph, ranked by risk"
     )
 
-    # 2x2 Matrix classification
+    # Influence vs Importance Matrix
     matrix_classifications: Dict[RiskQuadrant, List[NodeClassification]] = Field(
-        description="Nodes grouped by risk quadrant"
+        description="Nodes mapped to Influence vs Importance quadrants"
     )
 
     # Summary metrics

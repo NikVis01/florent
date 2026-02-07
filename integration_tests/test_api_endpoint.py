@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
 Test the /analyze API endpoint with POC data.
-
-This script tests the HTTP API endpoint without needing to start the server,
-by directly importing and calling the endpoint function.
+Updated for Influence vs Importance framework and Orchestrator V2.
 """
 
 import sys
 import asyncio
 from pathlib import Path
+import json
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -19,7 +18,7 @@ from src.main import analyze_project, AnalysisRequest
 async def test_api_with_file_paths():
     """Test the API with file paths to POC data."""
     print("=" * 80)
-    print("Testing /analyze endpoint with file paths")
+    print("Testing /analyze endpoint with file paths (Orchestrator V2)")
     print("=" * 80)
 
     poc_dir = Path(__file__).parent.parent / "src" / "data" / "poc"
@@ -27,49 +26,53 @@ async def test_api_with_file_paths():
     request = AnalysisRequest(
         firm_path=str(poc_dir / "firm.json"),
         project_path=str(poc_dir / "project.json"),
-        budget=50
+        budget=10
     )
 
-    print(f"\nRequest:")
-    print(f"  Firm path: {request.firm_path}")
-    print(f"  Project path: {request.project_path}")
-    print(f"  Budget: {request.budget}")
-
     print("\nCalling analyze_project()...")
-    response = await analyze_project(request)
+    if hasattr(analyze_project, "fn"):
+        response = await analyze_project.fn(request)
+    else:
+        response = await analyze_project(request)
 
     print("\n" + "=" * 80)
     print("RESPONSE")
     print("=" * 80)
 
     print(f"\nStatus: {response['status']}")
-    print(f"Message: {response['message']}")
+    if 'message' in response:
+        print(f"Message: {response['message']}")
 
     if response['status'] == 'success':
         analysis = response['analysis']
         summary = analysis['summary']
 
         print(f"\n--- SUMMARY ---")
-        print(f"Firm: {summary['firm_id']}")
-        print(f"Project: {summary['project_id']}")
-        print(f"Nodes Analyzed: {summary['nodes_analyzed']}")
-        print(f"Overall Bankability: {summary['overall_bankability']:.1%}")
-        print(f"Average Risk: {summary['average_risk']:.1%}")
-        print(f"Critical Chains: {summary['critical_chains_detected']}")
+        print(f"Nodes Total: {summary['total_nodes']}")
+        print(f"Nodes Evaluated: {summary['nodes_evaluated']}")
+        print(f"Aggregate Project Score (Success Prob): {summary['aggregate_project_score']:.1%}")
+        print(f"Critical Failure Likelihood: {summary['critical_failure_likelihood']:.1%}")
+        print(f"Critical Dependencies: {summary['critical_dependency_count']}")
 
-        print(f"\n--- ACTION MATRIX ---")
-        matrix = analysis['action_matrix']
-        print(f"Mitigate: {len(matrix['mitigate'])}")
-        print(f"Automate: {len(matrix['automate'])}")
-        print(f"Contingency: {len(matrix['contingency'])}")
-        print(f"Delegate: {len(matrix['delegate'])}")
+        print(f"\n--- ALL CHAINS (Ranked by Risk) ---")
+        chains = analysis.get('all_chains', [])
+        print(f"Chains found: {len(chains)}")
+        for i, chain in enumerate(chains[:5], 1): # Show top 5
+            print(f"{i}. Risk: {chain['cumulative_risk']:.2f} | Nodes: {' -> '.join(chain['node_names'])}")
 
-        print(f"\n--- RECOMMENDATIONS ---")
-        for i, rec in enumerate(summary['recommendations'], 1):
-            print(f"{i}. {rec}")
+        print(f"\n--- QUADRANT CLASSIFICATION ---")
+        matrix = analysis['matrix_classifications']
+        for quadrant, nodes in matrix.items():
+            print(f"{quadrant}: {len(nodes)} nodes")
+
+        print(f"\n--- BID RECOMMENDATION ---")
+        rec = analysis['recommendation']
+        print(f"Should Bid: {rec['should_bid']}")
+        print(f"Confidence: {rec['confidence']:.1%}")
+        print(f"Reasoning: {rec['reasoning']}")
 
         print("\n" + "=" * 80)
-        print("API TEST PASSED")
+        print("API TEST PASSED (V2)")
         print("=" * 80)
     else:
         print(f"\nError: {response.get('message')}")
@@ -100,7 +103,7 @@ async def test_api_with_inline_data():
         "sectors": [{"name": "Energy", "description": "energy"}],
         "services": [{"name": "Financing", "category": "financing", "description": "Capital"}],
         "strategic_focuses": [{"name": "Sustainability", "description": "sustainability"}],
-        "preferred_project_timeline": 36
+        "prefered_project_timeline": 36
     }
 
     project_data = {
@@ -120,34 +123,37 @@ async def test_api_with_inline_data():
         "service_requirements": ["financing"],
         "timeline": 24,
         "ops_requirements": [
-            {"name": "Financing", "category": "financing", "description": "Capital"}
+            {"id": "op1", "name": "Financing", "category": "financing", "description": "Capital"}
         ],
         "entry_criteria": {
             "pre_requisites": ["Permit"],
             "mobilization_time": 6,
-            "entry_node_id": "entry"
+            "entry_node_id": "op1"
         },
         "success_criteria": {
             "success_metrics": ["Complete"],
             "mandate_end_date": "2026-12-31",
-            "exit_node_id": "exit"
+            "exit_node_id": "op1"
         }
     }
 
     request = AnalysisRequest(
         firm_data=firm_data,
         project_data=project_data,
-        budget=25
+        budget=1
     )
 
     print("\nCalling analyze_project() with inline data...")
-    response = await analyze_project(request)
+    if hasattr(analyze_project, "fn"):
+        response = await analyze_project.fn(request)
+    else:
+        response = await analyze_project(request)
 
     print(f"\nStatus: {response['status']}")
 
     if response['status'] == 'success':
         summary = response['analysis']['summary']
-        print(f"Bankability: {summary['overall_bankability']:.1%}")
+        print(f"Aggregate Score: {summary['aggregate_project_score']:.1%}")
         print("\n" + "=" * 80)
         print("INLINE DATA TEST PASSED")
         print("=" * 80)
@@ -161,7 +167,7 @@ async def test_api_with_inline_data():
 async def main():
     """Run all API tests."""
     print("\n" + "=" * 80)
-    print("FLORENT API ENDPOINT TESTS")
+    print("FLORENT API ENDPOINT TESTS (V2)")
     print("=" * 80)
 
     try:

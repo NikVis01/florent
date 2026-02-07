@@ -1,6 +1,7 @@
 import sys
 import os
 import unittest
+from unittest.mock import patch
 from pydantic import ValidationError
 
 # Add src to sys.path
@@ -11,6 +12,11 @@ from src.models.base import OperationType
 
 class TestGraphModels(unittest.TestCase):
     def setUp(self):
+        # Mock the categories registry
+        self.mock_categories = {"transportation"}
+        self.patcher = patch('src.models.base.get_categories', return_value=self.mock_categories)
+        self.patcher.start()
+
         self.type_transport = OperationType(
             name="Trucking",
             category="transportation",
@@ -19,6 +25,9 @@ class TestGraphModels(unittest.TestCase):
         self.node_a = Node(id="A", name="Node A", type=self.type_transport, embedding=[0.1, 0.2])
         self.node_b = Node(id="B", name="Node B", type=self.type_transport, embedding=[0.3, 0.4])
         self.node_c = Node(id="C", name="Node C", type=self.type_transport, embedding=[0.5, 0.6])
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_valid_dag(self):
         graph = Graph(

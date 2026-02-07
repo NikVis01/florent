@@ -44,8 +44,8 @@ class TestDSPySignatures(unittest.TestCase):
         from src.services.agent.models.signatures import NodeSignature
 
         # Check for output field attributes in model_fields
+        self.assertIn('importance_score', NodeSignature.model_fields)
         self.assertIn('influence_score', NodeSignature.model_fields)
-        self.assertIn('risk_assessment', NodeSignature.model_fields)
         self.assertIn('reasoning', NodeSignature.model_fields)
 
     def test_node_signature_field_descriptions(self):
@@ -103,7 +103,7 @@ class TestDSPySignatures(unittest.TestCase):
 
         # Should have 2 input fields and 3 output fields
         input_fields = ['firm_context', 'node_requirements']
-        output_fields = ['influence_score', 'risk_assessment', 'reasoning']
+        output_fields = ['importance_score', 'influence_score', 'reasoning']
 
         for field in input_fields:
                 self.assertIn(field, NodeSignature.model_fields)
@@ -138,8 +138,8 @@ class TestDSPySignatures(unittest.TestCase):
         from src.services.agent.models.signatures import NodeSignature, PropagationSignature
 
         # Check that field names are snake_case
-        node_fields = ['firm_context', 'node_requirements', 'influence_score',
-                          'risk_assessment', 'reasoning']
+        node_fields = ['firm_context', 'node_requirements', 'importance_score',
+                          'influence_score', 'reasoning']
         prop_fields = ['upstream_risk_tensor', 'local_risk_factors', 'cascading_risk_score']
 
         for field in node_fields:

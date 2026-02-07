@@ -1,5 +1,5 @@
 """Critical chain detection for infrastructure project risk analysis."""
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from collections import deque
 from src.models.graph import Graph, Node
 
@@ -44,16 +44,16 @@ def detect_critical_chains(
     entry_node: Node,
     exit_node: Node,
     risk_scores: Dict[str, float],
-    top_n: int = 3
+    top_n: Optional[int] = 3
 ) -> List[Tuple[List[Node], float]]:
-    """Detect the top-N critical chains (paths with highest cumulative risk).
+    """Detect critical chains (paths with highest cumulative risk).
 
     Args:
         graph: The infrastructure DAG
         entry_node: Starting node
         exit_node: Ending node
-        risk_scores: Dict mapping node_id -> risk_level (0-1)
-        top_n: Number of critical chains to return
+        risk_scores: Dict mapping node_id -> derived_risk (0-1)
+        top_n: Number of chains to return. If None, returns all possible paths.
 
     Returns:
         List of (path, cumulative_risk) tuples, sorted by risk (highest first)
@@ -69,8 +69,11 @@ def detect_critical_chains(
         for path in all_paths
     ]
 
-    # Sort by risk (descending) and return top N
+    # Sort by risk (descending)
     path_risks.sort(key=lambda x: x[1], reverse=True)
+    
+    if top_n is None:
+        return path_risks
     return path_risks[:top_n]
 
 

@@ -7,7 +7,8 @@ from pydantic import BaseModel
 from src.services.clients.ai_client import AIClient
 from src.models.entities import Firm, Project, ProjectEntry, ProjectExit
 from src.models.base import Country, Sectors, StrategicFocus, OperationType
-from src.services.pipeline import run_analysis
+from src.models.graph import Graph, Node, Edge
+from src.services.agent.core.orchestrator_v2 import RiskOrchestrator
 from src.services.logging.logger import get_logger
 
 # Initialize AI Client (OpenAI via DSPy)
@@ -91,48 +92,96 @@ def parse_project(project_data: Dict[str, Any]) -> Project:
         success_criteria=exit_criteria
     )
 
+def build_infrastructure_graph(project: Project) -> Graph:
+    """Build initial graph from project requirements, ensuring no cycles."""
+    if not project.ops_requirements:
+        raise ValueError("Project has no ops_requirements")
+
+    node_map = {}
+    
+    # 1. Collect all nodes
+    # Entry
+    entry_id = project.entry_criteria.entry_node_id
+    node_map[entry_id] = Node(
+        id=entry_id,
+        name="Entry Point",
+        type=project.ops_requirements[0],
+        embedding=[0.1, 0.1, 0.1]
+    )
+    
+    # Ops (avoid duplicating entry/exit)
+    for i, op in enumerate(project.ops_requirements):
+        op_id = f"op_{i}"
+        if op_id not in node_map:
+            node_map[op_id] = Node(
+                id=op_id,
+                name=op.name,
+                type=op,
+                embedding=[0.2, 0.2, 0.2]
+            )
+            
+    # Exit
+    exit_id = project.success_criteria.exit_node_id
+    if exit_id not in node_map:
+        node_map[exit_id] = Node(
+            id=exit_id,
+            name="Exit Point",
+            type=project.ops_requirements[-1],
+            embedding=[0.9, 0.9, 0.9]
+        )
+
+    # 2. Sequence edges (linear pipeline for initial graph)
+    nodes_ordered = list(node_map.values())
+    edges = []
+    for i in range(len(nodes_ordered) - 1):
+        # Avoid self-loops
+        if nodes_ordered[i].id != nodes_ordered[i+1].id:
+            edges.append(Edge(
+                source=nodes_ordered[i],
+                target=nodes_ordered[i+1],
+                weight=0.8,
+                relationship="sequence"
+            ))
+
+    return Graph(nodes=nodes_ordered, edges=edges)
+
 @post("/analyze")
 async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
     """
-    Main endpoint for risk analysis.
-    Accepts JSON payloads or file paths for firm and project data.
+    Main endpoint for risk analysis using Orchestrator V2.
     """
     try:
-        logger.info("analysis_request_received")
+        logger.info("analysis_request_received", budget=data.budget)
 
         # Load data
         firm_data = load_data(data.firm_data, data.firm_path)
         project_data = load_data(data.project_data, data.project_path)
 
-        logger.info(
-            "data_loaded",
-            firm_id=firm_data.get('id'),
-            project_id=project_data.get('id')
-        )
-
         # Parse into entities
         firm = parse_firm(firm_data)
         project = parse_project(project_data)
 
-        logger.info(
-            "entities_parsed",
-            firm=firm.name,
-            project=project.name
-        )
+        logger.info("entities_parsed", firm=firm.name, project=project.name)
 
-        # Run analysis pipeline
+        # Build initial graph
+        graph = build_infrastructure_graph(project)
+
+        # Run enhanced V2 analysis
+        orchestrator = RiskOrchestrator(firm, project, graph)
         budget = data.budget or 100
-        analysis_result = run_analysis(firm, project, budget)
+        analysis_result = await orchestrator.run_analysis(budget)
 
         logger.info(
             "analysis_complete",
-            bankability=analysis_result['summary']['overall_bankability']
+            project_score=analysis_result.summary.aggregate_project_score,
+            nodes=analysis_result.summary.total_nodes
         )
 
+        # Return full Pydantic model dump
         return {
             "status": "success",
-            "message": f"Analysis complete for {project.name}",
-            "analysis": analysis_result
+            "message": f"Comprehensive analysis complete for {project.name}",
+            "analysis": analysis_result.model_dump()
         }
 
     except Exception as e:

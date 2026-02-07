@@ -6,8 +6,7 @@ from pathlib import Path
 from typing import Set, Dict, List, Optional
 
 import dspy
-from src.models.base import Firm
-from src.models.entities import Project
+from src.models.entities import Firm, Project
 from src.models.graph import Graph, Node
 from src.models.analysis import (
     AnalysisOutput,
@@ -18,16 +17,16 @@ from src.models.analysis import (
     BidRecommendation,
 )
 from src.services.agent.core.traversal import NodeHeap
-from src.services.agent.models.signatures import NodeSignature
+from src.services.agent.models.signatures import NodeSignature, DiscoverySignature
 from src.services.agent.analysis.critical_chain import (
     detect_critical_chains,
-    mark_critical_path_nodes,
 )
 from src.services.agent.analysis.matrix_classifier import (
     classify_all_nodes,
     should_bid,
     RiskQuadrant,
 )
+from src.models.base import OperationType
 from src.services.logging import get_logger
 
 logger = get_logger(__name__)
@@ -63,7 +62,8 @@ class RiskOrchestrator:
 
         self.heap = NodeHeap(max_heap=True)
         self.visited: Set[str] = set()
-        self.evaluator = dspy.Predict(NodeSignature)
+        self.node_evaluator = dspy.Predict(NodeSignature)
+        self.discovery_evaluator = dspy.Predict(DiscoverySignature)
 
         # Will be populated during analysis
         self.node_assessments: Dict[str, NodeAssessment] = {}
@@ -120,43 +120,44 @@ class RiskOrchestrator:
         # Retry loop with exponential backoff
         for attempt in range(self.max_retries):
             try:
-                result = self.evaluator(
+                result = self.node_evaluator(
                     firm_context=firm_context,
                     node_requirements=node_requirements,
                 )
 
                 # Parse result
+                importance = float(result.importance_score) if hasattr(result, "importance_score") else 0.5
                 influence = float(result.influence_score) if hasattr(result, "influence_score") else 0.5
-                risk = float(result.risk_assessment) if hasattr(result, "risk_assessment") else 0.5
                 reasoning = result.reasoning if hasattr(result, "reasoning") else "No reasoning provided"
 
-                # Estimate token usage (rough approximation)
-                self.token_count += len(firm_context.split()) + len(node_requirements.split()) + 200
+                # Derived Risk Calculation
+                derived_risk = importance * (1.0 - influence)
+
+                # Update token usage
+                self.token_count += 300
 
                 assessment = NodeAssessment(
                     node_id=node.id,
                     node_name=node.name,
+                    importance_score=max(0.0, min(1.0, importance)),
                     influence_score=max(0.0, min(1.0, influence)),
-                    risk_level=max(0.0, min(1.0, risk)),
+                    risk_level=max(0.0, min(1.0, derived_risk)),
                     reasoning=reasoning,
                     is_on_critical_path=self.critical_path_markers.get(node.id, False),
                 )
 
+                # TRIGGER RECURSIVE DISCOVERY
+                # We discover nodes for any high-importance node to "build" more of the graph
+                if assessment.importance_score > 0.4:
+                    await self._discover_and_inject_nodes(node, node_requirements)
+
                 # Save to cache
                 self._save_to_cache(cache_key, assessment)
-
-                logger.info(
-                    "node_evaluated",
-                    node_id=node.id,
-                    influence=assessment.influence_score,
-                    risk=assessment.risk_level,
-                    attempt=attempt + 1,
-                )
 
                 return assessment
 
             except Exception as e:
-                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                wait_time = 2 ** attempt  # Exponential backoff
                 logger.warning(
                     "dspy_call_failed",
                     node_id=node.id,
@@ -168,11 +169,57 @@ class RiskOrchestrator:
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(wait_time)
                 else:
-                    # All retries exhausted - crash as specified
                     logger.error("dspy_call_exhausted", node_id=node.id)
                     raise RuntimeError(
                         f"Failed to evaluate node {node.id} after {self.max_retries} attempts: {e}"
                     )
+
+    async def _discover_and_inject_nodes(self, node: Node, requirements: str):
+        """Generatively discover hidden infrastructure dependencies and inject them into the graph."""
+        logger.info("recursive_discovery_triggered", node_id=node.id)
+        
+        # Build context of existing graph to avoid duplicates
+        existing_nodes = ", ".join([n.name for n in self.graph.nodes])
+        
+        try:
+            discovery = self.discovery_evaluator(
+                node_requirements=requirements,
+                existing_graph_context=existing_nodes
+            )
+            
+            # Simple parser for "Name, Type, Description" format
+            lines = [line.strip() for line in discovery.hidden_dependencies.split('\n') if ',' in line]
+            
+            for line in lines:
+                parts = [p.strip() for p in line.split(',')]
+                if len(parts) >= 3:
+                    name, type_name, desc = parts[0], parts[1], parts[2]
+                    new_id = f"gen_{hashlib.md5(name.encode()).hexdigest()[:8]}"
+                    
+                    if any(n.id == new_id for n in self.graph.nodes):
+                        continue
+                        
+                    # Create new node
+                    new_node = Node(
+                        id=new_id,
+                        name=name,
+                        type=OperationType(
+                            name=type_name,
+                            category="GeneratedValue",
+                            description=desc
+                        )
+                    )
+                    
+                    # Inject into graph
+                    self.graph.add_node(new_node)
+                    self.graph.add_edge(node, new_node, weight=0.8, relationship="discovered dependency")
+                    
+                    logger.info("new_node_discovered", parent=node.id, new_node=new_node.name)
+                    
+            self.token_count += 500
+            
+        except Exception as e:
+            logger.warning("discovery_failed", node_id=node.id, error=str(e))
 
     def _build_firm_context(self) -> str:
         """Build firm capability context for DSPy."""
@@ -186,7 +233,7 @@ Sectors: {sectors}
 Services: {services}
 Active Countries: {countries}
 Strategic Focuses: {focuses}
-Project Timeline Preference: {self.firm.preferred_project_timeline} months"""
+Project Timeline Preference: {self.firm.prefered_project_timeline} months"""
 
     def _build_node_requirements(self, node: Node) -> str:
         """Build node requirements context for DSPy."""
@@ -196,27 +243,23 @@ Category: {node.type.category}
 Description: {node.type.description}"""
 
     async def run_analysis(self, budget: int) -> AnalysisOutput:
-        """Main analysis loop with critical chain prioritization."""
+        """Main analysis loop with full graph and chain transparency."""
         logger.info(
-            "analysis_started",
+            "analysis_started_v2",
             firm=self.firm.name,
             project=self.project.name,
             budget=budget,
         )
 
-        # Step 1: Get entry/exit nodes (hybrid approach)
+        # Step 1: Get entry/exit nodes
         try:
             entry_nodes = self.graph.get_entry_nodes()
             entry_node = next(
                 (n for n in entry_nodes if n.id == self.project.entry_criteria.entry_node_id),
                 entry_nodes[0],
             )
-        except ValueError:
-            # Fallback to project-specified entry
-            entry_node = next(
-                n for n in self.graph.nodes
-                if n.id == self.project.entry_criteria.entry_node_id
-            )
+        except (ValueError, IndexError):
+            entry_node = next(n for n in self.graph.nodes if n.id == self.project.entry_criteria.entry_node_id)
 
         try:
             exit_nodes = self.graph.get_exit_nodes()
@@ -224,166 +267,136 @@ Description: {node.type.description}"""
                 (n for n in exit_nodes if n.id == self.project.success_criteria.exit_node_id),
                 exit_nodes[0],
             )
-        except ValueError:
-            exit_node = next(
-                n for n in self.graph.nodes
-                if n.id == self.project.success_criteria.exit_node_id
-            )
+        except (ValueError, IndexError):
+            exit_node = next(n for n in self.graph.nodes if n.id == self.project.success_criteria.exit_node_id)
 
-        logger.info("entry_exit_identified", entry=entry_node.id, exit=exit_node.id)
-
-        # Step 2: Identify initial critical path (using default risks)
-        default_risks = {n.id: 0.5 for n in self.graph.nodes}
-        try:
-            critical_chains = detect_critical_chains(
-                self.graph, entry_node, exit_node, default_risks, top_n=1
-            )
-            initial_critical_chain = critical_chains[0][0] if critical_chains else []
-            self.critical_path_markers = mark_critical_path_nodes(self.graph, initial_critical_chain)
-            logger.info("initial_critical_path", length=len(initial_critical_chain))
-        except ValueError as e:
-            logger.warning("no_critical_path", error=str(e))
-            self.critical_path_markers = {n.id: False for n in self.graph.nodes}
-
-        # Step 3: Initialize heap with entry node
+        # Step 2: Initialize heap and visited
         self.heap.push(entry_node, priority=1.0)
-
-        # Step 4: Parallel node evaluation with priority-based traversal
-        traversal_status = TraversalStatus.COMPLETE
-        traversal_message = None
-
+        
+        # Step 3: Progressive traversal within budget
         while not self.heap.is_empty() and budget > 0:
             node = self.heap.pop()
-
             if node.id in self.visited:
                 continue
 
             self.visited.add(node.id)
-
-            # Evaluate node (async with retry)
             assessment = await self._evaluate_node_with_retry(node)
             self.node_assessments[node.id] = assessment
 
-            # Calculate priority for children: Risk × is_critical_path_multiplier
-            is_critical_multiplier = 2.0 if assessment.is_on_critical_path else 1.0
-            priority = assessment.risk_level * is_critical_multiplier
-
-            # Push children
+            # Children of unmanaged importance get priority
+            # Priority = Importance * (1 - Influence)
+            priority = assessment.risk_level
             for child in self.graph.get_children(node):
                 if child.id not in self.visited:
                     self.heap.push(child, priority=priority)
-
+            
             budget -= 1
 
-        # Check if we exhausted budget
-        if not self.heap.is_empty():
-            traversal_status = TraversalStatus.INCOMPLETE
-            traversal_message = f"Budget exhausted. {len(self.visited)}/{len(self.graph.nodes)} nodes evaluated."
-            logger.warning("budget_exhausted", nodes_evaluated=len(self.visited))
+        # Step 4: Ensure ALL nodes are present in output (at least with default values)
+        for node in self.graph.nodes:
+            if node.id not in self.node_assessments:
+                self.node_assessments[node.id] = NodeAssessment(
+                    node_id=node.id,
+                    node_name=node.name,
+                    importance_score=0.5,
+                    influence_score=0.5,
+                    risk_level=0.25,  # 0.5 * (1 - 0.5)
+                    reasoning="Node not reached within analysis budget.",
+                    is_on_critical_path=False
+                )
 
-        # Step 5: Detect final critical chains with real risk scores
+        # Step 5: Detect ALL critical chains (top_n=None)
         risk_scores = {aid: a.risk_level for aid, a in self.node_assessments.items()}
         try:
-            final_critical_chains = detect_critical_chains(
-                self.graph, entry_node, exit_node, risk_scores, top_n=3
+            final_chains = detect_critical_chains(
+                self.graph, entry_node, exit_node, risk_scores, top_n=None
             )
-            critical_chains_output = [
+            all_chains_output = [
                 CriticalChain(
                     node_ids=[n.id for n in chain],
                     node_names=[n.name for n in chain],
                     cumulative_risk=risk,
                     length=len(chain),
                 )
-                for chain, risk in final_critical_chains
+                for chain, risk in final_chains
             ]
         except ValueError:
-            critical_chains_output = []
+            all_chains_output = []
 
-        # Step 6: 2x2 Matrix classification
+        # Step 6: Matrix classification
         node_names = {n.id: n.name for n in self.graph.nodes}
         matrix_classifications = classify_all_nodes(
             self.node_assessments,
             node_names,
             influence_threshold=0.6,
-            risk_threshold=0.7,
+            importance_threshold=0.6,
         )
 
-        # Step 7: Bid recommendation
-        critical_chain_ids = critical_chains_output[0].node_ids if critical_chains_output else []
-        should_bid_result = should_bid(matrix_classifications, critical_chain_ids)
+        # Step 7: Final Bid Recommendation (Bidding logic)
+        primary_chain = all_chains_output[0].node_ids if all_chains_output else []
+        should_bid_result = should_bid(matrix_classifications, primary_chain)
 
-        cooked_count = len(matrix_classifications.get(RiskQuadrant.COOKED_ZONE, []))
-        cooked_percentage = cooked_count / len(self.node_assessments) if self.node_assessments else 0.0
+        critical_deps = len(matrix_classifications.get(RiskQuadrant.CRITICAL_DEPENDENCY, []))
 
         recommendation = BidRecommendation(
             should_bid=should_bid_result,
-            confidence=0.8 if len(self.node_assessments) > 10 else 0.5,
+            confidence=0.9 if budget > 0 else 0.6,
             reasoning=self._generate_bid_reasoning(
-                should_bid_result, cooked_percentage, critical_chains_output
+                should_bid_result, critical_deps, all_chains_output
             ),
             key_risks=self._extract_key_risks(matrix_classifications),
             key_opportunities=self._extract_key_opportunities(matrix_classifications),
         )
 
         # Step 8: Summary metrics
-        critical_failure_likelihood = (
-            critical_chains_output[0].cumulative_risk if critical_chains_output else 0.5
-        )
-        aggregate_score = 1.0 - critical_failure_likelihood
-
+        critical_failure_likelihood = all_chains_output[0].cumulative_risk if all_chains_output else 0.5
+        
         summary = SummaryMetrics(
-            aggregate_project_score=aggregate_score,
+            aggregate_project_score=1.0 - critical_failure_likelihood,
             total_token_cost=self.token_count,
             critical_failure_likelihood=critical_failure_likelihood,
-            nodes_evaluated=len(self.node_assessments),
+            nodes_evaluated=len(self.visited),
             total_nodes=len(self.graph.nodes),
-            cooked_zone_percentage=cooked_percentage,
+            critical_dependency_count=critical_deps,
         )
 
-        logger.info(
-            "analysis_complete",
-            nodes_evaluated=len(self.node_assessments),
-            should_bid=should_bid_result,
-            aggregate_score=aggregate_score,
-        )
+        traversal_status = TraversalStatus.COMPLETE if budget > 0 else TraversalStatus.INCOMPLETE
 
         return AnalysisOutput(
             firm=self.firm,
             project=self.project,
             traversal_status=traversal_status,
-            traversal_message=traversal_message,
             node_assessments=self.node_assessments,
-            critical_chains=critical_chains_output,
+            all_chains=all_chains_output,
             matrix_classifications=matrix_classifications,
             summary=summary,
             recommendation=recommendation,
         )
 
     def _generate_bid_reasoning(
-        self, should_bid: bool, cooked_pct: float, chains: List[CriticalChain]
+        self, should_bid: bool, critical_count: int, chains: List[CriticalChain]
     ) -> str:
-        """Generate natural language bid reasoning."""
+        """Generate bid reasoning based on structural project risk."""
+        risk_str = f"{chains[0].cumulative_risk:.1%}" if chains else "Unknown"
         if should_bid:
             return (
-                f"Recommendation: PROCEED WITH BID. "
-                f"Critical chain risk: {chains[0].cumulative_risk:.1%}. "
-                f"Only {cooked_pct:.1%} of nodes in 'Cooked Zone'. "
-                f"Project aligns with firm capabilities."
+                f"Recommendation: PROCEED. The critical dependency chain shows manageable risk ({risk_str}). "
+                f"Identified {critical_count} critical dependencies outside of firm's direct influence, "
+                "which is within acceptable structural limits for this firm profile."
             )
         else:
             return (
-                f"Recommendation: DO NOT BID. "
-                f"Critical chain dominated by high-risk, low-influence nodes. "
-                f"{cooked_pct:.1%} of nodes in 'Cooked Zone'. "
-                f"Risk exceeds firm's capability envelope."
+                f"Recommendation: DO NOT BID. The primary dependency chain is compromised by high-importance "
+                f"nodes where the firm has low influence. Total risk for primary path: {risk_str}. "
+                f"Found {critical_count} critical structural dependencies that exceed firm capability envelope."
             )
 
     def _extract_key_risks(self, classifications: Dict) -> List[str]:
-        """Extract top 3 key risks from Cooked Zone."""
-        cooked_nodes = classifications.get(RiskQuadrant.COOKED_ZONE, [])
-        return [f"{n.node_name} (Risk: {n.risk_level:.2f})" for n in cooked_nodes[:3]]
+        """Extract top 3 key risks from Critical Dependencies."""
+        critical_deps = classifications.get(RiskQuadrant.CRITICAL_DEPENDENCY, [])
+        return [f"{n.node_name} (Risk: {n.importance_score * (1-n.influence_score):.2f})" for n in critical_deps[:3]]
 
     def _extract_key_opportunities(self, classifications: Dict) -> List[str]:
-        """Extract top 3 opportunities from Safe Wins."""
-        safe_wins = classifications.get(RiskQuadrant.SAFE_WINS, [])
-        return [f"{n.node_name} (Influence: {n.influence_score:.2f})" for n in safe_wins[:3]]
+        """Extract top 3 opportunities from Strategic Wins."""
+        strategic_wins = classifications.get(RiskQuadrant.STRATEGIC_WIN, [])
+        return [f"{n.node_name} (Influence: {n.influence_score:.2f})" for n in strategic_wins[:3]]

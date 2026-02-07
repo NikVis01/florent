@@ -7,19 +7,19 @@ from pydantic import BaseModel
 
 
 class RiskQuadrant(str, Enum):
-    """Risk matrix quadrants for bid decision-making."""
-    SAFE_WINS = "Safe Wins"              # High Influence, Low Risk
-    MANAGED_RISKS = "Managed Risks"      # High Influence, High Risk (Firm's value-add zone)
-    BASELINE_UTILITY = "Baseline/Utility"  # Low Influence, Low Risk
-    COOKED_ZONE = "The Cooked Zone"      # Low Influence, High Risk (Potential Blockers)
+    """Quadrants derived from Influence (X) and Importance (Y)."""
+    STRATEGIC_WIN = "High Influence / Low Importance"
+    MANAGED_RISK = "High Influence / High Importance"
+    BASELINE_SUPPORT = "Low Influence / Low Importance"
+    CRITICAL_DEPENDENCY = "Low Influence / High Importance"
 
 
 class NodeClassification(BaseModel):
-    """Classification of a single node in the risk matrix."""
+    """Classification of a single node in the Influence vs Importance matrix."""
     node_id: str
     node_name: str
     influence_score: float
-    risk_level: float
+    importance_score: float
     quadrant: RiskQuadrant
 
 
@@ -27,40 +27,40 @@ def classify_node(
     node_id: str,
     node_name: str,
     influence_score: float,
-    risk_level: float,
+    importance_score: float,
     influence_threshold: float = 0.6,
-    risk_threshold: float = 0.7
+    importance_threshold: float = 0.6
 ) -> NodeClassification:
-    """Classify a single node into a risk quadrant using absolute thresholds.
+    """Classify a single node into a quadrant using absolute thresholds.
 
     Args:
         node_id: Node identifier
-        node_name: Node name for reporting
+        node_name: Node name
         influence_score: Influence score (0.0 - 1.0)
-        risk_level: Risk level (0.0 - 1.0)
-        influence_threshold: Threshold for high vs low influence (default 0.6)
-        risk_threshold: Threshold for high vs low risk (default 0.7)
+        importance_score: Importance score (0.0 - 1.0)
+        influence_threshold: Threshold for high vs low influence
+        importance_threshold: Threshold for high vs low importance
 
     Returns:
         NodeClassification with assigned quadrant
     """
     high_influence = influence_score > influence_threshold
-    high_risk = risk_level > risk_threshold
+    high_importance = importance_score > importance_threshold
 
-    if high_influence and not high_risk:
-        quadrant = RiskQuadrant.SAFE_WINS
-    elif high_influence and high_risk:
-        quadrant = RiskQuadrant.MANAGED_RISKS
-    elif not high_influence and not high_risk:
-        quadrant = RiskQuadrant.BASELINE_UTILITY
-    else:  # Low influence, high risk
-        quadrant = RiskQuadrant.COOKED_ZONE
+    if high_influence and not high_importance:
+        quadrant = RiskQuadrant.STRATEGIC_WIN
+    elif high_influence and high_importance:
+        quadrant = RiskQuadrant.MANAGED_RISK
+    elif not high_influence and not high_importance:
+        quadrant = RiskQuadrant.BASELINE_SUPPORT
+    else:  # Low influence, high importance
+        quadrant = RiskQuadrant.CRITICAL_DEPENDENCY
 
     return NodeClassification(
         node_id=node_id,
         node_name=node_name,
         influence_score=influence_score,
-        risk_level=risk_level,
+        importance_score=importance_score,
         quadrant=quadrant
     )
 
@@ -69,15 +69,15 @@ def classify_all_nodes(
     node_assessments: Dict[str, "NodeAssessment"],  # type: ignore
     node_names: Dict[str, str],
     influence_threshold: float = 0.6,
-    risk_threshold: float = 0.7
+    importance_threshold: float = 0.6
 ) -> Dict[RiskQuadrant, List[NodeClassification]]:
-    """Classify all evaluated nodes into risk quadrants.
+    """Classify all nodes into Influence vs Importance quadrants.
 
     Args:
         node_assessments: Dict of {node_id: NodeAssessment}
         node_names: Dict of {node_id: node_name}
-        influence_threshold: Threshold for high influence (default 0.6)
-        risk_threshold: Threshold for high risk (default 0.7)
+        influence_threshold: Threshold for high influence
+        importance_threshold: Threshold for high importance
 
     Returns:
         Dict mapping each RiskQuadrant to list of nodes in that quadrant
@@ -90,9 +90,9 @@ def classify_all_nodes(
             node_id=node_id,
             node_name=node_name,
             influence_score=assessment.influence_score,
-            risk_level=assessment.risk_level,
+            importance_score=assessment.importance_score,
             influence_threshold=influence_threshold,
-            risk_threshold=risk_threshold
+            importance_threshold=importance_threshold
         )
         classifications[classification.quadrant].append(classification)
 
@@ -103,31 +103,23 @@ def should_bid(
     classifications: Dict[RiskQuadrant, List[NodeClassification]],
     critical_chain_node_ids: List[str]
 ) -> bool:
-    """Determine if firm should bid on project based on critical chain analysis.
+    """Determine if firm should bid based on critical dependency analysis.
 
-    Decision Rule: If the critical chain is dominated by "Cooked Zone" nodes
-    (Low Influence / High Risk), the firm should NOT bid.
-
-    Args:
-        classifications: Node classifications by quadrant
-        critical_chain_node_ids: List of node IDs on the critical chain
-
-    Returns:
-        True if firm should bid, False otherwise
+    Decision Rule: If the critical chain is dominated by "Critical Dependency" nodes
+    (Low Influence / High Importance), the firm should NOT bid.
     """
-    cooked_nodes = classifications.get(RiskQuadrant.COOKED_ZONE, [])
-    cooked_node_ids = {node.node_id for node in cooked_nodes}
+    critical_deps = classifications.get(RiskQuadrant.CRITICAL_DEPENDENCY, [])
+    critical_dep_ids = {node.node_id for node in critical_deps}
 
-    # Count how many critical chain nodes are in the "Cooked Zone"
-    critical_cooked_count = sum(
+    if len(critical_chain_node_ids) == 0:
+        return True
+
+    critical_dep_on_path_count = sum(
         1 for node_id in critical_chain_node_ids
-        if node_id in cooked_node_ids
+        if node_id in critical_dep_ids
     )
 
-    # If more than 50% of critical chain is "Cooked", don't bid
-    if len(critical_chain_node_ids) == 0:
-        return True  # No critical chain evaluated, proceed cautiously
+    # If more than 50% of critical chain consists of unmanaged critical dependencies, don't bid
+    critical_dep_percentage = critical_dep_on_path_count / len(critical_chain_node_ids)
 
-    cooked_percentage = critical_cooked_count / len(critical_chain_node_ids)
-
-    return cooked_percentage <= 0.5
+    return critical_dep_percentage <= 0.5
