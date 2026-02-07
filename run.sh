@@ -1,1 +1,1 @@
-docker run -p 8000:8000 --env-file .env florent-engine
+docker compose -f docker/docker-compose-api.yaml up
