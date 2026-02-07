@@ -6,7 +6,8 @@ from pydantic import ValidationError
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.graph import Node, Edge, Graph, OperationType
+from src.models.graph import Node, Edge, Graph
+from src.models.base import OperationType
 
 class TestGraphModels(unittest.TestCase):
     def setUp(self):
@@ -56,7 +57,7 @@ class TestGraphModels(unittest.TestCase):
         graph.add_edge(self.node_a, self.node_b, 0.5, "step 1")
         graph.add_edge(self.node_b, self.node_c, 0.8, "step 2")
         
-        with self.assertRaisesRegex(ValidationError, "The graph contains a cycle"):
+        with self.assertRaisesRegex(ValueError, "The graph contains a cycle"):
             graph.add_edge(self.node_c, self.node_a, 0.9, "loop")
 
     def test_fairly_large_graph(self):

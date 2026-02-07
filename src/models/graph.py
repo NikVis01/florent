@@ -1,14 +1,11 @@
-# Datastructures for our business graph
-
 from pydantic import BaseModel, model_validator, Field
 from typing import List, Literal, Optional, Dict, Set
 import logging
 
+from src.models.base import OperationType
+
 # Set up logging
 logger = logging.getLogger(__name__)
-
-# Type of operations requirement or business need
-from src.models.misc import OperationType
 
 # Node class
 class Node(BaseModel):
@@ -57,8 +54,8 @@ class Graph(BaseModel):
         """
         adj = self._build_adjacency_list()
         
-        visited = set()
-        rec_stack = set()
+        visited: Set[str] = set()
+        rec_stack: Set[str] = set()
         
         for node_id in adj:
             if node_id not in visited:
