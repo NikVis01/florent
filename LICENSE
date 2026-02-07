@@ -1,23 +1,30 @@
-# PROPRIETARY LICENSE - PROJECT FLORENT
+# PROPRIETARY SOURCE CODE LICENSE - PROJECT FLORENT
 
 Copyright (c) 2026 Niklavs Visockis and Noah Hydén (the "Authors").
+All Rights Reserved.
 
-## 1. OWNERSHIP AND EXCLUSIVE RIGHTS
-This software and all associated documentation files (the "Software") are the sole property of the Authors. The Authors reserve all rights not expressly granted under this license.
+## 1. EXCLUSIVE OWNERSHIP
+This Software, including its source code, documentation, algorithms (specifically the neuro-symbolic risk engine and C++ math core), and data structures, is the exclusive intellectual property of Niklavs Visockis and Noah Hydén. 
 
-## 2. RESTRICTED USE
-**NO PERMISSION** is granted to any person, organization, or entity to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software. 
+## 2. NO LICENSE GRANTED
+This is NOT an Open Source license (such as Apache, MIT, or GPL). No rights or licenses, express or implied, are granted to any person or entity to:
+- Use, execute, or install the Software.
+- Copy, modify, or create derivative works.
+- Distribute, sublicense, or sell the Software.
+- Fork this repository on any platform.
 
-**STRICT PROHIBITION ON FORKING**: The act of "forking" this repository on any platform (including but not limited to GitHub, GitLab, or Bitbucket) is strictly prohibited without the express written consent of the Authors.
+## 3. NOTICE TO THIRD PARTIES
+The presence of this Software in a public repository is for the sole purpose of enabling the Authors to manage their source code and demonstrate their portfolio. Public visibility does NOT constitute a waiver of any intellectual property rights or an invitation to use the code.
 
-## 3. ACCESS WITHOUT PERMISSION
-Access to this Software in a public repository does NOT constitute a license to use it. This Software is made visible for the sole purpose of peer review or portfolio display by the Authors.
+## 4. ENFORCEMENT AND FORKING PROHIBITION
+**FORKING IS STRICTLY PROHIBITED.** Any unauthorized fork or clone of this repository will be treated as a direct infringement of the Authors' copyright.
 
-## 4. LEGAL CONSEQUENCES
-Any unauthorized use, reproduction, distribution, or forking of this Software will be considered a violation of copyright law and a breach of this license. **The Authors reserve the right to pursue full legal action, including but not limited to statutory damages and injunctive relief, against any party found to be in violation of these terms.**
+The Authors reserve the right to:
+- Issue DMCA Takedown notices immediately upon discovery of unauthorized copies.
+- Seek statutory damages, injunctive relief, and legal fees against any individual or entity found in violation of these terms.
 
-## 5. NO WARRANTY
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE.
+## 5. DISCLAIMER
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
 
 ---
 **Authors:**

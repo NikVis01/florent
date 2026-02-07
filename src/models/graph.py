@@ -110,3 +110,48 @@ class Graph(BaseModel):
         # Re-validate after adding edge to ensure it remains a DAG
         if validate:
             self.validate_graph()
+
+    def get_entry_nodes(self) -> List[Node]:
+        """Returns nodes with in-degree 0 (no incoming edges)."""
+        if not self.nodes:
+            raise ValueError("Graph has no nodes")
+        targets = {e.target.id for e in self.edges}
+        entry_nodes = [n for n in self.nodes if n.id not in targets]
+        if not entry_nodes:
+            raise ValueError("Graph has no entry points")
+        return entry_nodes
+
+    def get_exit_nodes(self) -> List[Node]:
+        """Returns nodes with out-degree 0 (no outgoing edges)."""
+        if not self.nodes:
+            raise ValueError("Graph has no nodes")
+        sources = {e.source.id for e in self.edges}
+        exit_nodes = [n for n in self.nodes if n.id not in sources]
+        if not exit_nodes:
+            raise ValueError("Graph has no exit points")
+        return exit_nodes
+
+    def get_parents(self, node: Node) -> List[Node]:
+        """Returns all nodes with edges pointing to this node."""
+        return [e.source for e in self.edges if e.target.id == node.id]
+
+    def get_children(self, node: Node) -> List[Node]:
+        """Returns all nodes this node points to."""
+        return [e.target for e in self.edges if e.source.id == node.id]
+
+    def get_distance(self, source: Node, target: Node) -> int:
+        """BFS to find shortest path distance."""
+        if source.id == target.id:
+            return 0
+        from collections import deque
+        queue = deque([(source, 0)])
+        visited = {source.id}
+        while queue:
+            current, dist = queue.popleft()
+            for child in self.get_children(current):
+                if child.id == target.id:
+                    return dist + 1
+                if child.id not in visited:
+                    visited.add(child.id)
+                    queue.append((child, dist + 1))
+        raise ValueError(f"No path from {source.id} to {target.id}")

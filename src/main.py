@@ -32,8 +32,8 @@ async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
     Accepts JSON payloads or file paths for firm and project data.
     """
     try:
-        firm_json = load_data(data.firm_data, data.firm_path)
-        project_json = load_data(data.project_data, data.project_path)
+        load_data(data.firm_data, data.firm_path)
+        load_data(data.project_data, data.project_path)
         
         # In the future, we will use ai_client.get_lm() inside the orchestrator
         return {
