@@ -14,4 +14,7 @@ make all
 echo "--- 3. Linting with ruff ---"
 uv run ruff check src/
 
+echo "--- 4. Rebuilding Docker Image ---"
+docker build -t florent-engine .
+
 echo "--- Maintenance Complete ---"

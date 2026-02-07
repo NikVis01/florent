@@ -13,7 +13,7 @@ class TestAIClient(unittest.TestCase):
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-api-key-12345'})
     @patch('dspy.OpenAI')
-    @patch('dspy.settings.configure')
+    @patch('dspy.configure')
     def test_init_dspy_success(self, mock_configure, mock_openai):
         """Test successful DSPy initialization."""
         from src.services.clients.ai_client import init_dspy
@@ -49,7 +49,7 @@ class TestAIClient(unittest.TestCase):
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-api-key'})
     @patch('dspy.OpenAI')
-    @patch('dspy.settings.configure')
+    @patch('dspy.configure')
     def test_ai_client_initialization(self, mock_configure, mock_openai):
         """Test AIClient initialization."""
         from src.services.clients.ai_client import AIClient
@@ -64,7 +64,7 @@ class TestAIClient(unittest.TestCase):
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-api-key'})
     @patch('dspy.OpenAI')
-    @patch('dspy.settings.configure')
+    @patch('dspy.configure')
     def test_ai_client_get_lm(self, mock_configure, mock_openai):
         """Test AIClient get_lm method."""
         from src.services.clients.ai_client import AIClient
@@ -79,7 +79,7 @@ class TestAIClient(unittest.TestCase):
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-api-key'})
     @patch('dspy.OpenAI')
-    @patch('dspy.settings.configure')
+    @patch('dspy.configure')
     def test_multiple_ai_client_instances(self, mock_configure, mock_openai):
         """Test creating multiple AIClient instances."""
         from src.services.clients.ai_client import AIClient
@@ -97,7 +97,7 @@ class TestAIClient(unittest.TestCase):
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-api-key'})
     @patch('dspy.OpenAI', side_effect=Exception("OpenAI initialization failed"))
-    @patch('dspy.settings.configure')
+    @patch('dspy.configure')
     def test_ai_client_initialization_failure(self, mock_configure, mock_openai):
         """Test AIClient initialization failure."""
         from src.services.clients.ai_client import AIClient
@@ -109,7 +109,7 @@ class TestAIClient(unittest.TestCase):
 
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
     @patch('dspy.OpenAI')
-    @patch('dspy.settings.configure')
+    @patch('dspy.configure')
     def test_correct_model_used(self, mock_configure, mock_openai):
         """Test that correct model is specified."""
         from src.services.clients.ai_client import init_dspy
