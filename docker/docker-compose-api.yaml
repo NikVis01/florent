@@ -5,9 +5,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - ../.env  # Load from project root .env file
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LLM_MODEL=${LLM_MODEL:-gpt-4-turbo-preview}
+      # These can override .env if needed
       - BGE_M3_URL=${BGE_M3_URL:-http://bge-m3:8080}
     depends_on:
       bge-m3:
