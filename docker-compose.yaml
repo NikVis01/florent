@@ -12,5 +12,5 @@ services:
     volumes:
       - .env:/app/.env
       # Optionally mount local data directories if you want to use file path references
-      - ./src/data:/app/src/data
+      - ./src/data:/app/src/data # for local test
     restart: always

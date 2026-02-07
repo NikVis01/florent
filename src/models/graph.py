@@ -94,8 +94,19 @@ class Graph(BaseModel):
             return
         self.nodes.append(node)
 
-    def add_edge(self, source: Node, target: Node, weight: float, relationship: str = "connected to"):
+    def add_edge(self, source: Node, target: Node, weight: float, relationship: str = "connected to", validate: bool = True):
+        """
+        Add an edge to the graph.
+
+        Args:
+            source: Source node
+            target: Target node
+            weight: Edge weight
+            relationship: Description of the relationship
+            validate: Whether to validate DAG property after adding (default: True)
+        """
         edge = Edge(source=source, target=target, weight=weight, relationship=relationship)
         self.edges.append(edge)
         # Re-validate after adding edge to ensure it remains a DAG
-        self.validate_graph()
+        if validate:
+            self.validate_graph()

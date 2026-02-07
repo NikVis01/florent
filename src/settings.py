@@ -1,10 +1,22 @@
 import os
+import logging
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
+# Configure basic logging
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
+
+
 class Settings:
+    """Application settings loaded from environment variables."""
+
     # LLM Settings
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4-turbo-preview")
@@ -24,5 +36,21 @@ class Settings:
     TAXONOMY_DIR = os.path.join(DATA_DIR, "taxonomy")
     CONFIG_DIR = os.path.join(DATA_DIR, "config")
     POC_DIR = os.path.join(DATA_DIR, "poc")
+
+    def __init__(self):
+        """Validate required settings on initialization."""
+        self._validate_settings()
+
+    def _validate_settings(self):
+        """Validate that required settings are present."""
+        if not self.OPENAI_API_KEY:
+            logger.warning("OPENAI_API_KEY not set - LLM features will not work")
+
+        # Validate paths exist
+        if not os.path.exists(self.DATA_DIR):
+            logger.warning(f"Data directory not found: {self.DATA_DIR}")
+
+        logger.info(f"Settings initialized - Model: {self.LLM_MODEL}, BGE URL: {self.BGE_M3_URL}")
+
 
 settings = Settings()
