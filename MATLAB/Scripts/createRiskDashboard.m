@@ -89,18 +89,59 @@ function createRiskDashboard(data, stabilityData, mcResults)
     savefig(fig, fullfile(figDir, 'risk_analysis_dashboard.fig'));
     fprintf('Dashboard saved to: risk_analysis_dashboard.fig\n');
     
-    % Export to PDF
+    % Export to PDF with multi-page support
     reportDir = fullfile(pwd, 'MATLAB', 'Reports');
     if ~exist(reportDir, 'dir')
         mkdir(reportDir);
     end
     
+    % Generate text report first (executive summary)
     try
-        exportgraphics(fig, fullfile(reportDir, 'risk_analysis_dashboard.pdf'), ...
-            'ContentType', 'vector', 'BackgroundColor', 'white');
+        if isfield(data, 'projectId') && isfield(data, 'firmId')
+            generateTextReport(data, stabilityData, config);
+        end
+    catch
+        warning('Text report generation failed');
+    end
+    
+    % Export main dashboard PDF
+    try
+        pdfFile = fullfile(reportDir, 'risk_analysis_dashboard.pdf');
+        exportgraphics(fig, pdfFile, ...
+            'ContentType', 'vector', 'BackgroundColor', 'white', ...
+            'Resolution', config.visualization.dpi);
         fprintf('PDF report saved to: risk_analysis_dashboard.pdf\n');
     catch
         warning('PDF export failed. Figure saved as .fig only.');
+    end
+    
+    % Export individual figure PDFs if configured
+    if isfield(config, 'report') && config.report.exportPDF
+        try
+            figDir = config.paths.figuresDir;
+            if exist(figDir, 'dir')
+                % Export key figures as separate PDFs
+                keyFigs = {'2x2_matrix_confidence', '3d_risk_landscape', ...
+                    'stability_network', 'parameter_sensitivity_heatmap'};
+                for i = 1:length(keyFigs)
+                    figFile = fullfile(figDir, [keyFigs{i}, '.fig']);
+                    if exist(figFile, 'file')
+                        try
+                            figHandle = openfig(figFile, 'invisible');
+                            pdfFile = fullfile(reportDir, [keyFigs{i}, '.pdf']);
+                            exportgraphics(figHandle, pdfFile, ...
+                                'ContentType', 'vector', 'BackgroundColor', 'white', ...
+                                'Resolution', config.visualization.dpi);
+                            close(figHandle);
+                        catch
+                            % Skip if export fails
+                        end
+                    end
+                end
+            end
+        catch
+            % Ignore individual figure export errors
+        end
     end
     
     fprintf('Dashboard creation completed\n');
