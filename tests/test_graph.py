@@ -23,8 +23,8 @@ class TestGraphModels(unittest.TestCase):
         graph = Graph(
             nodes=[self.node_a, self.node_b, self.node_c],
             edges=[
-                Edge(source=self.node_a, target=self.node_b, weight=0.5),
-                Edge(source=self.node_b, target=self.node_c, weight=0.8)
+                Edge(source=self.node_a, target=self.node_b, weight=0.5, relationship="leads to"),
+                Edge(source=self.node_b, target=self.node_c, weight=0.8, relationship="prerequisite")
             ]
         )
         self.assertEqual(len(graph.nodes), 3)
@@ -35,9 +35,9 @@ class TestGraphModels(unittest.TestCase):
             Graph(
                 nodes=[self.node_a, self.node_b, self.node_c],
                 edges=[
-                    Edge(source=self.node_a, target=self.node_b, weight=0.5),
-                    Edge(source=self.node_b, target=self.node_c, weight=0.8),
-                    Edge(source=self.node_c, target=self.node_a, weight=0.9)  # Cycle
+                    Edge(source=self.node_a, target=self.node_b, weight=0.5, relationship="x"),
+                    Edge(source=self.node_b, target=self.node_c, weight=0.8, relationship="y"),
+                    Edge(source=self.node_c, target=self.node_a, weight=0.9, relationship="z")  # Cycle
                 ]
             )
 
@@ -47,17 +47,17 @@ class TestGraphModels(unittest.TestCase):
             Graph(
                 nodes=[self.node_a, self.node_b],
                 edges=[
-                    Edge(source=self.node_a, target=node_external, weight=0.5)
+                    Edge(source=self.node_a, target=node_external, weight=0.5, relationship="invalid")
                 ]
             )
 
     def test_add_edge_dynamic_dag_check(self):
         graph = Graph(nodes=[self.node_a, self.node_b, self.node_c])
-        graph.add_edge(self.node_a, self.node_b, 0.5)
-        graph.add_edge(self.node_b, self.node_c, 0.8)
+        graph.add_edge(self.node_a, self.node_b, 0.5, "step 1")
+        graph.add_edge(self.node_b, self.node_c, 0.8, "step 2")
         
         with self.assertRaisesRegex(ValidationError, "The graph contains a cycle"):
-            graph.add_edge(self.node_c, self.node_a, 0.9)
+            graph.add_edge(self.node_c, self.node_a, 0.9, "loop")
 
     def test_fairly_large_graph(self):
         # Create 100 nodes and 99 edges in a line
@@ -66,7 +66,7 @@ class TestGraphModels(unittest.TestCase):
             for i in range(100)
         ]
         edges = [
-            Edge(source=nodes[i], target=nodes[i+1], weight=1.0)
+            Edge(source=nodes[i], target=nodes[i+1], weight=1.0, relationship="next")
             for i in range(99)
         ]
         graph = Graph(nodes=nodes, edges=edges)

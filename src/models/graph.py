@@ -7,6 +7,9 @@ import logging
 # Set up logging
 logger = logging.getLogger(__name__)
 
+# Type of operations requirement or business need
+from src.models.misc import OperationType
+
 # Node class
 class Node(BaseModel):
     id: str
@@ -91,8 +94,8 @@ class Graph(BaseModel):
             return
         self.nodes.append(node)
 
-    def add_edge(self, source: Node, target: Node, weight: float):
-        edge = Edge(source=source, target=target, weight=weight)
+    def add_edge(self, source: Node, target: Node, weight: float, relationship: str = "connected to"):
+        edge = Edge(source=source, target=target, weight=weight, relationship=relationship)
         self.edges.append(edge)
         # Re-validate after adding edge to ensure it remains a DAG
         self.validate_graph()

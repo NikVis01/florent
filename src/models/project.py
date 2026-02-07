@@ -1,5 +1,8 @@
 # Random models
+from typing import List
+from pydantic import BaseModel, Field
 
+from src.models.misc import OperationType
 
 class Project(BaseModel):
     id: str

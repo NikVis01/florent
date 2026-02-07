@@ -47,3 +47,18 @@ class StrategicFocus(BaseModel):
         "digital_transformation",
         "other",
     ]
+
+
+class Country(BaseModel):
+    name: str
+    code: str
+    region: Literal[
+        "europe",
+        "asia",
+        "africa",
+        "north_america",
+        "south_america",
+        "oceania",
+        "other",
+    ]
+    affiliations: List[str] = Field(default_factory=list, description="Affiliations of the country")

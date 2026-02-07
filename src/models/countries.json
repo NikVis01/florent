@@ -1,0 +1,2302 @@
+[
+    {
+        "name": "Afghanistan",
+        "a2": "AF",
+        "a3": "AFG",
+        "num": "004",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Albania",
+        "a2": "AL",
+        "a3": "ALB",
+        "num": "008",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "NATO"
+        ]
+    },
+    {
+        "name": "Algeria",
+        "a2": "DZ",
+        "a3": "DZA",
+        "num": "012",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "AU",
+            "AL",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Andorra",
+        "a2": "AD",
+        "a3": "AND",
+        "num": "020",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": []
+    },
+    {
+        "name": "Angola",
+        "a2": "AO",
+        "a3": "AGO",
+        "num": "024",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Antigua and Barbuda",
+        "a2": "AG",
+        "a3": "ATG",
+        "num": "028",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Argentina",
+        "a2": "AR",
+        "a3": "ARG",
+        "num": "032",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "G20",
+            "Mercosur"
+        ]
+    },
+    {
+        "name": "Armenia",
+        "a2": "AM",
+        "a3": "ARM",
+        "num": "051",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "CSTO",
+            "EAEU"
+        ]
+    },
+    {
+        "name": "Australia",
+        "a2": "AU",
+        "a3": "AUS",
+        "num": "036",
+        "region": "Oceania",
+        "sub_region": "Australia and New Zealand",
+        "affiliations": [
+            "G20",
+            "OECD",
+            "AUKUS",
+            "CPTPP",
+            "PIF"
+        ]
+    },
+    {
+        "name": "Austria",
+        "a2": "AT",
+        "a3": "AUT",
+        "num": "040",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "EU",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Azerbaijan",
+        "a2": "AZ",
+        "a3": "AZE",
+        "num": "031",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "CIS"
+        ]
+    },
+    {
+        "name": "Bahamas",
+        "a2": "BS",
+        "a3": "BHS",
+        "num": "044",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Bahrain",
+        "a2": "BH",
+        "a3": "BHR",
+        "num": "048",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "GCC",
+            "AL"
+        ]
+    },
+    {
+        "name": "Bangladesh",
+        "a2": "BD",
+        "a3": "BGD",
+        "num": "050",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Barbados",
+        "a2": "BB",
+        "a3": "BRB",
+        "num": "052",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Belarus",
+        "a2": "BY",
+        "a3": "BLR",
+        "num": "112",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "CSTO",
+            "EAEU",
+            "CIS"
+        ]
+    },
+    {
+        "name": "Belgium",
+        "a2": "BE",
+        "a3": "BEL",
+        "num": "056",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Belize",
+        "a2": "BZ",
+        "a3": "BLZ",
+        "num": "084",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Benin",
+        "a2": "BJ",
+        "a3": "BEN",
+        "num": "204",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Bhutan",
+        "a2": "BT",
+        "a3": "BTN",
+        "num": "064",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Bolivia",
+        "a2": "BO",
+        "a3": "BOL",
+        "num": "068",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "Mercosur"
+        ]
+    },
+    {
+        "name": "Bosnia and Herzegovina",
+        "a2": "BA",
+        "a3": "BIH",
+        "num": "070",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": []
+    },
+    {
+        "name": "Botswana",
+        "a2": "BW",
+        "a3": "BWA",
+        "num": "072",
+        "region": "Africa",
+        "sub_region": "Southern Africa",
+        "affiliations": [
+            "AU",
+            "SACU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Brazil",
+        "a2": "BR",
+        "a3": "BRA",
+        "num": "076",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "G20",
+            "BRICS",
+            "Mercosur"
+        ]
+    },
+    {
+        "name": "Brunei Darussalam",
+        "a2": "BN",
+        "a3": "BRN",
+        "num": "096",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "Bulgaria",
+        "a2": "BG",
+        "a3": "BGR",
+        "num": "100",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Burkina Faso",
+        "a2": "BF",
+        "a3": "BFA",
+        "num": "854",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Burundi",
+        "a2": "BI",
+        "a3": "BDI",
+        "num": "108",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "EAC"
+        ]
+    },
+    {
+        "name": "Cabo Verde",
+        "a2": "CV",
+        "a3": "CPV",
+        "num": "132",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Cambodia",
+        "a2": "KH",
+        "a3": "KHM",
+        "num": "116",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    {
+        "name": "Cameroon",
+        "a2": "CM",
+        "a3": "CMR",
+        "num": "120",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Canada",
+        "a2": "CA",
+        "a3": "CAN",
+        "num": "124",
+        "region": "Americas",
+        "sub_region": "Northern America",
+        "affiliations": [
+            "G7",
+            "G20",
+            "NATO",
+            "OECD",
+            "USMCA"
+        ]
+    },
+    {
+        "name": "Central African Republic",
+        "a2": "CF",
+        "a3": "CAF",
+        "num": "140",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Chad",
+        "a2": "TD",
+        "a3": "TCD",
+        "num": "148",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Chile",
+        "a2": "CL",
+        "a3": "CHL",
+        "num": "152",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "OECD",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "China",
+        "a2": "CN",
+        "a3": "CHN",
+        "num": "156",
+        "region": "Asia",
+        "sub_region": "Eastern Asia",
+        "affiliations": [
+            "G20",
+            "BRICS",
+            "SCO"
+        ]
+    },
+    {
+        "name": "Colombia",
+        "a2": "CO",
+        "a3": "COL",
+        "num": "170",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "OECD",
+            "Pacific Alliance"
+        ]
+    },
+    {
+        "name": "Comoros",
+        "a2": "KM",
+        "a3": "COM",
+        "num": "174",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "AL"
+        ]
+    },
+    {
+        "name": "Congo",
+        "a2": "CG",
+        "a3": "COG",
+        "num": "178",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Congo (Democratic Republic)",
+        "a2": "CD",
+        "a3": "COD",
+        "num": "180",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU",
+            "EAC",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Costa Rica",
+        "a2": "CR",
+        "a3": "CRI",
+        "num": "188",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": [
+            "OECD"
+        ]
+    },
+    {
+        "name": "Croatia",
+        "a2": "HR",
+        "a3": "HRV",
+        "num": "191",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Cuba",
+        "a2": "CU",
+        "a3": "CUB",
+        "num": "192",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": []
+    },
+    {
+        "name": "Cyprus",
+        "a2": "CY",
+        "a3": "CYP",
+        "num": "196",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Czechia",
+        "a2": "CZ",
+        "a3": "CZE",
+        "num": "203",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Denmark",
+        "a2": "DK",
+        "a3": "DNK",
+        "num": "208",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Djibouti",
+        "a2": "DJ",
+        "a3": "DJI",
+        "num": "262",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "AL"
+        ]
+    },
+    {
+        "name": "Dominica",
+        "a2": "DM",
+        "a3": "DMA",
+        "num": "212",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Dominican Republic",
+        "a2": "DO",
+        "a3": "DOM",
+        "num": "214",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": []
+    },
+    {
+        "name": "Ecuador",
+        "a2": "EC",
+        "a3": "ECU",
+        "num": "218",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": []
+    },
+    {
+        "name": "Egypt",
+        "a2": "EG",
+        "a3": "EGY",
+        "num": "818",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "AU",
+            "AL",
+            "BRICS"
+        ]
+    },
+    {
+        "name": "El Salvador",
+        "a2": "SV",
+        "a3": "SLV",
+        "num": "222",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": []
+    },
+    {
+        "name": "Equatorial Guinea",
+        "a2": "GQ",
+        "a3": "GNQ",
+        "num": "226",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Eritrea",
+        "a2": "ER",
+        "a3": "ERI",
+        "num": "232",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Estonia",
+        "a2": "EE",
+        "a3": "EST",
+        "num": "233",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Eswatini",
+        "a2": "SZ",
+        "a3": "SWZ",
+        "num": "748",
+        "region": "Africa",
+        "sub_region": "Southern Africa",
+        "affiliations": [
+            "AU",
+            "SACU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Ethiopia",
+        "a2": "ET",
+        "a3": "ETH",
+        "num": "231",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "BRICS"
+        ]
+    },
+    {
+        "name": "Fiji",
+        "a2": "FJ",
+        "a3": "FJI",
+        "num": "242",
+        "region": "Oceania",
+        "sub_region": "Melanesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Finland",
+        "a2": "FI",
+        "a3": "FIN",
+        "num": "246",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "France",
+        "a2": "FR",
+        "a3": "FRA",
+        "num": "250",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "EU",
+            "G7",
+            "G20",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Gabon",
+        "a2": "GA",
+        "a3": "GAB",
+        "num": "266",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Gambia",
+        "a2": "GM",
+        "a3": "GMB",
+        "num": "270",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Georgia",
+        "a2": "GE",
+        "a3": "GEO",
+        "num": "268",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": []
+    },
+    {
+        "name": "Germany",
+        "a2": "DE",
+        "a3": "DEU",
+        "num": "276",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "EU",
+            "G7",
+            "G20",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Ghana",
+        "a2": "GH",
+        "a3": "GHA",
+        "num": "288",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Greece",
+        "a2": "GR",
+        "a3": "GRC",
+        "num": "300",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Grenada",
+        "a2": "GD",
+        "a3": "GRD",
+        "num": "308",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Guatemala",
+        "a2": "GT",
+        "a3": "GTM",
+        "num": "320",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": []
+    },
+    {
+        "name": "Guinea",
+        "a2": "GN",
+        "a3": "GIN",
+        "num": "324",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Guinea-Bissau",
+        "a2": "GW",
+        "a3": "GNB",
+        "num": "624",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Guyana",
+        "a2": "GY",
+        "a3": "GUY",
+        "num": "328",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Haiti",
+        "a2": "HT",
+        "a3": "HTI",
+        "num": "332",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Honduras",
+        "a2": "HN",
+        "a3": "HND",
+        "num": "340",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": []
+    },
+    {
+        "name": "Hungary",
+        "a2": "HU",
+        "a3": "HUN",
+        "num": "348",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Iceland",
+        "a2": "IS",
+        "a3": "ISL",
+        "num": "352",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "NATO",
+            "OECD",
+            "Schengen",
+            "EFTA"
+        ]
+    },
+    {
+        "name": "India",
+        "a2": "IN",
+        "a3": "IND",
+        "num": "356",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "G20",
+            "BRICS",
+            "SCO",
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Indonesia",
+        "a2": "ID",
+        "a3": "IDN",
+        "num": "360",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "G20",
+            "ASEAN"
+        ]
+    },
+    {
+        "name": "Iran",
+        "a2": "IR",
+        "a3": "IRN",
+        "num": "364",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "BRICS",
+            "SCO",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Iraq",
+        "a2": "IQ",
+        "a3": "IRQ",
+        "num": "368",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "AL",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Ireland",
+        "a2": "IE",
+        "a3": "IRL",
+        "num": "372",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "OECD",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Israel",
+        "a2": "IL",
+        "a3": "ISR",
+        "num": "376",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "OECD"
+        ]
+    },
+    {
+        "name": "Italy",
+        "a2": "IT",
+        "a3": "ITA",
+        "num": "380",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "G7",
+            "G20",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Jamaica",
+        "a2": "JM",
+        "a3": "JAM",
+        "num": "388",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Japan",
+        "a2": "JP",
+        "a3": "JPN",
+        "num": "392",
+        "region": "Asia",
+        "sub_region": "Eastern Asia",
+        "affiliations": [
+            "G7",
+            "G20",
+            "OECD",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "Jordan",
+        "a2": "JO",
+        "a3": "JOR",
+        "num": "400",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "AL"
+        ]
+    },
+    {
+        "name": "Kazakhstan",
+        "a2": "KZ",
+        "a3": "KAZ",
+        "num": "398",
+        "region": "Asia",
+        "sub_region": "Central Asia",
+        "affiliations": [
+            "CSTO",
+            "EAEU",
+            "SCO",
+            "CIS"
+        ]
+    },
+    {
+        "name": "Kenya",
+        "a2": "KE",
+        "a3": "KEN",
+        "num": "404",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "EAC"
+        ]
+    },
+    {
+        "name": "Kiribati",
+        "a2": "KI",
+        "a3": "KIR",
+        "num": "296",
+        "region": "Oceania",
+        "sub_region": "Micronesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Kuwait",
+        "a2": "KW",
+        "a3": "KWT",
+        "num": "414",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "GCC",
+            "AL",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Kyrgyzstan",
+        "a2": "KG",
+        "a3": "KGZ",
+        "num": "417",
+        "region": "Asia",
+        "sub_region": "Central Asia",
+        "affiliations": [
+            "CSTO",
+            "EAEU",
+            "SCO",
+            "CIS"
+        ]
+    },
+    {
+        "name": "Laos",
+        "a2": "LA",
+        "a3": "LAO",
+        "num": "418",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    {
+        "name": "Latvia",
+        "a2": "LV",
+        "a3": "LVA",
+        "num": "428",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Lebanon",
+        "a2": "LB",
+        "a3": "LBN",
+        "num": "422",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "AL"
+        ]
+    },
+    {
+        "name": "Lesotho",
+        "a2": "LS",
+        "a3": "LSO",
+        "num": "426",
+        "region": "Africa",
+        "sub_region": "Southern Africa",
+        "affiliations": [
+            "AU",
+            "SACU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Liberia",
+        "a2": "LR",
+        "a3": "LRO",
+        "num": "430",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Libya",
+        "a2": "LY",
+        "a3": "LBY",
+        "num": "434",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "AU",
+            "AL",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Liechtenstein",
+        "a2": "LI",
+        "a3": "LIE",
+        "num": "438",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "Schengen",
+            "EFTA"
+        ]
+    },
+    {
+        "name": "Lithuania",
+        "a2": "LT",
+        "a3": "LTU",
+        "num": "440",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Luxembourg",
+        "a2": "LU",
+        "a3": "LUX",
+        "num": "442",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Madagascar",
+        "a2": "MG",
+        "a3": "MDG",
+        "num": "450",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Malawi",
+        "a2": "MW",
+        "a3": "MWI",
+        "num": "454",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Malaysia",
+        "a2": "MY",
+        "a3": "MYS",
+        "num": "458",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "Maldives",
+        "a2": "MV",
+        "a3": "MDV",
+        "num": "462",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Mali",
+        "a2": "ML",
+        "a3": "MLI",
+        "num": "466",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Malta",
+        "a2": "MT",
+        "a3": "MLT",
+        "num": "470",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Marshall Islands",
+        "a2": "MH",
+        "a3": "MHL",
+        "num": "584",
+        "region": "Oceania",
+        "sub_region": "Micronesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Mauritania",
+        "a2": "MR",
+        "a3": "MRT",
+        "num": "478",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "AL"
+        ]
+    },
+    {
+        "name": "Mauritius",
+        "a2": "MU",
+        "a3": "MUS",
+        "num": "480",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Mexico",
+        "a2": "MX",
+        "a3": "MEX",
+        "num": "484",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": [
+            "G20",
+            "OECD",
+            "USMCA",
+            "Pacific Alliance"
+        ]
+    },
+    {
+        "name": "Micronesia",
+        "a2": "FM",
+        "a3": "FSM",
+        "num": "583",
+        "region": "Oceania",
+        "sub_region": "Micronesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Moldova",
+        "a2": "MD",
+        "a3": "MDA",
+        "num": "498",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "CIS"
+        ]
+    },
+    {
+        "name": "Monaco",
+        "a2": "MC",
+        "a3": "MCO",
+        "num": "492",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Mongolia",
+        "a2": "MN",
+        "a3": "MNG",
+        "num": "496",
+        "region": "Asia",
+        "sub_region": "Eastern Asia",
+        "affiliations": []
+    },
+    {
+        "name": "Montenegro",
+        "a2": "ME",
+        "a3": "MNE",
+        "num": "499",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "NATO"
+        ]
+    },
+    {
+        "name": "Morocco",
+        "a2": "MA",
+        "a3": "MAR",
+        "num": "504",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "AU",
+            "AL"
+        ]
+    },
+    {
+        "name": "Mozambique",
+        "a2": "MZ",
+        "a3": "MOZ",
+        "num": "508",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Myanmar",
+        "a2": "MM",
+        "a3": "MMR",
+        "num": "104",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    {
+        "name": "Namibia",
+        "a2": "NA",
+        "a3": "NAM",
+        "num": "516",
+        "region": "Africa",
+        "sub_region": "Southern Africa",
+        "affiliations": [
+            "AU",
+            "SACU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Nauru",
+        "a2": "NR",
+        "a3": "NRU",
+        "num": "520",
+        "region": "Oceania",
+        "sub_region": "Micronesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Nepal",
+        "a2": "NP",
+        "a3": "NPL",
+        "num": "524",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Netherlands",
+        "a2": "NL",
+        "a3": "NLD",
+        "num": "528",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "New Zealand",
+        "a2": "NZ",
+        "a3": "NZL",
+        "num": "554",
+        "region": "Oceania",
+        "sub_region": "Australia and New Zealand",
+        "affiliations": [
+            "OECD",
+            "CPTPP",
+            "PIF"
+        ]
+    },
+    {
+        "name": "Nicaragua",
+        "a2": "NI",
+        "a3": "NIC",
+        "num": "558",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": []
+    },
+    {
+        "name": "Niger",
+        "a2": "NE",
+        "a3": "NER",
+        "num": "562",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Nigeria",
+        "a2": "NG",
+        "a3": "NGA",
+        "num": "566",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "North Macedonia",
+        "a2": "MK",
+        "a3": "MKD",
+        "num": "807",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "NATO"
+        ]
+    },
+    {
+        "name": "Norway",
+        "a2": "NO",
+        "a3": "NOR",
+        "num": "578",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "NATO",
+            "OECD",
+            "Schengen",
+            "EFTA"
+        ]
+    },
+    {
+        "name": "Oman",
+        "a2": "OM",
+        "a3": "OMN",
+        "num": "512",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "GCC",
+            "AL"
+        ]
+    },
+    {
+        "name": "Pakistan",
+        "a2": "PK",
+        "a3": "PAK",
+        "num": "586",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SCO",
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Palau",
+        "a2": "PW",
+        "a3": "PLW",
+        "num": "585",
+        "region": "Oceania",
+        "sub_region": "Micronesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Panama",
+        "a2": "PA",
+        "a3": "PAN",
+        "num": "591",
+        "region": "Americas",
+        "sub_region": "Central America",
+        "affiliations": []
+    },
+    {
+        "name": "Papua New Guinea",
+        "a2": "PG",
+        "a3": "PNG",
+        "num": "598",
+        "region": "Oceania",
+        "sub_region": "Melanesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Paraguay",
+        "a2": "PY",
+        "a3": "PRY",
+        "num": "600",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "Mercosur"
+        ]
+    },
+    {
+        "name": "Peru",
+        "a2": "PE",
+        "a3": "PER",
+        "num": "604",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "CPTPP",
+            "Pacific Alliance"
+        ]
+    },
+    {
+        "name": "Philippines",
+        "a2": "PH",
+        "a3": "PHL",
+        "num": "608",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    {
+        "name": "Poland",
+        "a2": "PL",
+        "a3": "POL",
+        "num": "616",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Portugal",
+        "a2": "PT",
+        "a3": "PRT",
+        "num": "620",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Qatar",
+        "a2": "QA",
+        "a3": "QAT",
+        "num": "634",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "GCC",
+            "AL"
+        ]
+    },
+    {
+        "name": "Romania",
+        "a2": "RO",
+        "a3": "ROU",
+        "num": "642",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Russia",
+        "a2": "RU",
+        "a3": "RUS",
+        "num": "643",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "G20",
+            "BRICS",
+            "SCO",
+            "CSTO",
+            "CIS"
+        ]
+    },
+    {
+        "name": "Rwanda",
+        "a2": "RW",
+        "a3": "RWA",
+        "num": "646",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "EAC"
+        ]
+    },
+    {
+        "name": "Saint Kitts and Nevis",
+        "a2": "KN",
+        "a3": "KNA",
+        "num": "659",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Saint Lucia",
+        "a2": "LC",
+        "a3": "LCA",
+        "num": "662",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Saint Vincent and the Grenadines",
+        "a2": "VC",
+        "a3": "VCT",
+        "num": "670",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Samoa",
+        "a2": "WS",
+        "a3": "WSM",
+        "num": "882",
+        "region": "Oceania",
+        "sub_region": "Polynesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "San Marino",
+        "a2": "SM",
+        "a3": "SMR",
+        "num": "674",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": []
+    },
+    {
+        "name": "Sao Tome and Principe",
+        "a2": "ST",
+        "a3": "STP",
+        "num": "678",
+        "region": "Africa",
+        "sub_region": "Middle Africa",
+        "affiliations": [
+            "AU"
+        ]
+    },
+    {
+        "name": "Saudi Arabia",
+        "a2": "SA",
+        "a3": "SAU",
+        "num": "682",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "G20",
+            "BRICS",
+            "GCC",
+            "AL",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Senegal",
+        "a2": "SN",
+        "a3": "SEN",
+        "num": "686",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Serbia",
+        "a2": "RS",
+        "a3": "SRB",
+        "num": "688",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": []
+    },
+    {
+        "name": "Seychelles",
+        "a2": "SC",
+        "a3": "SYC",
+        "num": "690",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Sierra Leone",
+        "a2": "SL",
+        "a3": "SLE",
+        "num": "694",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Singapore",
+        "a2": "SG",
+        "a3": "SGP",
+        "num": "702",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "Slovakia",
+        "a2": "SK",
+        "a3": "SVK",
+        "num": "703",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Slovenia",
+        "a2": "SI",
+        "a3": "SVN",
+        "num": "705",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Solomon Islands",
+        "a2": "SB",
+        "a3": "SLB",
+        "num": "090",
+        "region": "Oceania",
+        "sub_region": "Melanesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Somalia",
+        "a2": "SO",
+        "a3": "SOM",
+        "num": "706",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "AL",
+            "EAC"
+        ]
+    },
+    {
+        "name": "South Africa",
+        "a2": "ZA",
+        "a3": "ZAF",
+        "num": "710",
+        "region": "Africa",
+        "sub_region": "Southern Africa",
+        "affiliations": [
+            "G20",
+            "BRICS",
+            "AU",
+            "SACU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "South Sudan",
+        "a2": "SS",
+        "a3": "SSD",
+        "num": "728",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "EAC"
+        ]
+    },
+    {
+        "name": "Spain",
+        "a2": "ES",
+        "a3": "ESP",
+        "num": "724",
+        "region": "Europe",
+        "sub_region": "Southern Europe",
+        "affiliations": [
+            "EU",
+            "G20",
+            "NATO",
+            "OECD",
+            "Schengen",
+            "Eurozone"
+        ]
+    },
+    {
+        "name": "Sri Lanka",
+        "a2": "LK",
+        "a3": "LKA",
+        "num": "144",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    {
+        "name": "Sudan",
+        "a2": "SD",
+        "a3": "SDN",
+        "num": "729",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "AU",
+            "AL"
+        ]
+    },
+    {
+        "name": "Suriname",
+        "a2": "SR",
+        "a3": "SUR",
+        "num": "740",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Sweden",
+        "a2": "SE",
+        "a3": "SWE",
+        "num": "752",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "EU",
+            "NATO",
+            "OECD",
+            "Schengen"
+        ]
+    },
+    {
+        "name": "Switzerland",
+        "a2": "CH",
+        "a3": "CHE",
+        "num": "756",
+        "region": "Europe",
+        "sub_region": "Western Europe",
+        "affiliations": [
+            "OECD",
+            "Schengen",
+            "EFTA"
+        ]
+    },
+    {
+        "name": "Syria",
+        "a2": "SY",
+        "a3": "SYR",
+        "num": "760",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "AL"
+        ]
+    },
+    {
+        "name": "Tajikistan",
+        "a2": "TJ",
+        "a3": "TJK",
+        "num": "762",
+        "region": "Asia",
+        "sub_region": "Central Asia",
+        "affiliations": [
+            "CSTO",
+            "SCO",
+            "CIS"
+        ]
+    },
+    {
+        "name": "Tanzania",
+        "a2": "TZ",
+        "a3": "TZA",
+        "num": "834",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "EAC",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Thailand",
+        "a2": "TH",
+        "a3": "THA",
+        "num": "764",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    {
+        "name": "Timor-Leste",
+        "a2": "TL",
+        "a3": "TLS",
+        "num": "626",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": []
+    },
+    {
+        "name": "Togo",
+        "a2": "TG",
+        "a3": "TGO",
+        "num": "768",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "AU",
+            "ECOWAS"
+        ]
+    },
+    {
+        "name": "Tonga",
+        "a2": "TO",
+        "a3": "TON",
+        "num": "776",
+        "region": "Oceania",
+        "sub_region": "Polynesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Trinidad and Tobago",
+        "a2": "TT",
+        "a3": "TTO",
+        "num": "780",
+        "region": "Americas",
+        "sub_region": "Caribbean",
+        "affiliations": [
+            "CARICOM"
+        ]
+    },
+    {
+        "name": "Tunisia",
+        "a2": "TN",
+        "a3": "TUN",
+        "num": "788",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "AU",
+            "AL"
+        ]
+    },
+    {
+        "name": "Türkiye",
+        "a2": "TR",
+        "a3": "TUR",
+        "num": "792",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "G20",
+            "NATO",
+            "OECD"
+        ]
+    },
+    {
+        "name": "Turkmenistan",
+        "a2": "TM",
+        "a3": "TKM",
+        "num": "795",
+        "region": "Asia",
+        "sub_region": "Central Asia",
+        "affiliations": [
+            "CIS"
+        ]
+    },
+    {
+        "name": "Tuvalu",
+        "a2": "TV",
+        "a3": "TUV",
+        "num": "798",
+        "region": "Oceania",
+        "sub_region": "Polynesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Uganda",
+        "a2": "UG",
+        "a3": "UGA",
+        "num": "800",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "EAC"
+        ]
+    },
+    {
+        "name": "Ukraine",
+        "a2": "UA",
+        "a3": "UKR",
+        "num": "804",
+        "region": "Europe",
+        "sub_region": "Eastern Europe",
+        "affiliations": []
+    },
+    {
+        "name": "United Arab Emirates",
+        "a2": "AE",
+        "a3": "ARE",
+        "num": "784",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "BRICS",
+            "GCC",
+            "AL",
+            "OPEC"
+        ]
+    },
+    {
+        "name": "United Kingdom",
+        "a2": "GB",
+        "a3": "GBR",
+        "num": "826",
+        "region": "Europe",
+        "sub_region": "Northern Europe",
+        "affiliations": [
+            "G7",
+            "G20",
+            "NATO",
+            "OECD",
+            "AUKUS",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "United States",
+        "a2": "US",
+        "a3": "USA",
+        "num": "840",
+        "region": "Americas",
+        "sub_region": "Northern America",
+        "affiliations": [
+            "G7",
+            "G20",
+            "NATO",
+            "OECD",
+            "USMCA",
+            "AUKUS"
+        ]
+    },
+    {
+        "name": "Uruguay",
+        "a2": "UY",
+        "a3": "URY",
+        "num": "858",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "Mercosur"
+        ]
+    },
+    {
+        "name": "Uzbekistan",
+        "a2": "UZ",
+        "a3": "UZB",
+        "num": "860",
+        "region": "Asia",
+        "sub_region": "Central Asia",
+        "affiliations": [
+            "SCO",
+            "CIS"
+        ]
+    },
+    {
+        "name": "Vanuatu",
+        "a2": "VU",
+        "a3": "VUT",
+        "num": "548",
+        "region": "Oceania",
+        "sub_region": "Melanesia",
+        "affiliations": [
+            "PIF"
+        ]
+    },
+    {
+        "name": "Venezuela",
+        "a2": "VE",
+        "a3": "VEN",
+        "num": "862",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "OPEC"
+        ]
+    },
+    {
+        "name": "Vietnam",
+        "a2": "VN",
+        "a3": "VNM",
+        "num": "704",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN",
+            "CPTPP"
+        ]
+    },
+    {
+        "name": "Yemen",
+        "a2": "YE",
+        "a3": "YEM",
+        "num": "887",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "AL"
+        ]
+    },
+    {
+        "name": "Zambia",
+        "a2": "ZM",
+        "a3": "ZMB",
+        "num": "894",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    },
+    {
+        "name": "Zimbabwe",
+        "a2": "ZW",
+        "a3": "ZWE",
+        "num": "716",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "AU",
+            "SADC"
+        ]
+    }
+]
