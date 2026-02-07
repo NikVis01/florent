@@ -215,12 +215,17 @@ class TestLoggingConfiguration(unittest.TestCase):
 
     @patch('dotenv.load_dotenv')
     def test_dotenv_loaded(self, mock_load_dotenv):
-        """Test that dotenv is loaded."""
-        if 'src.settings' in sys.modules:
-            del sys.modules['src.settings']
+        """Test that dotenv is loaded when config module is imported."""
+        import importlib
+        # Clean up modules to force reload
+        for module in ['src.config', 'src.settings', 'src.services.logging', 'src.services.logging.logger']:
+            if module in sys.modules:
+                del sys.modules[module]
 
-        import src.settings
+        # Now import with the patch active - this should call load_dotenv
+        import src.config
 
+        # Verify load_dotenv was called
         mock_load_dotenv.assert_called()
 
 

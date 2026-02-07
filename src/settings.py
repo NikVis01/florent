@@ -1,17 +1,6 @@
 import os
-from pathlib import Path
-from dotenv import load_dotenv
+from src.config import PROJECT_ROOT
 from src.services.logging import get_logger
-
-# Load environment variables from .env file in project root
-try:
-    # Get project root directory (where .env is located)
-    project_root = Path(__file__).parent.parent
-    dotenv_path = project_root / ".env"
-    load_dotenv(dotenv_path=dotenv_path, override=False)
-except (AssertionError, Exception):
-    # Handle cases where dotenv fails (e.g., in test contexts)
-    pass
 
 logger = get_logger(__name__)
 
@@ -34,7 +23,7 @@ class Settings:
         self.MAX_TRAVERSAL_DEPTH = int(os.getenv("MAX_TRAVERSAL_DEPTH", "10"))
 
         # Project Paths
-        self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.BASE_DIR = str(PROJECT_ROOT)
         self.DATA_DIR = os.path.join(self.BASE_DIR, "src", "data")
         self.GEO_DIR = os.path.join(self.DATA_DIR, "geo")
         self.TAXONOMY_DIR = os.path.join(self.DATA_DIR, "taxonomy")

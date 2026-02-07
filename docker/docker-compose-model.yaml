@@ -2,10 +2,10 @@ services:
   bge-m3:
     image: mdelapenya/bge-m3:0.3.13-567m
     ports:
-      - "8080:8080"
+      - "11434:11434"
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/" ]
       interval: 30s
       timeout: 10s
       retries: 3
