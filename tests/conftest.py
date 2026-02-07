@@ -17,9 +17,13 @@ def mock_registries():
     mock_sectors = {"infrastructure", "energy", "finance"}
     mock_focuses = {"efficiency", "sustainability", "growth", "quality"}
 
-    with patch('src.models.base.get_categories', return_value=mock_categories), \
-         patch('src.models.base.get_sectors', return_value=mock_sectors), \
-         patch('src.models.base.get_focuses', return_value=mock_focuses):
+    try:
+        with patch('src.models.base.get_categories', return_value=mock_categories), \
+             patch('src.models.base.get_sectors', return_value=mock_sectors), \
+             patch('src.models.base.get_focuses', return_value=mock_focuses):
+            yield
+    except (ImportError, AttributeError):
+        # Skip mocking if the modules don't exist yet
         yield
 
 

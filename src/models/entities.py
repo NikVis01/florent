@@ -1,5 +1,5 @@
 from typing import List, Optional, Any, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from src.models.base import OperationType, Sectors, StrategicFocus, Country
 
@@ -13,9 +13,12 @@ class Firm(BaseModel):
     sectors: List[Sectors]
     services: List[OperationType]
     strategic_focuses: List[StrategicFocus]
-    prefered_project_timeline: int # in months
-    
+    prefered_project_timeline: int = Field(alias="preferred_project_timeline") # in months
+
     embedding: List[float] = Field(default_factory=list, description="Vector embedding for similarity calculations")
+
+    class Config:
+        populate_by_name = True  # Allow both field name and alias
 
 class ProjectEntry(BaseModel):
     pre_requisites: List[str] = Field(description="Mandatory conditions to be met before project start")

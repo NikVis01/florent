@@ -1,7 +1,7 @@
 import sys
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from io import StringIO
 
 # Add src to sys.path
@@ -21,6 +21,11 @@ class TestAgentOrchestrator(unittest.TestCase):
         self.patcher = patch('src.models.base.get_categories', return_value=self.mock_categories)
         self.patcher.start()
 
+        # Mock the DSPy evaluator to avoid "No LM loaded" errors
+        self.mock_eval = patch.object(AgentOrchestrator, '_evaluate_node', 
+                                     return_value=MagicMock(influence_score=0.5, risk_level=0.5, reasoning="Mocked"))
+        self.mock_eval.start()
+
         # Create test nodes
         self.op_type = OperationType(name="Test", category="test_category", description="Test op")
         self.node_a = Node(id="A", name="Node A", type=self.op_type, embedding=[0.1, 0.2])
@@ -38,6 +43,7 @@ class TestAgentOrchestrator(unittest.TestCase):
 
     def tearDown(self):
         self.patcher.stop()
+        self.mock_eval.stop()
 
     def test_orchestrator_initialization(self):
         """Test that orchestrator initializes correctly."""
@@ -106,11 +112,13 @@ class TestAgentOrchestrator(unittest.TestCase):
         """Test that exploration doesn't reprocess visited nodes."""
         orchestrator = AgentOrchestrator(self.graph)
 
-        # Add same node twice
-        orchestrator.heap.push(self.node_a, priority=1.0)
+        # The orchestrator automatically pushes entry nodes (Node A)
+        # We manually push Node A again with lower priority
         orchestrator.heap.push(self.node_a, priority=0.9)
 
-        orchestrator.run_exploration(budget=5)
+        # We want to isolate the 'visited' check, so we mock get_children to return nothing
+        with patch.object(Graph, 'get_children', return_value=[]):
+            orchestrator.run_exploration(budget=5)
 
         # Should only visit node_a once
         self.assertEqual(len(orchestrator.visited), 1)

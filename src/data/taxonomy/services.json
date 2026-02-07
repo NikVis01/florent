@@ -12,6 +12,12 @@
         "description": "Structuring or managing joint ventures between public and private sectors."
     },
     {
+        "id": "srv_fin_006",
+        "name": "Public-Private Partnership Management",
+        "category": "financing",
+        "description": "Operational management and governance of PPP agreements throughout project lifecycle."
+    },
+    {
         "id": "srv_fin_003",
         "name": "Bankability Assessment",
         "category": "financing",

@@ -55,7 +55,7 @@ class TestPOCDataLoading(unittest.TestCase):
         self.assertIn('sectors', firm_data)
         self.assertIn('services', firm_data)
         self.assertIn('strategic_focuses', firm_data)
-        self.assertIn('prefered_project_timeline', firm_data)
+        self.assertIn('preferred_project_timeline', firm_data)
 
         # Validate data types
         self.assertIsInstance(firm_data['countries_active'], list)
@@ -134,7 +134,7 @@ class TestEntityCreationFromPOC(unittest.TestCase):
             sectors=sectors,
             services=services,
             strategic_focuses=focuses,
-            prefered_project_timeline=self.firm_data['prefered_project_timeline']
+            preferred_project_timeline=self.firm_data['preferred_project_timeline']
         )
 
         # Validate
@@ -240,7 +240,7 @@ class TestFirmProjectAlignment(unittest.TestCase):
 
     def test_timeline_compatibility(self):
         """Test firm's preferred timeline against project timeline."""
-        firm_timeline = self.firm_data['prefered_project_timeline']
+        firm_timeline = self.firm_data['preferred_project_timeline']
         project_timeline = self.project_data['timeline']
 
         # Firm prefers 48 months, project is 36 months - should be acceptable
@@ -523,7 +523,7 @@ class TestCompleteE2EPipeline(unittest.TestCase):
             sectors=firm_sectors,
             services=firm_services,
             strategic_focuses=firm_focuses,
-            prefered_project_timeline=self.firm_data['prefered_project_timeline']
+            preferred_project_timeline=self.firm_data['preferred_project_timeline']
         )
 
         # 2. CREATE PROJECT
