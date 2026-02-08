@@ -3,8 +3,8 @@ function varargout = openapiHelpers(operation, varargin)
     %
     % This function provides convenient access to OpenAPI-formatted analysis
     % data from the Florent API. It handles field name mapping and provides
-    % safe access with fallbacks. Uses schemas from load_florent_schemas() for
-    % validation and type checking.
+    % safe access with fallbacks. Uses enhanced schemas from load_enhanced_schemas()
+    % for validation and type checking of response data.
     %
     % Usage:
     %   influence = openapiHelpers('getInfluenceScore', analysis, nodeId);
@@ -544,11 +544,26 @@ function topology = getGraphTopology(analysis)
     %
     % Returns:
     %   topology - GraphTopology structure, or empty if not found
+    %
+    % Note: Validates against GraphTopology schema from enhanced schemas if available
     
     topology = [];
     
     if isfield(analysis, 'graph_topology') && ~isempty(analysis.graph_topology)
         topology = analysis.graph_topology;
+        
+        % Optional: Validate against enhanced schema
+        try
+            enhancedSchemas = getEnhancedSchemas();
+            if ~isempty(enhancedSchemas) && isfield(enhancedSchemas, 'GraphTopology')
+                [isValid, errors] = validateAgainstSchema(topology, enhancedSchemas.GraphTopology);
+                if ~isValid && ~isempty(errors)
+                    warning('GraphTopology validation warnings: %s', strjoin(errors, '; '));
+                end
+            end
+        catch
+            % Schema validation failed - continue anyway
+        end
     end
 end
 
@@ -560,11 +575,26 @@ function distributions = getRiskDistributions(analysis)
     %
     % Returns:
     %   distributions - RiskDistributions structure, or empty if not found
+    %
+    % Note: Validates against RiskDistributions schema from enhanced schemas if available
     
     distributions = [];
     
     if isfield(analysis, 'risk_distributions') && ~isempty(analysis.risk_distributions)
         distributions = analysis.risk_distributions;
+        
+        % Optional: Validate against enhanced schema
+        try
+            enhancedSchemas = getEnhancedSchemas();
+            if ~isempty(enhancedSchemas) && isfield(enhancedSchemas, 'RiskDistributions')
+                [isValid, errors] = validateAgainstSchema(distributions, enhancedSchemas.RiskDistributions);
+                if ~isValid && ~isempty(errors)
+                    warning('RiskDistributions validation warnings: %s', strjoin(errors, '; '));
+                end
+            end
+        catch
+            % Schema validation failed - continue anyway
+        end
     end
 end
 
@@ -576,11 +606,26 @@ function mcParams = getMonteCarloParameters(analysis)
     %
     % Returns:
     %   mcParams - MonteCarloParameters structure, or empty if not found
+    %
+    % Note: Validates against MonteCarloParameters schema from enhanced schemas if available
     
     mcParams = [];
     
     if isfield(analysis, 'monte_carlo_parameters') && ~isempty(analysis.monte_carlo_parameters)
         mcParams = analysis.monte_carlo_parameters;
+        
+        % Optional: Validate against enhanced schema
+        try
+            enhancedSchemas = getEnhancedSchemas();
+            if ~isempty(enhancedSchemas) && isfield(enhancedSchemas, 'MonteCarloParameters')
+                [isValid, errors] = validateAgainstSchema(mcParams, enhancedSchemas.MonteCarloParameters);
+                if ~isValid && ~isempty(errors)
+                    warning('MonteCarloParameters validation warnings: %s', strjoin(errors, '; '));
+                end
+            end
+        catch
+            % Schema validation failed - continue anyway
+        end
     end
 end
 
@@ -608,11 +653,26 @@ function stats = getGraphStatistics(analysis)
     %
     % Returns:
     %   stats - GraphStatistics structure, or empty if not found
+    %
+    % Note: Validates against GraphStatistics schema from enhanced schemas if available
     
     stats = [];
     
     if isfield(analysis, 'graph_statistics') && ~isempty(analysis.graph_statistics)
         stats = analysis.graph_statistics;
+        
+        % Optional: Validate against enhanced schema
+        try
+            enhancedSchemas = getEnhancedSchemas();
+            if ~isempty(enhancedSchemas) && isfield(enhancedSchemas, 'GraphStatistics')
+                [isValid, errors] = validateAgainstSchema(stats, enhancedSchemas.GraphStatistics);
+                if ~isValid && ~isempty(errors)
+                    warning('GraphStatistics validation warnings: %s', strjoin(errors, '; '));
+                end
+            end
+        catch
+            % Schema validation failed - continue anyway
+        end
     end
 end
 
@@ -772,5 +832,58 @@ function schemas = getEnhancedSchemas()
     end
     
     schemas = cachedEnhancedSchemas;
+end
+
+function [isValid, errors] = validateAgainstSchema(data, schema)
+    % VALIDATEAGAINSTSCHEMA Validate data structure against JSON schema
+    %
+    % Args:
+    %   data - Data structure to validate
+    %   schema - JSON schema structure
+    %
+    % Returns:
+    %   isValid - Boolean indicating if structure is valid
+    %   errors - Cell array of error/warning messages
+    
+    isValid = true;
+    errors = {};
+    
+    if isempty(schema) || ~isstruct(schema)
+        return; % Can't validate without schema
+    end
+    
+    % Basic structure validation
+    if ~isstruct(data)
+        errors{end+1} = 'Data should be a struct';
+        isValid = false;
+        return;
+    end
+    
+    % Check required fields if schema has them
+    if isfield(schema, 'required') && iscell(schema.required)
+        requiredFields = schema.required;
+        for i = 1:length(requiredFields)
+            fieldName = requiredFields{i};
+            if ~isfield(data, fieldName)
+                errors{end+1} = sprintf('Missing required field: %s', fieldName);
+                isValid = false;
+            end
+        end
+    end
+    
+    % Check properties if schema has them
+    if isfield(schema, 'properties') && isstruct(schema.properties)
+        props = schema.properties;
+        propNames = fieldnames(props);
+        dataFields = fieldnames(data);
+        
+        % Warn about unexpected fields (but don't fail validation)
+        for i = 1:length(dataFields)
+            fieldName = dataFields{i};
+            if ~any(strcmp(fieldName, propNames))
+                errors{end+1} = sprintf('Unexpected field: %s', fieldName);
+            end
+        end
+    end
 end
 

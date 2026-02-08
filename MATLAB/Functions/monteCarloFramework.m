@@ -10,7 +10,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     % Inputs:
     %   data - Base data structure from getRiskData()
     %   perturbFunc - Function handle: [perturbedData, params] = perturbFunc(data, iter)
-    %   nIterations - Number of MC iterations (default: 10000)
+    %   nIterations - Number of MC iterations (default: 100)
     %   useParallel - Use parallel processing (default: true if available)
     %
     % Output:
@@ -24,7 +24,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     %     .parameters - Parameter values used in each iteration
     
     if nargin < 3
-        nIterations = 10000;
+        nIterations = 100;
     end
     if nargin < 4
         useParallel = true;
@@ -331,9 +331,7 @@ function scores = calculateScoresFromSamples(importanceSamples, influenceSamples
     adjMatrix = openapiHelpers('getAdjacencyMatrix', analysis);
     if isempty(adjMatrix) && ~isempty(graphTopo) && isfield(graphTopo, 'adjacency_matrix')
         adjMatrix = graphTopo.adjacency_matrix;
-        if iscell(adjMatrix)
-            adjMatrix = cell2mat(adjMatrix);
-        end
+        % Python always sends numeric array (List[List[float]]), no conversion needed
     end
     
     % Calculate risk = importance * (1 - influence)

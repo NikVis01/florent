@@ -109,15 +109,13 @@ function data = parseAnalysisResponse(response, projectId, firmId)
     % Extract parameters (use defaults, API doesn't return these)
     data.parameters = getDefaultParameters();
     
-    % Parse matrix_classifications from API (preferred) or calculate from risk scores
+    % Parse matrix_classifications from API or calculate from risk scores
+    % Python API only uses matrix_classifications (not action_matrix)
     if isfield(analysis, 'matrix_classifications') && ~isempty(analysis.matrix_classifications)
         % API provides matrix_classifications - use it
         data.classifications = parseMatrixClassifications(analysis.matrix_classifications, data.riskScores);
-    elseif isfield(analysis, 'action_matrix') && ~isempty(analysis.action_matrix)
-        % Fallback to old action_matrix format
-        data.classifications = parseActionMatrix(analysis.action_matrix, data.riskScores);
     elseif ~isempty(data.riskScores.nodeIds)
-        % Calculate classifications from risk scores as last resort
+        % Calculate classifications from risk scores as fallback
         data.classifications = classifyAllNodes(data.riskScores);
     else
         data.classifications = {};

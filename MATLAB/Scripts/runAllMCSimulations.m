@@ -17,7 +17,7 @@ function runAllMCSimulations(apiBaseUrl, projectId, firmId, nIterations)
         firmId = 'firm_001';
     end
     if nargin < 4
-        nIterations = 10000;
+        nIterations = 100;
     end
     
     fprintf('=== Monte Carlo Simulation Suite ===\n');

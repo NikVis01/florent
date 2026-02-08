@@ -158,18 +158,10 @@ function results = runMCSimulations(data, config)
         error('runMCSimulations: data must be in enhanced API format');
     end
     
-    % Get MC parameters from enhanced schema
+    % Get MC parameters from enhanced schema (for reference only)
     mcParams = openapiHelpers('getMonteCarloParameters', data);
-    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
-        % Use recommended samples from enhanced schema if available
-        if isfield(mcParams.simulation_config, 'recommended_samples')
-            recommendedIterations = mcParams.simulation_config.recommended_samples;
-            if recommendedIterations > 0
-                fprintf('  Using recommended iterations from enhanced schema: %d\n', recommendedIterations);
-                config.monteCarlo.nIterations = recommendedIterations;
-            end
-        end
-    end
+    % Note: Not using recommended_samples from schema - using config defaults instead
+    % This keeps iterations at reasonable levels (default: 100)
     
     % Generate cache key for MC results
     cacheKey = cacheManager('generateKey', data, config);

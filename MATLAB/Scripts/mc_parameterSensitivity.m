@@ -20,16 +20,12 @@ function results = mc_parameterSensitivity(analysis, nIterations)
         error('mc_parameterSensitivity: analysis must be in enhanced API format');
     end
     
-    % Get MC parameters from enhanced schema
+    % Get MC parameters from enhanced schema (for reference, but use default iterations)
     mcParams = openapiHelpers('getMonteCarloParameters', analysis);
-    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
-        if isfield(mcParams.simulation_config, 'recommended_samples') && nargin < 2
-            nIterations = mcParams.simulation_config.recommended_samples;
-        end
-    end
     
     if nargin < 2
-        nIterations = 10000;
+        nIterations = 100;  % Default to 100 iterations
+        % Note: Ignoring recommended_samples from schema to keep iterations reasonable
     end
     
     fprintf('Parameter Sensitivity Analysis: %d iterations\n', nIterations);

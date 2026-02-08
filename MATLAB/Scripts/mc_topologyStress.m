@@ -32,16 +32,12 @@ function results = mc_topologyStress(analysis, nIterations)
     
     nEdges = sum(originalAdj(:) > 0);
     
-    % Get MC parameters
+    % Get MC parameters (for reference, but use default iterations)
     mcParams = openapiHelpers('getMonteCarloParameters', analysis);
-    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
-        if isfield(mcParams.simulation_config, 'recommended_samples') && nargin < 2
-            nIterations = mcParams.simulation_config.recommended_samples;
-        end
-    end
     
     if nargin < 2
-        nIterations = 10000;
+        nIterations = 100;  % Default to 100 iterations
+        % Note: Ignoring recommended_samples from schema to keep iterations reasonable
     end
     
     fprintf('Topology Stress Test: %d iterations\n', nIterations);

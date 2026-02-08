@@ -294,11 +294,10 @@ function adj = buildAdjacencyFromChains(chains, nodeIds)
         chain = chainArray{chainIdx};
         
         % Get node IDs from chain
+        % Python API only sends node_ids
         chainNodes = [];
         if isfield(chain, 'node_ids') && ~isempty(chain.node_ids)
             chainNodes = chain.node_ids;
-        elseif isfield(chain, 'nodes') && ~isempty(chain.nodes)
-            chainNodes = chain.nodes;
         end
         
         if isempty(chainNodes) || length(chainNodes) < 2

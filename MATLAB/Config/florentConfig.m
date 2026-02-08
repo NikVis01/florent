@@ -59,9 +59,9 @@ function config = florentConfig(mode)
         case 'test'
             config.monteCarlo.nIterations = 100;
         case 'interactive'
-            config.monteCarlo.nIterations = 1000;
+            config.monteCarlo.nIterations = 100;
         otherwise % 'production'
-            config.monteCarlo.nIterations = 10000;
+            config.monteCarlo.nIterations = 100;
     end
     
     % Thresholds

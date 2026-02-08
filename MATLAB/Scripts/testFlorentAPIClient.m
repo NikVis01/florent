@@ -78,10 +78,14 @@ function results = testFlorentAPIClient()
         mockResponse.status = 'success';
         mockResponse.message = 'Test';
         mockResponse.analysis = struct();
-        mockResponse.analysis.node_assessments = struct('node1', struct('influence', 0.5, 'risk', 0.3, 'reasoning', 'Test'));
-        mockResponse.analysis.action_matrix = struct('mitigate', {}, 'automate', {}, 'contingency', {}, 'delegate', {});
-        mockResponse.analysis.critical_chains = {};
-        mockResponse.analysis.summary = struct('overall_bankability', 0.7, 'average_risk', 0.3, 'maximum_risk', 0.5);
+        % Use new API field names: influence_score, risk_level
+        mockResponse.analysis.node_assessments = struct('node1', struct('influence_score', 0.5, 'risk_level', 0.3, 'importance_score', 0.6, 'reasoning', 'Test'));
+        % Use new API field name: matrix_classifications (not action_matrix)
+        mockResponse.analysis.matrix_classifications = struct('Type A (High Influence / High Importance)', {});
+        % Use new API field name: all_chains (not critical_chains)
+        mockResponse.analysis.all_chains = {};
+        % Use new API summary field names
+        mockResponse.analysis.summary = struct('aggregate_project_score', 0.7, 'total_token_cost', 1000, 'critical_failure_likelihood', 0.3);
         
         [isValid, errors, warnings] = validateAnalysisResponse(mockResponse);
         assert(isValid, 'Mock response should be valid');
