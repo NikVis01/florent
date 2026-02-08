@@ -431,7 +431,7 @@ Florent uses 4 discovery personas to identify hidden dependencies:
 
 ### Custom Personas
 
-Edit `data/config/discovery_personas.json`:
+Edit `src/data/config/discovery_personas.json`:
 
 ```json
 [
@@ -450,7 +450,7 @@ Load custom personas:
 ```python
 from src.models.orchestration import load_personas_from_config
 
-personas = load_personas_from_config("data/config/discovery_personas.json")
+personas = load_personas_from_config("src/data/config/discovery_personas.json")
 orchestrator.personas = personas
 ```
 
