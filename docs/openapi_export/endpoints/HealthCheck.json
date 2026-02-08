@@ -1,0 +1,20 @@
+{
+  "path": "/",
+  "method": "GET",
+  "operationId": "HealthCheck",
+  "summary": "HealthCheck",
+  "request": null,
+  "responses": {
+    "200": {
+      "description": "Request fulfilled, document follows",
+      "schemas": {
+        "text/plain": {
+          "schema": {
+            "type": "string"
+          },
+          "example": "example_string"
+        }
+      }
+    }
+  }
+}

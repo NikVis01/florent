@@ -1,0 +1,12 @@
+{
+  "total_schemas": 1,
+  "total_endpoints": 2,
+  "schemas": {
+    "AnalysisRequest": "schemas/AnalysisRequest.json"
+  },
+  "endpoints": [
+    "endpoints/HealthCheck.json",
+    "endpoints/AnalyzeAnalyzeProject.json"
+  ],
+  "output_directory": "docs/openapi_export"
+}

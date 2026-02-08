@@ -36,13 +36,13 @@ def generate_openapi_spec(output_path: str = "docs/openapi.json"):
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(openapi_schema.to_schema(), f, indent=2, ensure_ascii=False)
 
-        print(f"✅ OpenAPI specification generated successfully!")
-        print(f"📄 Saved to: {output_file.absolute()}")
-        print(f"📊 Endpoints: {len(openapi_schema.paths)}")
-        print(f"🔖 Version: {openapi_schema.info.version}")
+        print(f"[SUCCESS] OpenAPI specification generated successfully!")
+        print(f"Saved to: {output_file.absolute()}")
+        print(f"Endpoints: {len(openapi_schema.paths)}")
+        print(f"Version: {openapi_schema.info.version}")
 
         # Print endpoint summary
-        print("\n📍 Available endpoints:")
+        print("\nAvailable endpoints:")
         for path, path_item in openapi_schema.paths.items():
             methods = []
             if path_item.get:
@@ -62,7 +62,7 @@ def generate_openapi_spec(output_path: str = "docs/openapi.json"):
         return True
 
     except Exception as e:
-        print(f"❌ Error generating OpenAPI spec: {e}", file=sys.stderr)
+        print(f"[ERROR] Error generating OpenAPI spec: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         return False

@@ -1,0 +1,67 @@
+{
+  "name": "AnalysisRequest",
+  "schema": {
+    "properties": {
+      "firm_data": {
+        "oneOf": [
+          {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "project_data": {
+        "oneOf": [
+          {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "firm_path": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "project_path": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "budget": {
+        "oneOf": [
+          {
+            "type": "integer",
+            "default": 100
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": 100
+      }
+    },
+    "type": "object",
+    "required": [],
+    "title": "AnalysisRequest"
+  },
+  "example": {
+    "budget": 100
+  }
+}

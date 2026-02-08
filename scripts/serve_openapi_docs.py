@@ -94,7 +94,7 @@ def serve_docs(port=8080, openapi_path='docs/openapi.json'):
     openapi_file = Path(openapi_path)
 
     if not openapi_file.exists():
-        print(f"❌ Error: OpenAPI spec not found at {openapi_file.absolute()}")
+        print(f"[ERROR] Error: OpenAPI spec not found at {openapi_file.absolute()}")
         print(f"💡 Tip: Run 'python3 scripts/generate_openapi.py' first")
         return False
 
@@ -103,7 +103,7 @@ def serve_docs(port=8080, openapi_path='docs/openapi.json'):
     )
 
     with socketserver.TCPServer(("", port), handler) as httpd:
-        print(f"✅ Serving OpenAPI documentation")
+        print(f"[SUCCESS] Serving OpenAPI documentation")
         print(f"📄 OpenAPI spec: {openapi_file.absolute()}")
         print(f"🌐 Swagger UI: http://localhost:{port}")
         print(f"🛑 Press Ctrl+C to stop")

@@ -210,8 +210,8 @@ def create_risk_matrix(analysis: Dict[str, Any], output_dir: Path):
     ax.axvline(x=0.5, color='black', linestyle='--', linewidth=2, alpha=0.4)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel('Firm Influence Score →', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Risk / Importance Level →', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Firm Influence Score ->', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Risk / Importance Level ->', fontsize=12, fontweight='bold')
     ax.set_title('Risk Action Matrix (2×2)', fontsize=16, fontweight='bold', pad=20)
     ax.grid(True, alpha=0.2)
 
@@ -426,7 +426,7 @@ def create_distributions(analysis: Dict[str, Any], output_dir: Path):
 
 def create_radar_chart(analysis: Dict[str, Any], output_dir: Path):
     """Create radar chart for overall project assessment."""
-    print("\n📊 Creating radar chart...")
+    print("\n Creating radar chart...")
 
     summary = analysis.get("summary", {})
 
@@ -474,11 +474,11 @@ def create_radar_chart(analysis: Dict[str, Any], output_dir: Path):
 
 def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
     """Create comparative bar chart for nodes."""
-    print("\n📊 Creating node comparison chart...")
+    print("\n Creating node comparison chart...")
 
     node_assessments = analysis.get("node_assessments", {})
     if not node_assessments:
-        print("   ⚠️  No data to visualize")
+        print("   [WARN]  No data to visualize")
         return
 
     # Prepare data
@@ -528,7 +528,7 @@ def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
 
 def create_recommendation_viz(analysis: Dict[str, Any], output_dir: Path):
     """Create recommendation visualization."""
-    print("\n📊 Creating recommendation visualization...")
+    print("\n Creating recommendation visualization...")
 
     recommendation = analysis.get("recommendation", {})
     summary = analysis.get("summary", {})
@@ -697,7 +697,7 @@ def _draw_metric_card(ax, value, label: str, icon_color: str = None, show_bar: b
 
 def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
     """Create a comprehensive single-page report."""
-    print("\n📊 Creating comprehensive report...")
+    print("\n Creating comprehensive report...")
 
     fig = plt.figure(figsize=(20, 24))
     gs = fig.add_gridspec(6, 3, hspace=0.4, wspace=0.3)
@@ -812,10 +812,10 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
             bullet = "⚠"
         elif any(word in rec_lower for word in ['opportunity', 'proceed', 'optimize', 'automate']):
             bullet_color = COLORS['success']
-            bullet = "✓"
+            bullet = "[OK]"
         elif any(word in rec_lower for word in ['monitor', 'consider', 'mitigate']):
             bullet_color = COLORS['warning']
-            bullet = "→"
+            bullet = "->"
         else:
             bullet_color = COLORS['primary']
             bullet = "•"
@@ -878,8 +878,8 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
     key_opportunities = recommendation.get("key_opportunities", [])
     
     decision_color = COLORS['success'] if should_bid else COLORS['danger']
-    decision_text = "✓ RECOMMEND BID" if should_bid else "✗ DO NOT RECOMMEND"
-    decision_icon = "✓" if should_bid else "✗"
+    decision_text = "[OK] RECOMMEND BID" if should_bid else "[FAIL] DO NOT RECOMMEND"
+    decision_icon = "[OK]" if should_bid else "[FAIL]"
     
     # Main decision text
     ax_decision.text(0.5, 0.75, decision_text, ha='center', va='center',
@@ -937,11 +937,11 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
 
 def create_heatmap_correlation(analysis: Dict[str, Any], output_dir: Path):
     """Create correlation heatmap for nodes."""
-    print("\n📊 Creating correlation heatmap...")
+    print("\n Creating correlation heatmap...")
 
     node_assessments = analysis.get("node_assessments", {})
     if len(node_assessments) < 2:
-        print("   ⚠️  Not enough nodes for correlation")
+        print("   [WARN]  Not enough nodes for correlation")
         return
 
     # Prepare data matrix
