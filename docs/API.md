@@ -36,7 +36,7 @@ python3 scripts/generate_openapi.py
 
 ## Test Coverage
 
-The system has **238 comprehensive tests** covering:
+The system has **264 comprehensive tests** covering:
 - REST API endpoints (health check, analysis)
 - Cross-encoder client (embeddings, similarity scoring)
 - Graph builder (firm-contextual weighting, gap detection, discovery)

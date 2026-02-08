@@ -3,7 +3,7 @@
 **Project Florent** - Neuro-Symbolic Infrastructure Risk Analysis Engine
 
 **Version**: 1.1.0
-**Status**: [OK] Production Ready (238 tests, 100% passing)
+**Status**: [OK] Production Ready (264 tests, 100% passing)
 **REST API**: [OK] Fully Tested & Operational
 **Cross-Encoder**: [OK] BGE-M3 Integration Active
 **Last Updated**: 2026-02-08
@@ -18,7 +18,6 @@
 - **[Deployment Guide](#docker-deployment)** - How to deploy Florent
 
 ### Technical Documentation
-- **[System Audit](audit.md)** - Current implementation status ([OK] 100% Complete, 264 tests)
 - **[Technical Roadmap](ROADMAP.md)** - Mathematical foundations and architecture
 - **[OpenAPI Specification](openapi.json)** - Auto-generated API specification
 
@@ -32,20 +31,6 @@
 ## Documentation Overview
 
 ###  Core Documentation
-
-#### [System Audit (audit.md)](audit.md)
-**Status**: [OK] MVP Complete - 100% Functional
-- Complete implementation status
-- **238/238 tests passing** (100% coverage)
-- REST API fully tested
-- Cross-encoder firm-contextual graph generation
-- Architecture overview
-- Live test results
-- Performance metrics
-- API usage examples
-- Production-ready system status
-
-**When to read**: To understand what's implemented and current system status
 
 #### [Technical Roadmap (ROADMAP.md)](ROADMAP.md)
 **Status**: Reference document
@@ -106,7 +91,6 @@
 ### I want to...
 
 #### **Deploy Florent**
-1. Read [System Audit](audit.md) - Deployment section
 2. Check [API Documentation](API.md) - Deployment section
 3. Set environment variables
 4. Run with Docker: `docker-compose up --build`
@@ -138,17 +122,15 @@
    - Priority: `Priority = Influence × Risk`
 
 #### **Extend the System**
-1. Read [System Audit](audit.md) - Architecture section
-2. Review [Technical Roadmap](ROADMAP.md) - Mathematical foundations
-3. Check test structure in `tests/` (264 tests as examples)
-4. Follow TDD approach with pytest
-5. See [Testing Guide](../tests/TESTING_GUIDE.md) for best practices
+1. Review [Technical Roadmap](ROADMAP.md) - Mathematical foundations
+2. Check test structure in `tests/` (264 tests as examples)
+3. Follow TDD approach with pytest
+4. See [Testing Guide](../tests/TESTING_GUIDE.md) for best practices
 
 #### **Debug Issues**
-1. Check [System Audit](audit.md) - Troubleshooting
-2. Review structured logs (JSON format)
-3. Run health check: `curl http://localhost:8000/health`
-4. Run validation: `python scripts/validate_data.py`
+1. Review structured logs (JSON format)
+2. Run health check: `curl http://localhost:8000/health`
+3. Run validation: `python scripts/validate_data.py`
 
 ---
 
@@ -243,7 +225,7 @@ curl http://localhost:8000/schema/openapi.json -o openapi.json
 
 ## Test Coverage
 
-**Total Tests**: 238
+**Total Tests**: 264
 **Pass Rate**: 100% [OK]
 
 ### By Module
@@ -266,7 +248,7 @@ curl http://localhost:8000/schema/openapi.json -o openapi.json
 
 ### Run Tests
 ```bash
-# All tests (238 total)
+# All tests (264 total)
 uv run pytest tests/ -v
 
 # Specific module
@@ -476,27 +458,16 @@ uv run python -c "from src.main import app; print(app)"
 - OpenAPI client generation
 - Production logging
 
-See [System Audit](audit.md) for detailed status and [API Documentation](API.md) for integration guides.
 
 ---
 
 ## Support & Resources
-
-### Project Links
-- **Repository**: [GitHub](https://github.com/your-org/florent)
-- **Issues**: [Issue Tracker](https://github.com/your-org/florent/issues)
-- **Releases**: [Changelog](https://github.com/your-org/florent/releases)
 
 ### External Resources
 - [Litestar Documentation](https://docs.litestar.dev/)
 - [DSPy Documentation](https://dspy-docs.vercel.app/)
 - [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
 - [Pydantic Documentation](https://docs.pydantic.dev/)
-
-### Community
-- Discussions: [GitHub Discussions](https://github.com/your-org/florent/discussions)
-- Chat: [Discord Server](https://discord.gg/florent)
-
 ---
 
 ## License
@@ -510,7 +481,6 @@ See [LICENSE](../LICENSE) for details.
 | Document | Purpose | Status |
 |----------|---------|--------|
 | [INDEX.md](INDEX.md) | This file - navigation hub | [OK] Current |
-| [audit.md](audit.md) | Implementation status & metrics (264 tests) | [OK] Complete |
 | [ROADMAP.md](ROADMAP.md) | Mathematical foundations & algorithms | [OK] Reference |
 | [API.md](API.md) | REST API reference (19 tests) | [OK] Production |
 | [openapi.json](openapi.json) | OpenAPI 3.1 specification | [OK] Auto-generated |
@@ -520,8 +490,7 @@ See [LICENSE](../LICENSE) for details.
 
 ---
 
-**Last Updated**: 2026-02-07
+**Last Updated**: 2026-02-08
 **Production Status**: [OK] Ready (264 tests, 100% passing)
 **Next Review**: Quarterly or after major feature additions
 
-For questions or issues, see the troubleshooting section above or refer to the [System Audit](audit.md) for detailed implementation status.

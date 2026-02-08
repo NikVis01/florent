@@ -688,7 +688,6 @@ git push -u origin feature/my-feature
 **After setup, read these**:
 
 - **[API.md](API.md)** - How to use the API
-- **[audit.md](audit.md)** - What's implemented (264 tests status)
 - **[ROADMAP.md](ROADMAP.md)** - Math/algorithms explained
 - **[INDEX.md](INDEX.md)** - All documentation index
 
@@ -782,7 +781,6 @@ florent/
 
 - [README](../README.md) - Project overview
 - [API Documentation](API.md) - REST API reference
-- [System Audit](audit.md) - Implementation status
 - [Technical Roadmap](ROADMAP.md) - Mathematical foundations
 - [Documentation Index](INDEX.md) - All documentation
 

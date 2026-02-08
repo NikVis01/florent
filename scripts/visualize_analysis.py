@@ -97,17 +97,17 @@ def create_summary_card(analysis: Dict[str, Any], output_dir: Path):
     should_bid = recommendation.get("should_bid", False)
     confidence = recommendation.get("confidence", 0) * 100
 
-    # Decision banner
-    decision_color = COLORS['success'] if should_bid else COLORS['danger']
-    decision_text = "[+] RECOMMEND BID" if should_bid else "[-] DO NOT RECOMMEND"
+    # Status banner
+    status_color = COLORS['success'] if bankability > 70 else COLORS['warning'] if bankability > 40 else COLORS['danger']
+    status_text = "STRUCTURALLY SOUND" if bankability > 70 else "MARGINAL BANKABILITY" if bankability > 40 else "CRITICAL RISK PROFILE"
 
-    rect = Rectangle((0.05, 0.7), 0.9, 0.2, facecolor=decision_color, alpha=0.15,
-                     edgecolor=decision_color, linewidth=3)
+    rect = Rectangle((0.05, 0.7), 0.9, 0.2, facecolor=status_color, alpha=0.15,
+                     edgecolor=status_color, linewidth=3)
     ax.add_patch(rect)
 
-    ax.text(0.5, 0.8, decision_text, ha='center', va='center', fontsize=26,
-            fontweight='black', color=decision_color, transform=ax.transAxes)
-    ax.text(0.5, 0.73, f'Confidence: {confidence:.1f}%', ha='center', va='center',
+    ax.text(0.5, 0.8, status_text, ha='center', va='center', fontsize=26,
+            fontweight='black', color=status_color, transform=ax.transAxes)
+    ax.text(0.5, 0.73, f'Analysis Confidence: {confidence:.1f}%', ha='center', va='center',
             fontsize=14, color='#3c4043', transform=ax.transAxes)
 
     # Metrics grid
@@ -569,40 +569,40 @@ def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
     plt.close()
 
 
-def create_recommendation_viz(analysis: Dict[str, Any], output_dir: Path):
-    """Create recommendation visualization."""
-    print("\n Creating recommendation visualization...")
+def create_assessment_viz(analysis: Dict[str, Any], output_dir: Path):
+    """Create project assessment visualization (focus on bankability)."""
+    print("\n Creating assessment visualization...")
 
     recommendation = analysis.get("recommendation", {})
     summary = analysis.get("summary", {})
 
-    should_bid = recommendation.get("should_bid", False)
+    bankability = summary.get("overall_bankability", 0) * 100
     confidence = recommendation.get("confidence", 0) * 100
 
     fig = plt.figure(figsize=(14, 10))
     gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
 
-    # 1. Decision Card
+    # 1. Health Card
     ax1 = fig.add_subplot(gs[0, :])
-    decision_color = COLORS['success'] if should_bid else COLORS['danger']
-    decision_text = "RECOMMEND BID" if should_bid else "DO NOT BID"
+    status_color = COLORS['success'] if bankability > 70 else COLORS['warning'] if bankability > 40 else COLORS['danger']
+    status_text = f"BANKABILITY: {bankability:.1f}%"
 
-    ax1.text(0.5, 0.6, decision_text, ha='center', va='center',
-            fontsize=32, fontweight='black', color=decision_color,
+    ax1.text(0.5, 0.6, status_text, ha='center', va='center',
+            fontsize=32, fontweight='black', color=status_color,
             transform=ax1.transAxes)
-    ax1.text(0.5, 0.35, f'Confidence: {confidence:.1f}%', ha='center', va='center',
-            fontsize=18, fontweight='bold', color=COLORS['slate'],
+    ax1.text(0.5, 0.35, f'Metric Confidence: {confidence:.1f}%', ha='center', va='center',
+            fontsize=18, fontweight='bold', color="#5f6368",
             transform=ax1.transAxes)
 
     # Add confidence bar
     bar_width = 0.6
     bar_x = 0.5 - bar_width/2
     rect_bg = Rectangle((bar_x, 0.15), bar_width, 0.08,
-                        facecolor=COLORS['light_gray'], transform=ax1.transAxes)
+                        facecolor="#dadce0", transform=ax1.transAxes, alpha=0.3)
     ax1.add_patch(rect_bg)
 
     rect_fill = Rectangle((bar_x, 0.15), bar_width * (confidence/100), 0.08,
-                          facecolor=decision_color, alpha=0.8, transform=ax1.transAxes)
+                          facecolor=status_color, alpha=0.8, transform=ax1.transAxes)
     ax1.add_patch(rect_fill)
 
     ax1.set_xlim(0, 1)
@@ -841,136 +841,92 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
     y_spacing = 0.15
     
     # Section header
-    ax_recom.text(0.02, y_start, "Strategic Recommendations", 
+    ax_recom.text(0.02, y_start, "Structural Risk Observations", 
                  transform=ax_recom.transAxes,
                  fontsize=16, fontweight='bold', color=COLORS['primary'])
     
-    # Display recommendations in a cleaner format
+    # Display recommendations as observations in a cleaner format
     current_y = y_start - 0.08
     for i, rec in enumerate(recommendations[:5]):  # Limit to 5 for readability
-        # Determine recommendation type and color
+        # Determine observation type and color
         rec_lower = rec.lower()
         if any(word in rec_lower for word in ['risk', 'danger', 'critical', 'decline', 'avoid']):
             bullet_color = COLORS['danger']
-            bullet = "[!]"
+            bullet = "!"
         elif any(word in rec_lower for word in ['opportunity', 'proceed', 'optimize', 'automate']):
             bullet_color = COLORS['success']
-            bullet = "[OK]"
+            bullet = "+"
         elif any(word in rec_lower for word in ['monitor', 'consider', 'mitigate']):
             bullet_color = COLORS['warning']
-            bullet = "->"
+            bullet = "~"
         else:
             bullet_color = COLORS['primary']
             bullet = "•"
         
-        # Wrap long text manually (simpler approach)
+        # Wrap long text manually
         max_chars = 70
-        if len(rec) > max_chars:
-            # Simple word wrap
-            words = rec.split()
-            lines = []
-            current_line = []
-            for word in words:
-                test_line = ' '.join(current_line + [word])
-                if len(test_line) <= max_chars:
-                    current_line.append(word)
-                else:
-                    if current_line:
-                        lines.append(' '.join(current_line))
-                    current_line = [word]
-            if current_line:
-                lines.append(' '.join(current_line))
-            rec_display = '\n'.join(lines)
-        else:
-            rec_display = rec
-        
-        # Calculate height needed for this recommendation
-        num_lines = rec_display.count('\n') + 1
-        rec_height = min(num_lines * 0.04, 0.12)
+        rec_display = rec if len(rec) <= max_chars else rec[:67] + "..."
         
         # Bullet point with color
         ax_recom.text(0.05, current_y, bullet, transform=ax_recom.transAxes,
                      fontsize=16, color=bullet_color, fontweight='bold',
                      verticalalignment='top')
         
-        # Recommendation text with better formatting
+        # Observation text
         ax_recom.text(0.12, current_y, rec_display, transform=ax_recom.transAxes,
-                     fontsize=10, color=COLORS['slate'], verticalalignment='top',
+                     fontsize=10, color="#5f6368", verticalalignment='top',
                      bbox=dict(boxstyle='round,pad=0.6', 
                               facecolor='white', alpha=0.8, 
                               edgecolor=bullet_color, linewidth=1.5))
         
-        current_y -= rec_height + 0.05
+        current_y -= 0.12
     
     # Background
     ax_recom.add_patch(Rectangle((0.01, 0.05), 0.98, 0.90, 
-                                facecolor=COLORS['light_gray'], alpha=0.3,
-                                edgecolor=COLORS['border'], linewidth=2,
+                                facecolor="#f8f9fa", alpha=0.3,
+                                edgecolor="#dadce0", linewidth=2,
                                 transform=ax_recom.transAxes))
     ax_recom.set_xlim(0, 1)
     ax_recom.set_ylim(0, 1)
     ax_recom.axis('off')
 
-    # Figure 8: Decision Box (Enhanced)
-    ax_decision = fig.add_subplot(gs[5, :])
+    # Figure 8: Structural Health Summary (Enhanced)
+    ax_status = fig.add_subplot(gs[5, :])
     
-    # Extract decision data with proper fallbacks
-    should_bid = recommendation.get("should_bid", False)
+    # Extract health data
+    bankability = summary.get("overall_bankability", 0) * 100
     confidence = recommendation.get("confidence", 0.0) * 100
-    key_risks = recommendation.get("key_risks", [])
-    key_opportunities = recommendation.get("key_opportunities", [])
     
-    decision_color = COLORS['success'] if should_bid else COLORS['danger']
-    decision_text = "[OK] RECOMMEND BID" if should_bid else "[FAIL] DO NOT RECOMMEND"
-    decision_icon = "[OK]" if should_bid else "[FAIL]"
+    status_color = COLORS['success'] if bankability > 70 else COLORS['warning'] if bankability > 40 else COLORS['danger']
+    status_text = "STRUCTURALLY SOUND" if bankability > 70 else "MARGINAL BANKABILITY" if bankability > 40 else "CRITICAL RISK PROFILE"
     
-    # Main decision text
-    ax_decision.text(0.5, 0.75, decision_text, ha='center', va='center',
-                    fontsize=24, fontweight='black', color=decision_color,
-                    transform=ax_decision.transAxes)
+    # Main status text
+    ax_status.text(0.5, 0.75, status_text, ha='center', va='center',
+                    fontsize=24, fontweight='black', color=status_color,
+                    transform=ax_status.transAxes)
     
     # Confidence level
-    if confidence > 0:
-        ax_decision.text(0.5, 0.55, f'Confidence: {confidence:.1f}%', 
-                        ha='center', va='center',
-                        fontsize=14, fontweight='bold', color=COLORS['slate'],
-                        transform=ax_decision.transAxes)
-        
-        # Confidence bar
-        bar_width = confidence / 100.0
-        ax_decision.barh([0.4], [bar_width], height=0.08, color=decision_color, 
-                        alpha=0.6, left=0.25, transform=ax_decision.transAxes)
-        ax_decision.barh([0.4], [1.0], height=0.08, color=COLORS['light_gray'], 
-                        alpha=0.3, left=0.25, transform=ax_decision.transAxes)
+    ax_status.text(0.5, 0.55, f'Bankability Score: {bankability:.1f}% (Confidence: {confidence:.1f}%)', 
+                    ha='center', va='center',
+                    fontsize=14, fontweight='bold', color="#5f6368",
+                    transform=ax_status.transAxes)
     
-    # Key risks and opportunities (if available)
-    info_y = 0.25
-    if key_risks:
-        risks_text = "Key Risks: " + ", ".join(key_risks[:3])
-        ax_decision.text(0.5, info_y, risks_text, ha='center', va='center',
-                        fontsize=10, color=COLORS['danger'], 
-                        transform=ax_decision.transAxes,
-                        bbox=dict(boxstyle='round,pad=0.5', facecolor='#ffe6e6', 
-                                 alpha=0.8, edgecolor=COLORS['danger'], linewidth=1))
-        info_y -= 0.12
+    # Bankability bar
+    bar_width = bankability / 100.0
+    ax_status.barh([0.4], [bar_width], height=0.08, color=status_color, 
+                    alpha=0.6, left=0.25, transform=ax_status.transAxes)
+    ax_status.barh([0.4], [1.0], height=0.08, color="#dadce0", 
+                    alpha=0.3, left=0.25, transform=ax_status.transAxes)
     
-    if key_opportunities:
-        opps_text = "Opportunities: " + ", ".join(key_opportunities[:3])
-        ax_decision.text(0.5, info_y, opps_text, ha='center', va='center',
-                        fontsize=10, color=COLORS['success'],
-                        transform=ax_decision.transAxes,
-                        bbox=dict(boxstyle='round,pad=0.5', facecolor='#e6f7e6', 
-                                 alpha=0.8, edgecolor=COLORS['success'], linewidth=1))
+    # Health box border
+    ax_status.add_patch(Rectangle((0.05, 0.05), 0.90, 0.90,
+                                   facecolor=status_color, alpha=0.1,
+                                   edgecolor=status_color, linewidth=4,
+                                   transform=ax_status.transAxes))
     
-    # Decision box border
-    ax_decision.add_patch(Rectangle((0.05, 0.05), 0.90, 0.90,
-                                   facecolor=decision_color, alpha=0.1,
-                                   edgecolor=decision_color, linewidth=4,
-                                   transform=ax_decision.transAxes))
-    
-    ax_decision.set_xlim(0, 1)
-    ax_decision.set_ylim(0, 1)
-    ax_decision.axis('off')
+    ax_status.set_xlim(0, 1)
+    ax_status.set_ylim(0, 1)
+    ax_status.axis('off')
 
     output_path = output_dir / "comprehensive_report.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
@@ -1039,6 +995,65 @@ def save_analysis_json(analysis: Dict[str, Any], output_dir: Path):
         json.dump(analysis, f, indent=2)
 
 
+def create_waterfall_chart(analysis: Dict[str, Any], output_dir: Path):
+    """Create waterfall chart showing risk impact on bankability."""
+    print("Creating waterfall chart...")
+    
+    summary = analysis.get("summary", {})
+    base_score = 1.0
+    
+    # Deriving components for visualization purposes
+    # These are placeholders for real structural components if available
+    avg_risk_impact = -summary.get("average_risk", 0) * 0.5
+    chain_impact = -summary.get("critical_chains_detected", 0) * 0.05
+    high_risk_penalty = -summary.get("high_risk_nodes", 0) * 0.02
+    
+    final_score = summary.get("overall_bankability", 0)
+    
+    data = [
+        ("Base Score", base_score),
+        ("Avg Risk Impact", avg_risk_impact),
+        ("Chain Dependencies", chain_impact),
+        ("Node Risk Penalty", high_risk_penalty),
+        ("Final Bankability", final_score)
+    ]
+    
+    df = pd.DataFrame(data, columns=['Label', 'Value'])
+    df['Cumulative'] = df['Value'].cumsum().shift(1).fillna(0)
+    df['Total'] = df['Value'].cumsum()
+    
+    fig, ax = plt.subplots(figsize=(12, 7))
+    
+    colors = [COLORS['primary'] if i == 0 or i == len(df)-1 else 
+              (COLORS['danger'] if v < 0 else COLORS['success']) 
+              for i, v in enumerate(df['Value'])]
+    
+    # Plot bars
+    for i in range(len(df)):
+        if i == 0 or i == len(df) - 1:
+            ax.bar(df['Label'][i], df['Value'][i], color=colors[i], edgecolor='black', zorder=3)
+        else:
+            ax.bar(df['Label'][i], df['Value'][i], bottom=df['Cumulative'][i], 
+                   color=colors[i], edgecolor='black', zorder=3)
+            # Add connecting lines
+            if i > 0:
+                ax.plot([i-1, i], [df['Cumulative'][i], df['Cumulative'][i]], color='gray', linestyle='--', alpha=0.5)
+
+    ax.set_ylim(0, 1.1)
+    ax.set_ylabel("Normalized Score", fontweight='bold')
+    ax.set_title("Bankability Factor Decomposition", fontsize=16, fontweight='black', pad=20)
+    ax.grid(axis='y', linestyle=':', alpha=0.5)
+    
+    # Add value labels
+    for i, v in enumerate(df['Value']):
+        y_pos = df['Total'][i] if i == 0 or i == len(df)-1 else df['Cumulative'][i] + v
+        ax.text(i, y_pos + (0.02 if v >= 0 else -0.05), f"{v:+.2f}" if i != 0 and i != len(df)-1 else f"{df['Total'][i]:.2f}",
+                ha='center', va='bottom' if v >= 0 else 'top', fontweight='bold', fontsize=10)
+
+    plt.savefig(output_dir / "waterfall_risk.png", dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Visualize Florent risk analysis")
     parser.add_argument("--firm", default="src/data/poc/firm.json", help="Firm JSON path")
@@ -1054,42 +1069,55 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 70)
-    print("Florent Analysis Visualizer")
+    print("Florent Analysis Visualizer - v2.0")
     print("=" * 70 + "\n")
 
     # Get analysis from API
-    analysis = call_api(args.firm, args.project, args.budget, args.api_url)
+    # analysis = call_api(args.firm, args.project, args.budget, args.api_url)
+    
+    # FOR DEVELOPMENT: Read local files if they exist to avoid API dependency
+    if (output_dir / "analysis.json").exists():
+        print("Using local analysis.json for visualization updates...")
+        with open(output_dir / "analysis.json", 'r') as f:
+            analysis = json.load(f)
+    else:
+        analysis = call_api(args.firm, args.project, args.budget, args.api_url)
 
-    # Save raw data
-    save_analysis(analysis, output_dir)
-    print("Saved analysis.json\n")
+    # Save/Update raw data
+    save_analysis_json(analysis, output_dir)
+    print("Ensured analysis.json is present\n")
 
     # Generate visualizations
-    print("Generating visualizations...\n")
+    print("Generating comprehensive visualization suite...\n")
 
     try:
+        # Standard reports
         create_summary_card(analysis, output_dir)
         create_risk_matrix(analysis, output_dir)
         create_node_table(analysis, output_dir)
         create_distributions(analysis, output_dir)
+        
+        # Advanced visualizations
+        create_radar_chart(analysis, output_dir)
+        create_node_comparison_bars(analysis, output_dir)
+        create_heatmap_correlation(analysis, output_dir)
+        create_assessment_viz(analysis, output_dir)
+        create_waterfall_chart(analysis, output_dir)
+        
+        # Final combined report
+        create_comprehensive_report(analysis, output_dir)
+        
+        # Interactive
         create_network_graph_plotly(analysis, output_dir)
 
         print("\n" + "=" * 70)
-        print("[SUCCESS] Visualizations complete")
+        print("[SUCCESS] All visualizations generated successfully")
         print("=" * 70)
-        print(f"\nOutput: {output_dir.absolute()}")
-        print(f"\nGenerated:")
-        print(f"   - analysis.json - Raw analysis data")
-        print(f"   - summary_card.png - Executive summary")
-        print(f"   - risk_matrix.png - 2x2 action matrix")
-        print(f"   - node_table.png - Node assessments")
-        print(f"   - distributions.png - Risk/influence distributions")
-        if HAS_PLOTLY:
-            print(f"   - network_graph.html - Interactive network (open in browser)")
+        print(f"\nLocation: {output_dir.absolute()}")
         print()
 
     except Exception as e:
-        print(f"\n[ERROR] Visualization error: {e}")
+        print(f"\n[ERROR] Visualization pipeline failed: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
