@@ -116,7 +116,7 @@ orchestrator.token_tracker.get_breakdown()
 # {"total_tokens": 4500, "total_cost_usd": 0.0068}
 ```
 
-📖 **[Full Configuration Guide](docs/CONFIGURATION.md)**
+**[Full Configuration Guide](docs/CONFIGURATION.md)**
 
 ### Cross-Encoder Service
 
@@ -283,13 +283,44 @@ Response:
 - **3-5 TYPE_C nodes**: High risk, require partnerships/insurance
 - **6+ TYPE_C nodes**: Don't bid (too many uncontrolled critical dependencies)
 
-## Configuration
+## OpenAPI & MATLAB Integration
 
-Environment variables:
-- `OPENAI_API_KEY`: Required for DSPy agents
-- `CROSS_ENCODER_ENDPOINT`: Cross-encoder URL (default: `http://localhost:8080`)
-- `USE_CROSS_ENCODER`: Enable/disable cross-encoder (default: `true`)
-- `LLM_MODEL`: Model for DSPy (default: `gpt-4o-mini`)
+### Generate OpenAPI Spec
+
+```bash
+# Generate OpenAPI specification
+uv run python scripts/generate_openapi.py -o docs/openapi.json
+```
+
+### Export Schemas for MATLAB
+
+```bash
+# Export individual JSON schemas for MATLAB
+uv run python scripts/export_openapi_schemas.py
+
+# Output: docs/openapi_export/
+# - schemas/         - Individual schema definitions
+# - endpoints/       - Request/response structures
+# - matlab/          - MATLAB helper functions
+```
+
+**MATLAB Usage:**
+```matlab
+% Add to path
+addpath('docs/openapi_export/matlab');
+
+% Load schemas
+schemas = load_florent_schemas();
+
+% Create API request
+json_str = create_analysis_request('data/firm.json', 'data/project.json', 100);
+
+% Send to API
+options = weboptions('RequestMethod', 'post', 'MediaType', 'application/json');
+response = webwrite('http://localhost:8000/analyze', json_str, options);
+```
+
+**[MATLAB Integration Guide](docs/openapi_export/README.md)**
 
 ## Testing
 
@@ -304,7 +335,7 @@ uv run pytest tests/test_graph_builder.py -v
 uv run pytest --cov=src --cov-report=html
 ```
 
-264 tests, 100% passing.
+**264 tests, 100% passing**
 
 ## Docker Deployment
 
@@ -353,19 +384,26 @@ Contextual evaluation of firm-node match:
 ```
 florent/
 ├── src/
-│   ├── main.py                          # REST API
+│   ├── main.py                          # REST API (Litestar)
+│   ├── config/                          # Configuration system
+│   │   ├── __init__.py                  # PROJECT_ROOT, env loading
+│   │   └── schemas.py                   # 6 config dataclasses (41 params)
 │   ├── models/
 │   │   ├── base.py                      # Primitives (Country, Sector, etc)
 │   │   ├── entities.py                  # Firm, Project
 │   │   ├── graph.py                     # Node, Edge, Graph (DAG)
-│   │   └── analysis.py                  # AnalysisOutput, NodeAssessment
+│   │   ├── analysis.py                  # AnalysisOutput, NodeAssessment
+│   │   ├── scoring.py                   # FirmNodeScore, CrossEncoderScore
+│   │   └── orchestration.py             # TokenUsageTracker, ExecutionTrace
 │   ├── services/
 │   │   ├── graph_builder.py             # Firm-contextual graph construction
+│   │   ├── pipeline.py                  # End-to-end analysis pipeline
 │   │   ├── clients/
 │   │   │   ├── ai_client.py             # DSPy/OpenAI client
 │   │   │   └── cross_encoder_client.py  # BGE-M3 reranker client
 │   │   ├── agent/
 │   │   │   ├── core/
+│   │   │   │   ├── orchestrator.py      # Legacy orchestrator
 │   │   │   │   ├── orchestrator_v2.py   # Main analysis orchestrator
 │   │   │   │   └── traversal.py         # Priority heap
 │   │   │   ├── models/
@@ -374,21 +412,31 @@ florent/
 │   │   │       ├── critical_chain.py    # Chain detection
 │   │   │       └── matrix_classifier.py # 2×2 quadrant mapping
 │   │   ├── analysis/
-│   │   │   ├── matrix.py                # Matrix generation
 │   │   │   ├── propagation.py           # Risk propagation
 │   │   │   └── chains.py                # Chain analysis
 │   │   └── math/
 │   │       └── risk.py                  # Risk formulas
-│   └── settings.py                      # Configuration
-├── tests/                               # 264 tests
+│   └── settings.py                      # Settings singleton
+├── scripts/
+│   ├── generate_openapi.py              # OpenAPI spec generator
+│   └── export_openapi_schemas.py        # MATLAB schema exporter
+├── tests/                               # 264 tests (100% passing)
 ├── docs/
-│   ├── SYSTEM_OVERVIEW.md              # Complete system documentation
-│   ├── API.md                          # API reference
-│   └── ROADMAP.md                      # Mathematical foundations
-├── docker-compose.yaml
-├── Dockerfile
-├── update.sh                           # Build & test script
-└── run.sh                              # Start server
+│   ├── CONFIGURATION.md                 # Configuration guide (41 params)
+│   ├── SYSTEM_OVERVIEW.md               # Complete system documentation
+│   ├── API.md                           # REST API reference
+│   ├── SETUP.md                         # Developer setup guide
+│   ├── INDEX.md                         # Documentation index
+│   ├── openapi.json                     # OpenAPI 3.1 specification
+│   └── openapi_export/                  # MATLAB integration
+│       ├── schemas/                     # Individual schema JSONs
+│       ├── endpoints/                   # Endpoint structures
+│       └── matlab/                      # MATLAB helper functions
+├── docker/
+│   ├── docker-compose-api.yaml          # API + BGE-M3
+│   └── docker-compose-model.yaml        # BGE-M3 only
+├── update.sh                            # Build & test script
+└── run.sh                               # Start server
 ```
 
 ## Performance
@@ -409,10 +457,20 @@ florent/
 
 ## Documentation
 
-- **SYSTEM_OVERVIEW.md**: Complete architecture and metrics guide
-- **API.md**: REST API reference with examples
-- **ROADMAP.md**: Mathematical foundations and algorithms
-- **TESTING_GUIDE.md**: Test structure and best practices
+### Core Documentation
+- **[CONFIGURATION.md](docs/CONFIGURATION.md)** - Complete configuration guide (41 parameters)
+- **[SYSTEM_OVERVIEW.md](docs/SYSTEM_OVERVIEW.md)** - Architecture and system design
+- **[API.md](docs/API.md)** - REST API reference with examples
+- **[SETUP.md](docs/SETUP.md)** - Developer setup guide
+
+### API Integration
+- **[openapi.json](docs/openapi.json)** - OpenAPI 3.1 specification
+- **[MATLAB Integration](docs/openapi_export/README.md)** - MATLAB schema export guide
+
+### Reference
+- **[INDEX.md](docs/INDEX.md)** - Documentation index
+- **[CHANGELOG.md](docs/CHANGELOG.md)** - Version history
+- **[ROADMAP.md](docs/ROADMAP.md)** - Mathematical foundations
 
 ## License
 

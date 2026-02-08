@@ -549,10 +549,10 @@ When you run an analysis, Florent returns a shit-ton of data. Here's exactly wha
 **Formula**: `1.0 - critical_failure_likelihood`
 
 **How to read it**:
-- **0.80 - 1.00**: 🟢 **Strong project** - Low risk, firm has good control
-- **0.60 - 0.79**: 🟡 **Moderate project** - Manageable risk with proper mitigation
-- **0.40 - 0.59**: 🟠 **Risky project** - Significant concerns, contingencies required
-- **0.00 - 0.39**: 🔴 **High risk project** - Consider not bidding
+- **0.80 - 1.00**: [GREEN] **Strong project** - Low risk, firm has good control
+- **0.60 - 0.79**: [YELLOW] **Moderate project** - Manageable risk with proper mitigation
+- **0.40 - 0.59**: [ORANGE] **Risky project** - Significant concerns, contingencies required
+- **0.00 - 0.39**: [RED] **High risk project** - Consider not bidding
 
 **Example**:
 ```
@@ -566,10 +566,10 @@ aggregate_project_score: 0.73
 **Formula**: Cascading risk across the highest-risk chain from entry → exit
 
 **How to read it**:
-- **0.00 - 0.20**: 🟢 **Low risk** - Critical path is solid
-- **0.21 - 0.40**: 🟡 **Moderate risk** - Some concerns on critical path
-- **0.41 - 0.60**: 🟠 **High risk** - Critical path has serious vulnerabilities
-- **0.61 - 1.00**: 🔴 **Very high risk** - Critical path likely to fail
+- **0.00 - 0.20**: [GREEN] **Low risk** - Critical path is solid
+- **0.21 - 0.40**: [YELLOW] **Moderate risk** - Some concerns on critical path
+- **0.41 - 0.60**: [ORANGE] **High risk** - Critical path has serious vulnerabilities
+- **0.61 - 1.00**: [RED] **Very high risk** - Critical path likely to fail
 
 **Example**:
 ```
@@ -581,10 +581,10 @@ critical_failure_likelihood: 0.27
 **What it is**: Number of "Type C" nodes (high importance, low influence)
 
 **How to read it**:
-- **0-2**: 🟢 **Acceptable** - Few critical dependencies outside your control
-- **3-5**: 🟡 **Concerning** - Several critical bottlenecks you can't manage
-- **6-10**: 🟠 **Dangerous** - Many dependencies outside firm control
-- **10+**: 🔴 **Deal breaker** - Too many things can fuck you that you can't control
+- **0-2**: [GREEN] **Acceptable** - Few critical dependencies outside your control
+- **3-5**: [YELLOW] **Concerning** - Several critical bottlenecks you can't manage
+- **6-10**: [ORANGE] **Dangerous** - Many dependencies outside firm control
+- **10+**: [RED] **Deal breaker** - Too many things can fuck you that you can't control
 
 **Example**:
 ```
@@ -639,11 +639,11 @@ Each task/node in the project gets evaluated with these scores:
 - Project requirements context
 
 **How to read it**:
-- **0.80 - 1.00**: 🔴 **Mission critical** - If this fails, project fails
-- **0.60 - 0.79**: 🟠 **Very important** - Significant impact on success
-- **0.40 - 0.59**: 🟡 **Moderately important** - Matters but not make-or-break
-- **0.20 - 0.39**: 🟢 **Minor importance** - Peripheral task
-- **0.00 - 0.19**: ⚪ **Trivial** - Almost irrelevant
+- **0.80 - 1.00**: [RED] **Mission critical** - If this fails, project fails
+- **0.60 - 0.79**: [ORANGE] **Very important** - Significant impact on success
+- **0.40 - 0.59**: [YELLOW] **Moderately important** - Matters but not make-or-break
+- **0.20 - 0.39**: [GREEN] **Minor importance** - Peripheral task
+- **0.00 - 0.19**: [NEUTRAL] **Trivial** - Almost irrelevant
 
 **Example**:
 ```
@@ -662,11 +662,11 @@ importance_score: 0.92
 - Strategic focus relevance
 
 **How to read it**:
-- **0.80 - 1.00**: 🟢 **Complete mastery** - This is your bread and butter
-- **0.60 - 0.79**: 🟡 **Strong capability** - You can handle this well
-- **0.40 - 0.59**: 🟠 **Moderate capability** - You can do it but it's not your strength
-- **0.20 - 0.39**: 🔴 **Weak capability** - Outside your core competence
-- **0.00 - 0.19**: 🔴 **No capability** - You have no control/experience here
+- **0.80 - 1.00**: [GREEN] **Complete mastery** - This is your bread and butter
+- **0.60 - 0.79**: [YELLOW] **Strong capability** - You can handle this well
+- **0.40 - 0.59**: [ORANGE] **Moderate capability** - You can do it but it's not your strength
+- **0.20 - 0.39**: [RED] **Weak capability** - Outside your core competence
+- **0.00 - 0.19**: [RED] **No capability** - You have no control/experience here
 
 **Example**:
 ```
@@ -683,11 +683,11 @@ influence_score: 0.23
 **Logic**: Risk = How important it is × How little control you have
 
 **How to read it**:
-- **0.70 - 1.00**: 🔴 **Critical risk** - Important task you can't control
-- **0.50 - 0.69**: 🟠 **High risk** - Significant vulnerability
-- **0.30 - 0.49**: 🟡 **Moderate risk** - Needs attention
-- **0.10 - 0.29**: 🟢 **Low risk** - Manageable
-- **0.00 - 0.09**: ⚪ **Negligible** - Don't worry about it
+- **0.70 - 1.00**: [RED] **Critical risk** - Important task you can't control
+- **0.50 - 0.69**: [ORANGE] **High risk** - Significant vulnerability
+- **0.30 - 0.49**: [YELLOW] **Moderate risk** - Needs attention
+- **0.10 - 0.29**: [GREEN] **Low risk** - Manageable
+- **0.00 - 0.09**: [NEUTRAL] **Negligible** - Don't worry about it
 
 **Example**:
 ```
@@ -702,7 +702,7 @@ risk_level: 0.71  // 0.92 × (1 - 0.23) = 0.71
 **What it is**: Boolean flag indicating if this node is on the highest-risk chain
 
 **How to read it**:
-- **true**: 🔴 This node is on the path most likely to cause total project failure
+- **true**: [RED] This node is on the path most likely to cause total project failure
 - **false**: This node is on an alternative path or lower-risk chain
 
 **Example**:
@@ -775,7 +775,7 @@ TYPE_B: [
 **Translation**: "Documentation is easy for you (87% influence) and not that important (31%). Just use your standard templates and don't overthink it."
 
 #### `TYPE_C`: High Importance + Low Influence
-**What it means**: 🚨 **THE DANGER ZONE** - Critical shit you can't control
+**What it means**: [ALERT] **THE DANGER ZONE** - Critical shit you can't control
 
 **Characteristics**:
 - Critical to project success (importance > 0.6)
@@ -866,11 +866,11 @@ The system finds ALL possible paths through the project from entry → exit, the
 **Logic**: Probability that at least one node in this chain fails
 
 **How to read it**:
-- **0.00 - 0.20**: 🟢 **Safe path** - Low probability of failure
-- **0.21 - 0.40**: 🟡 **Moderate path** - Some concerns
-- **0.41 - 0.60**: 🟠 **Risky path** - Significant failure probability
-- **0.61 - 0.80**: 🔴 **Dangerous path** - High failure probability
-- **0.81 - 1.00**: 💀 **Death march** - Almost certain to fail
+- **0.00 - 0.20**: [GREEN] **Safe path** - Low probability of failure
+- **0.21 - 0.40**: [YELLOW] **Moderate path** - Some concerns
+- **0.41 - 0.60**: [ORANGE] **Risky path** - Significant failure probability
+- **0.61 - 0.80**: [RED] **Dangerous path** - High failure probability
+- **0.81 - 1.00**: [CRITICAL] **Death march** - Almost certain to fail
 
 **Example**:
 ```
@@ -938,8 +938,8 @@ else:
 ```
 
 **How to read it**:
-- **true**: 🟢 Project is viable, risk is manageable
-- **false**: 🔴 Don't bid, risk exceeds firm capability
+- **true**: [GREEN] Project is viable, risk is manageable
+- **false**: [RED] Don't bid, risk exceeds firm capability
 
 #### `recommendation.confidence` (0.0 - 1.0)
 **What it is**: How sure the system is about its recommendation
@@ -1130,10 +1130,10 @@ Use this table to make fast bid decisions:
 
 | Aggregate Score | Critical Failure | Type C Count | Decision |
 |----------------|------------------|--------------|----------|
-| >0.75 | <0.25 | 0-2 | 🟢 **STRONG BID** - Go for it |
-| 0.60-0.74 | 0.25-0.40 | 2-4 | 🟡 **BID WITH CONDITIONS** - Contingencies required |
-| 0.45-0.59 | 0.41-0.60 | 5-7 | 🟠 **RISKY** - Only bid with strong partnerships/insurance |
-| <0.45 | >0.60 | 7+ | 🔴 **DON'T BID** - Too many uncontrolled risks |
+| >0.75 | <0.25 | 0-2 | [GREEN] **STRONG BID** - Go for it |
+| 0.60-0.74 | 0.25-0.40 | 2-4 | [YELLOW] **BID WITH CONDITIONS** - Contingencies required |
+| 0.45-0.59 | 0.41-0.60 | 5-7 | [ORANGE] **RISKY** - Only bid with strong partnerships/insurance |
+| <0.45 | >0.60 | 7+ | [RED] **DON'T BID** - Too many uncontrolled risks |
 
 ---
 
@@ -1330,12 +1330,12 @@ openapi-generator-cli generate -i docs/openapi.json -g typescript-fetch -o clien
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
-| Small project (20 nodes) | <5s | <1s | ✅ |
-| Medium project (50 nodes) | <10s | <2s | ✅ |
-| Full test suite | <5min | 2.8s | ✅ |
-| Memory usage | <2GB | <500MB | ✅ |
-| Test pass rate | 100% | 100% | ✅ |
-| API response time | <1s | <1s | ✅ |
+| Small project (20 nodes) | <5s | <1s | [OK] |
+| Medium project (50 nodes) | <10s | <2s | [OK] |
+| Full test suite | <5min | 2.8s | [OK] |
+| Memory usage | <2GB | <500MB | [OK] |
+| Test pass rate | 100% | 100% | [OK] |
+| API response time | <1s | <1s | [OK] |
 
 ---
 
@@ -1638,11 +1638,11 @@ Node: "Foundation Construction"
 
 Firm A (Civil Engineers):
 - Cross-encoder similarity: 0.89
-- Edge weight: 0.89 × 0.9² = 0.72  ✅ Strong connection
+- Edge weight: 0.89 × 0.9² = 0.72  [OK] Strong connection
 
 Firm B (Environmental Consultants):
 - Cross-encoder similarity: 0.21
-- Edge weight: 0.21 × 0.9² = 0.17  ❌ Weak connection → GAP DETECTED
+- Edge weight: 0.21 × 0.9² = 0.17  [X] Weak connection → GAP DETECTED
 ```
 
 #### Phase 2: Agent-Driven Node Discovery (Creative LLM Work)
@@ -1721,9 +1721,9 @@ while iteration < 5:
 
 **Phase 1: Cross-Encoder Scores**:
 ```
-Design Phase: similarity = 0.91, weight = 0.82 ✅
-Construction: similarity = 0.88, weight = 0.71 ✅
-QA: similarity = 0.76, weight = 0.55 ✅
+Design Phase: similarity = 0.91, weight = 0.82 [OK]
+Construction: similarity = 0.88, weight = 0.71 [OK]
+QA: similarity = 0.76, weight = 0.55 [OK]
 ```
 
 **Phase 2: Agent Discovery**:
@@ -1737,9 +1737,9 @@ No gaps (all weights > 0.5) → No new nodes needed
 
 **Phase 1: Cross-Encoder Scores**:
 ```
-Design: similarity = 0.34, weight = 0.31 (⚠️ borderline)
-Construction: similarity = 0.19, weight = 0.15 ❌ GAP!
-QA: similarity = 0.41, weight = 0.30 ❌ GAP!
+Design: similarity = 0.34, weight = 0.31 ([WARNING] borderline)
+Construction: similarity = 0.19, weight = 0.15 [X] GAP!
+QA: similarity = 0.41, weight = 0.30 [X] GAP!
 ```
 
 **Phase 2: Agent Discovery (Iteration 1)**:
@@ -1752,8 +1752,8 @@ Gap 2: Construction → QA (weight 0.30)
 
 **Phase 3: Cross-Encoder Re-Scores New Nodes**:
 ```
-"Structural Engineering Partnership": 0.22 ❌ Still low! (firm doesn't have partners yet)
-"Construction Management": 0.51 ✅ (firm can manage consultants)
+"Structural Engineering Partnership": 0.22 [X] Still low! (firm doesn't have partners yet)
+"Construction Management": 0.51 [OK] (firm can manage consultants)
 ```
 
 **Phase 4: Agent Discovery (Iteration 2)**:
@@ -1796,14 +1796,14 @@ Dynamic Graph for Firm B:
 
 ### What's Currently Implemented vs What's Missing
 
-#### ✅ Fully Implemented
+#### [OK] Fully Implemented
 - **Layer 3**: Evaluation agents (orchestrator_v2.py)
 - **Layer 2**: Discovery agents (partially - generate nodes but not gap-triggered)
 
-#### ⚠️ Partially Implemented
+#### [WARNING] Partially Implemented
 - Discovery agents exist but trigger on importance > 0.3, not cross-encoder gaps
 
-#### ❌ Not Implemented
+#### [X] Not Implemented
 - **Layer 1**: Cross-encoder edge weighting
 - Firm-contextual graph generation
 - Iterative refinement loop

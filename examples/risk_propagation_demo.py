@@ -189,18 +189,18 @@ def main():
 
     # Generate recommendations based on matrix
     if matrix["mitigate"]:
-        print("⚠️  CRITICAL ACTION REQUIRED:")
+        print("[WARNING]  CRITICAL ACTION REQUIRED:")
         for stage in matrix["mitigate"]:
             print(f"   • {stage}: High risk and high influence - needs immediate mitigation")
             print(f"     → {result[stage]['description']}")
 
     if matrix["automate"]:
-        print("\n✓  OPTIMIZATION OPPORTUNITIES:")
+        print("\n[OK]  OPTIMIZATION OPPORTUNITIES:")
         for stage in matrix["automate"]:
             print(f"   • {stage}: Low risk and high influence - candidate for automation")
 
     if matrix["contingency"]:
-        print("\n⚡ CONTINGENCY PLANNING:")
+        print("\n CONTINGENCY PLANNING:")
         for stage in matrix["contingency"]:
             print(f"   • {stage}: High risk but lower influence - prepare backup plans")
 

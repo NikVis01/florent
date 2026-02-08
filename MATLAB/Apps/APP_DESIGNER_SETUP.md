@@ -3,10 +3,10 @@
 **NOTE**: This file is for reference. The app is now fully programmatic!
 
 The Florent app is implemented as a programmatic App Designer application (`florentRiskApp.m`), which means:
-- ✅ No `.mlapp` binary file needed
-- ✅ Fully Git-friendly
-- ✅ Can be edited in any text editor
-- ✅ Faster to iterate on
+- [OK] No `.mlapp` binary file needed
+- [OK] Fully Git-friendly
+- [OK] Can be edited in any text editor
+- [OK] Faster to iterate on
 
 **To use the app, simply run:**
 ```matlab

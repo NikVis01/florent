@@ -167,10 +167,10 @@ def main():
     print(f"Skipped: {len(result.skipped)}")
 
     if result.wasSuccessful():
-        print("\n✓ All tests passed!")
+        print("\n[OK] All tests passed!")
         return 0
     else:
-        print("\n✗ Some tests failed.")
+        print("\n[X] Some tests failed.")
         return 1
 
 

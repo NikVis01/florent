@@ -95,7 +95,7 @@ def serve_docs(port=8080, openapi_path='docs/openapi.json'):
 
     if not openapi_file.exists():
         print(f"[ERROR] Error: OpenAPI spec not found at {openapi_file.absolute()}")
-        print(f"💡 Tip: Run 'python3 scripts/generate_openapi.py' first")
+        print(f"Tip: Run 'python3 scripts/generate_openapi.py' first")
         return False
 
     handler = lambda *args, **kwargs: OpenAPIHandler(
@@ -104,15 +104,15 @@ def serve_docs(port=8080, openapi_path='docs/openapi.json'):
 
     with socketserver.TCPServer(("", port), handler) as httpd:
         print(f"[SUCCESS] Serving OpenAPI documentation")
-        print(f"📄 OpenAPI spec: {openapi_file.absolute()}")
-        print(f"🌐 Swagger UI: http://localhost:{port}")
-        print(f"🛑 Press Ctrl+C to stop")
+        print(f"OpenAPI spec: {openapi_file.absolute()}")
+        print(f"Swagger UI: http://localhost:{port}")
+        print(f"Press Ctrl+C to stop")
         print()
 
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\n\n👋 Shutting down server...")
+            print("\n\nShutting down server...")
             return True
 
 

@@ -149,7 +149,7 @@ print(orchestrator.token_tracker.get_breakdown())
 **Matrix Quadrants:**
 - **Type A** (High Influence, High Importance) - Strategic Wins
 - **Type B** (High Influence, Low Importance) - Quick Wins
-- **Type C** (Low Influence, High Importance) - Critical Dependencies ⚠️
+- **Type C** (Low Influence, High Importance) - Critical Dependencies [WARNING]
 - **Type D** (Low Influence, Low Importance) - Monitor
 
 **Example:**
@@ -511,9 +511,9 @@ load_dotenv(override=True)
 for name, config in settings.get_all_configs().items():
     try:
         config.validate()
-        print(f"✓ {name} valid")
+        print(f"[OK] {name} valid")
     except AssertionError as e:
-        print(f"✗ {name} invalid: {e}")
+        print(f"[X] {name} invalid: {e}")
 ```
 
 ### Performance Issues

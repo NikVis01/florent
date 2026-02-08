@@ -44,17 +44,17 @@ testFlorentAppLaunch()
 
 ## Features
 
-### ✅ Implemented (MVP)
-- ✅ Fully programmatic app (no .mlapp binary needed!)
-- ✅ Input panel with firm/project/mode dropdowns
-- ✅ MC iterations slider with live updates
-- ✅ Tabbed interface with 4 visualization types
-- ✅ Progress bar and status updates
-- ✅ Demo mode (one-click demo setup)
-- ✅ Full integration with analysis pipeline
-- ✅ Error handling with user-friendly messages
+### [OK] Implemented (MVP)
+- [OK] Fully programmatic app (no .mlapp binary needed!)
+- [OK] Input panel with firm/project/mode dropdowns
+- [OK] MC iterations slider with live updates
+- [OK] Tabbed interface with 4 visualization types
+- [OK] Progress bar and status updates
+- [OK] Demo mode (one-click demo setup)
+- [OK] Full integration with analysis pipeline
+- [OK] Error handling with user-friendly messages
 
-### 🚀 Ready to Add (Optional Enhancements)
+###  Ready to Add (Optional Enhancements)
 - Export buttons for figures and reports
 - Results table showing node summary
 - Findings text area with key insights

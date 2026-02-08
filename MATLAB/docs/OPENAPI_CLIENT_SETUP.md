@@ -1,6 +1,6 @@
 # OpenAPI MATLAB Client Setup Guide
 
-**⚠️ IMPORTANT: This guide is OPTIONAL!**
+**[WARNING] IMPORTANT: This guide is OPTIONAL!**
 
 The Florent MATLAB codebase works perfectly with **manual HTTP calls** (using `webread`/`webwrite`). The `FlorentAPIClientWrapper` automatically uses manual HTTP calls when the generated client is not available.
 

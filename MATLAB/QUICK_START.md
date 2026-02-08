@@ -35,10 +35,10 @@ If this works, **YOU'RE DONE**. Everything is set up correctly.
 The API client uses manual HTTP calls automatically. **You don't need to install anything else.** 
 
 **DO NOT** waste your time with:
-- ❌ REST API Client Generator
-- ❌ OpenAPI client generation
-- ❌ Communications Toolbox (unless you want it for other reasons)
-- ❌ Any of that complicated bullshit
+- [X] REST API Client Generator
+- [X] OpenAPI client generation
+- [X] Communications Toolbox (unless you want it for other reasons)
+- [X] Any of that complicated bullshit
 
 The codebase works with **manual HTTP calls** (`webread`/`webwrite`) which are built into MATLAB. No add-ons needed.
 
@@ -158,10 +158,10 @@ The system now automatically sets up worker paths when parallel pools are create
 **FUCK IT. SKIP IT.**
 
 The REST API Client Generator is:
-- ❌ Not required
-- ❌ Complicated to set up
-- ❌ Requires add-ons you don't need
-- ❌ Provides minimal benefits (just IntelliSense)
+- [X] Not required
+- [X] Complicated to set up
+- [X] Requires add-ons you don't need
+- [X] Provides minimal benefits (just IntelliSense)
 
 The codebase works perfectly without it using manual HTTP calls. The `FlorentAPIClientWrapper` automatically uses `webread`/`webwrite` which are built into MATLAB.
 

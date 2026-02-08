@@ -11,7 +11,7 @@
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 1. [Quick Start](#quick-start-5-minutes)
 2. [Prerequisites](#prerequisites)
@@ -25,7 +25,7 @@
 
 ---
 
-## ⚡ Quick Start (5 Minutes)
+##  Quick Start (5 Minutes)
 
 **TL;DR - Get running now:**
 
@@ -55,35 +55,35 @@ curl http://localhost:8000/
 
 ---
 
-## 📦 Prerequisites
+##  Prerequisites
 
 **What you need before starting:**
 
 ### Required (Can't develop without these)
 
-✅ **Python 3.11+**
+[OK] **Python 3.11+**
 ```bash
 python --version  # Must be 3.11 or higher
 ```
 
-✅ **uv** (Package manager - better than pip)
+[OK] **uv** (Package manager - better than pip)
 ```bash
 uv --version  # If not installed: curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-✅ **OpenAI API Key** (For AI features)
+[OK] **OpenAI API Key** (For AI features)
 - Get one: https://platform.openai.com/api-keys
 - Cost: ~$0.01-0.10 per analysis
 - **Without this, AI features won't work** (tests will fail)
 
 ### Optional (Nice to have)
 
-⚠️ **Docker** (If you want to run containerized)
+[WARNING] **Docker** (If you want to run containerized)
 ```bash
 docker --version && docker-compose --version
 ```
 
-⚠️ **Make** (For running `make all` build command)
+[WARNING] **Make** (For running `make all` build command)
 ```bash
 make --version
 ```
@@ -146,7 +146,7 @@ Or install directly on Windows:
 
 ---
 
-## 🛠️ Environment Setup
+##  Environment Setup
 
 **You're in the repo directory. Now set up your environment.**
 
@@ -172,7 +172,7 @@ pip install -r requirements.txt
 
 ```bash
 # Quick check
-uv run python -c "import litestar, dspy, pydantic; print('✅ All dependencies OK')"
+uv run python -c "import litestar, dspy, pydantic; print('[OK] All dependencies OK')"
 
 # If that works, you're good. If not, run:
 uv pip list | grep -E "litestar|dspy|pydantic"
@@ -226,11 +226,11 @@ uv run pytest tests/ -v
 # Expected: 264 passed in 2-3 seconds
 ```
 
-**If tests pass, you're done with setup!** ✅
+**If tests pass, you're done with setup!** [OK]
 
 ---
 
-## 🔧 Development Workflow
+##  Development Workflow
 
 ### Daily Commands You'll Use
 
@@ -299,7 +299,7 @@ uv run python -c "from src.settings import get_settings; print(get_settings())"
 
 ---
 
-## 🏃 Running & Testing
+##  Running & Testing
 
 ### Start the Server
 
@@ -388,14 +388,14 @@ chmod +x test_api.sh  # Make executable
 ./test_api.sh         # Run all API tests
 
 # Output shows:
-# ✅ Health check
-# ✅ Analysis endpoint
-# ✅ All tests passed
+# [OK] Health check
+# [OK] Analysis endpoint
+# [OK] All tests passed
 ```
 
 ---
 
-## 💻 IDE Configuration
+##  IDE Configuration
 
 ### VS Code Setup (Recommended)
 
@@ -457,7 +457,7 @@ uv run pre-commit install
 
 ---
 
-## 🐳 Docker Development
+##  Docker Development
 
 **Want to run in Docker instead?**
 
@@ -522,7 +522,7 @@ litestar run --reload
 
 ---
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### Quick Fixes
 
@@ -579,12 +579,12 @@ uv run pytest tests/ -v
 **Save as `check.sh`**:
 ```bash
 #!/bin/bash
-echo "🔍 Florent Health Check"
-python --version || echo "❌ Python missing"
-uv --version || echo "❌ uv missing"
-uv run python -c "import litestar" && echo "✅ Dependencies OK" || echo "❌ Run: uv sync"
-[ -n "$OPENAI_API_KEY" ] && echo "✅ API key set" || echo "❌ Set OPENAI_API_KEY"
-curl -s http://localhost:8000/ > /dev/null && echo "✅ Server running" || echo "⚠️ Start server"
+echo " Florent Health Check"
+python --version || echo "[X] Python missing"
+uv --version || echo "[X] uv missing"
+uv run python -c "import litestar" && echo "[OK] Dependencies OK" || echo "[X] Run: uv sync"
+[ -n "$OPENAI_API_KEY" ] && echo "[OK] API key set" || echo "[X] Set OPENAI_API_KEY"
+curl -s http://localhost:8000/ > /dev/null && echo "[OK] Server running" || echo "[WARNING] Start server"
 ```
 
 ```bash
@@ -593,7 +593,7 @@ chmod +x check.sh && ./check.sh
 
 ---
 
-## 📋 Daily Workflow
+##  Daily Workflow
 
 **What you'll actually do day-to-day:**
 
@@ -683,7 +683,7 @@ git push -u origin feature/my-feature
 
 ---
 
-## 📚 Key Documentation
+##  Key Documentation
 
 **After setup, read these**:
 
@@ -699,20 +699,20 @@ git push -u origin feature/my-feature
 
 ---
 
-## ✅ Setup Complete!
+## [OK] Setup Complete!
 
 **You should now have**:
-- ✅ Dependencies installed
-- ✅ API key configured
-- ✅ Tests passing (264/264)
-- ✅ Server running on http://localhost:8000
-- ✅ Swagger UI at http://localhost:8000/schema/swagger
+- [OK] Dependencies installed
+- [OK] API key configured
+- [OK] Tests passing (264/264)
+- [OK] Server running on http://localhost:8000
+- [OK] Swagger UI at http://localhost:8000/schema/swagger
 
-**Start coding!** 🚀
+**Start coding!** 
 
 ---
 
-## 📝 Quick Reference
+##  Quick Reference
 
 ### Essential Commands
 
@@ -761,7 +761,7 @@ florent/
 
 ---
 
-## ✅ Setup Checklist
+## [OK] Setup Checklist
 
 - [ ] Python 3.11+ installed
 - [ ] `uv` installed
@@ -774,11 +774,11 @@ florent/
 - [ ] API responding (`curl http://localhost:8000/`)
 - [ ] Swagger UI accessible (`http://localhost:8000/schema/swagger`)
 
-**All checked?** You're ready to go! 🚀
+**All checked?** You're ready to go! 
 
 ---
 
-## 📚 Additional Resources
+##  Additional Resources
 
 - [README](../README.md) - Project overview
 - [API Documentation](API.md) - REST API reference
@@ -794,4 +794,4 @@ florent/
 **Last Updated**: 2026-02-07
 **Maintained By**: Florent Development Team
 
-Good luck with your risk analysis! 🎯
+Good luck with your risk analysis! 

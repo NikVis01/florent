@@ -19,35 +19,35 @@ def check_imports():
     # Standard library
     try:
         import unittest
-        print("✓ unittest")
+        print("[OK] unittest")
     except ImportError as e:
-        errors.append(f"✗ unittest: {e}")
+        errors.append(f"[X] unittest: {e}")
 
     try:
         from unittest.mock import patch, MagicMock
-        print("✓ unittest.mock")
+        print("[OK] unittest.mock")
     except ImportError as e:
-        errors.append(f"✗ unittest.mock: {e}")
+        errors.append(f"[X] unittest.mock: {e}")
 
     # Third-party
     try:
         import pydantic
-        print(f"✓ pydantic (version {pydantic.__version__})")
+        print(f"[OK] pydantic (version {pydantic.__version__})")
     except ImportError as e:
-        errors.append(f"✗ pydantic: {e}")
+        errors.append(f"[X] pydantic: {e}")
 
     # Optional
     try:
         import pytest
-        print(f"✓ pytest (version {pytest.__version__})")
+        print(f"[OK] pytest (version {pytest.__version__})")
     except ImportError:
-        print("⚠ pytest (optional, not installed)")
+        print("[WARNING] pytest (optional, not installed)")
 
     try:
         import coverage
-        print(f"✓ coverage (version {coverage.__version__})")
+        print(f"[OK] coverage (version {coverage.__version__})")
     except ImportError:
-        print("⚠ coverage (optional, not installed)")
+        print("[WARNING] coverage (optional, not installed)")
 
     return errors
 
@@ -69,10 +69,10 @@ def check_src_modules():
     for module in modules_to_check:
         try:
             __import__(module)
-            print(f"✓ {module}")
+            print(f"[OK] {module}")
         except ImportError as e:
-            errors.append(f"✗ {module}: {e}")
-            print(f"✗ {module}: {e}")
+            errors.append(f"[X] {module}: {e}")
+            print(f"[X] {module}: {e}")
 
     return errors
 
@@ -103,10 +103,10 @@ def check_test_files():
     for filename in expected_files:
         filepath = os.path.join(test_dir, filename)
         if os.path.exists(filepath):
-            print(f"✓ {filename}")
+            print(f"[OK] {filename}")
         else:
-            errors.append(f"✗ {filename} (not found)")
-            print(f"✗ {filename} (not found)")
+            errors.append(f"[X] {filename} (not found)")
+            print(f"[X] {filename} (not found)")
 
     return errors
 
@@ -122,10 +122,10 @@ def check_test_discovery():
     try:
         suite = loader.discover(test_dir, pattern='test_*.py')
         test_count = suite.countTestCases()
-        print(f"✓ Discovered {test_count} tests")
+        print(f"[OK] Discovered {test_count} tests")
         return []
     except Exception as e:
-        error = f"✗ Test discovery failed: {e}"
+        error = f"[X] Test discovery failed: {e}"
         print(error)
         return [error]
 
@@ -145,10 +145,10 @@ def run_sample_test():
     result = runner.run(suite)
 
     if result.wasSuccessful():
-        print("✓ Sample test passed")
+        print("[OK] Sample test passed")
         return []
     else:
-        error = "✗ Sample test failed"
+        error = "[X] Sample test failed"
         print(error)
         return [error]
 
@@ -174,14 +174,14 @@ def main():
     print("="*70)
 
     if not all_errors:
-        print("✓ All checks passed! Test environment is ready.")
+        print("[OK] All checks passed! Test environment is ready.")
         print("\nYou can now run tests with:")
         print("  python tests/run_tests.py")
         print("  python -m pytest tests/")
         print("  python -m unittest discover tests/")
         return 0
     else:
-        print(f"✗ {len(all_errors)} error(s) found:")
+        print(f"[X] {len(all_errors)} error(s) found:")
         for error in all_errors:
             print(f"  {error}")
         print("\nPlease resolve these issues before running tests.")

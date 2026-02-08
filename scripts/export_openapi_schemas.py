@@ -407,7 +407,7 @@ def main():
 
     output_dir = Path(args.output)
 
-    print(f"📖 Reading OpenAPI spec: {input_path}")
+    print(f" Reading OpenAPI spec: {input_path}")
     print(f" Output directory: {output_dir}")
     print()
 
@@ -436,7 +436,7 @@ def main():
     print(f"   - {len(schema_files)} schemas")
     print(f"   - {len(endpoint_files)} endpoints")
     print(f"\n Output: {output_dir}/")
-    print(f"\n🔧 MATLAB Usage:")
+    print(f"\n MATLAB Usage:")
     print(f"   >> addpath('{output_dir}/matlab')")
     print(f"   >> schemas = load_florent_schemas();")
 

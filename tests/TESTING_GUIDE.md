@@ -234,7 +234,7 @@ python tests/run_tests.py
 # If code does: from src.models import base
 # Mock should be: @patch('src.models.base.function')
 
-# Not: @patch('src.models.function')  ❌
+# Not: @patch('src.models.function')  [ERROR]
 ```
 
 ### Tests Pass Individually But Fail Together
@@ -310,4 +310,4 @@ For test-related issues:
 3. Run validate_setup.py for diagnostics
 4. Check individual test file docstrings
 
-Happy testing! 🧪
+Happy testing! 

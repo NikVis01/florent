@@ -1,6 +1,6 @@
 # Florent MATLAB Setup Guide
 
-**⚠️ NEW USERS: Start with `QUICK_START.md` for a super simple setup guide!**
+**[WARNING] NEW USERS: Start with `QUICK_START.md` for a super simple setup guide!**
 
 This is the detailed setup guide. For a quick, no-nonsense setup, see `QUICK_START.md` first.
 
@@ -230,7 +230,7 @@ If you encounter issues:
 
 ## Additional Resources
 
-- **🚀 Quick Start**: `QUICK_START.md` - **START HERE** - Super simple, no-nonsense setup guide
+- ** Quick Start**: `QUICK_START.md` - **START HERE** - Super simple, no-nonsense setup guide
 - **Function Reference**: `README_FUNCTIONS.md` - Complete function documentation
 - **App Designer Setup**: `Apps/README.md` - Frontend application guide
 - **App Designer Details**: `Apps/APP_DESIGNER_SETUP.md` - Detailed App Designer information

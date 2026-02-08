@@ -501,7 +501,7 @@ limit_req zone=api_limit burst=20 nodelay;
 
 ## Authentication
 
-⚠️ **Development Mode**: No authentication currently required
+[WARNING] **Development Mode**: No authentication currently required
 
 **Security Warning:** The API is currently open and should only be deployed in trusted environments.
 

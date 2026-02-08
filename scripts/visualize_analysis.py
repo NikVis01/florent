@@ -809,7 +809,7 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
         rec_lower = rec.lower()
         if any(word in rec_lower for word in ['risk', 'danger', 'critical', 'decline', 'avoid']):
             bullet_color = COLORS['danger']
-            bullet = "⚠"
+            bullet = "[!]"
         elif any(word in rec_lower for word in ['opportunity', 'proceed', 'optimize', 'automate']):
             bullet_color = COLORS['success']
             bullet = "[OK]"
