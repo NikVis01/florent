@@ -16,7 +16,7 @@ from src.models.entities import Firm, Project
 from src.models.graph import Graph, Node, Edge
 from src.models.base import OperationType
 from src.services.agent.core.orchestrator import AgentOrchestrator, NodeAssessment
-from src.services.analysis.matrix import generate_matrix
+from src.services.agent.analysis.matrix_classifier import classify_all_nodes, RiskQuadrant
 from src.services.logging.logger import get_logger
 
 logger = get_logger(__name__)
