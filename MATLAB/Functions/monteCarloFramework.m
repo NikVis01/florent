@@ -24,7 +24,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     %     .parameters - Parameter values used in each iteration
     
     if nargin < 3
-        nIterations = 100;
+        nIterations = 1000;
     end
     if nargin < 4
         useParallel = true;
