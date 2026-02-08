@@ -1,0 +1,1958 @@
+{
+  "$defs": {
+    "BidRecommendation": {
+      "description": "Go/No-Go bid recommendation based on structural risk.",
+      "properties": {
+        "should_bid": {
+          "title": "Should Bid",
+          "type": "boolean"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "type": "string"
+        },
+        "key_risks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Key Risks",
+          "type": "array"
+        },
+        "key_opportunities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Key Opportunities",
+          "type": "array"
+        }
+      },
+      "required": [
+        "should_bid",
+        "confidence",
+        "reasoning",
+        "key_risks",
+        "key_opportunities"
+      ],
+      "title": "BidRecommendation",
+      "type": "object"
+    },
+    "ClusteringCoefficients": {
+      "description": "Clustering coefficient data.",
+      "properties": {
+        "global_coefficient": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Global Coefficient",
+          "type": "number"
+        },
+        "per_node": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Local clustering per node",
+          "title": "Per Node",
+          "type": "object"
+        }
+      },
+      "required": [
+        "global_coefficient",
+        "per_node"
+      ],
+      "title": "ClusteringCoefficients",
+      "type": "object"
+    },
+    "ConditionalDependency": {
+      "description": "Conditional dependency between nodes.",
+      "properties": {
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "relationship": {
+          "default": "conditional_probability",
+          "title": "Relationship",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "depends_on"
+      ],
+      "title": "ConditionalDependency",
+      "type": "object"
+    },
+    "ConfigurationSnapshot": {
+      "description": "Complete configuration snapshot for reproducibility.",
+      "properties": {
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Florent version",
+          "title": "Version",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "description": "All 41 configuration parameters organized by module",
+          "title": "Parameters",
+          "type": "object"
+        },
+        "models": {
+          "$ref": "#/$defs/ModelVersions"
+        }
+      },
+      "required": [
+        "timestamp",
+        "version",
+        "parameters",
+        "models"
+      ],
+      "title": "ConfigurationSnapshot",
+      "type": "object"
+    },
+    "CorrelationPair": {
+      "description": "Correlation between two nodes.",
+      "properties": {
+        "node_a": {
+          "title": "Node A",
+          "type": "string"
+        },
+        "node_b": {
+          "title": "Node B",
+          "type": "string"
+        },
+        "correlation": {
+          "description": "Pearson correlation coefficient",
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Correlation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "node_a",
+        "node_b",
+        "correlation"
+      ],
+      "title": "CorrelationPair",
+      "type": "object"
+    },
+    "Country": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "a2": {
+          "title": "A2",
+          "type": "string"
+        },
+        "a3": {
+          "title": "A3",
+          "type": "string"
+        },
+        "num": {
+          "title": "Num",
+          "type": "string"
+        },
+        "region": {
+          "title": "Region",
+          "type": "string"
+        },
+        "sub_region": {
+          "title": "Sub Region",
+          "type": "string"
+        },
+        "affiliations": {
+          "description": "Affiliations of the country",
+          "items": {
+            "type": "string"
+          },
+          "title": "Affiliations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "a2",
+        "a3",
+        "num",
+        "region",
+        "sub_region"
+      ],
+      "title": "Country",
+      "type": "object"
+    },
+    "CriticalChain": {
+      "description": "A prioritized sequence of dependencies with its cumulative derived risk.",
+      "properties": {
+        "node_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Node Ids",
+          "type": "array"
+        },
+        "node_names": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Node Names",
+          "type": "array"
+        },
+        "cumulative_risk": {
+          "description": "Path failure probability",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Cumulative Risk",
+          "type": "number"
+        },
+        "length": {
+          "title": "Length",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "node_ids",
+        "node_names",
+        "cumulative_risk",
+        "length"
+      ],
+      "title": "CriticalChain",
+      "type": "object"
+    },
+    "DiscoveredNode": {
+      "description": "Metadata for an AI-discovered node.",
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "discovered_at_iteration": {
+          "title": "Discovered At Iteration",
+          "type": "integer"
+        },
+        "triggered_by_gap": {
+          "$ref": "#/$defs/GapTrigger"
+        },
+        "persona_used": {
+          "description": "AI persona that discovered this node",
+          "title": "Persona Used",
+          "type": "string"
+        },
+        "confidence": {
+          "description": "Discovery confidence score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "discovery_reasoning": {
+          "description": "Why this node was discovered",
+          "title": "Discovery Reasoning",
+          "type": "string"
+        },
+        "insertion_point": {
+          "description": "Where in graph this node was inserted",
+          "title": "Insertion Point",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "name",
+        "discovered_at_iteration",
+        "triggered_by_gap",
+        "persona_used",
+        "confidence",
+        "discovery_reasoning",
+        "insertion_point"
+      ],
+      "title": "DiscoveredNode",
+      "type": "object"
+    },
+    "DiscoveryMetadata": {
+      "description": "Complete discovery metadata.",
+      "properties": {
+        "discovered_nodes": {
+          "items": {
+            "$ref": "#/$defs/DiscoveredNode"
+          },
+          "title": "Discovered Nodes",
+          "type": "array"
+        },
+        "summary": {
+          "$ref": "#/$defs/DiscoverySummary"
+        }
+      },
+      "required": [
+        "summary"
+      ],
+      "title": "DiscoveryMetadata",
+      "type": "object"
+    },
+    "DiscoverySummary": {
+      "description": "Summary of discovery process.",
+      "properties": {
+        "total_discovered": {
+          "title": "Total Discovered",
+          "type": "integer"
+        },
+        "iterations_run": {
+          "title": "Iterations Run",
+          "type": "integer"
+        },
+        "gaps_filled": {
+          "title": "Gaps Filled",
+          "type": "integer"
+        },
+        "personas_used": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "Count of nodes discovered by each persona",
+          "title": "Personas Used",
+          "type": "object"
+        }
+      },
+      "required": [
+        "total_discovered",
+        "iterations_run",
+        "gaps_filled",
+        "personas_used"
+      ],
+      "title": "DiscoverySummary",
+      "type": "object"
+    },
+    "DistributionParameters": {
+      "description": "Statistical distribution parameters.",
+      "properties": {
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "std_dev": {
+          "description": "Standard deviation / uncertainty",
+          "title": "Std Dev",
+          "type": "number"
+        },
+        "distribution": {
+          "description": "Distribution type: beta, normal, uniform",
+          "title": "Distribution",
+          "type": "string"
+        },
+        "alpha": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Beta distribution alpha parameter",
+          "title": "Alpha"
+        },
+        "beta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Beta distribution beta parameter",
+          "title": "Beta"
+        },
+        "confidence_interval_95": {
+          "description": "95% confidence interval [lower, upper]",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Confidence Interval 95",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mean",
+        "std_dev",
+        "distribution",
+        "confidence_interval_95"
+      ],
+      "title": "DistributionParameters",
+      "type": "object"
+    },
+    "EdgeTopology": {
+      "description": "Enhanced edge with topology metadata.",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "weight": {
+          "description": "Cross-encoder similarity score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "relationship": {
+          "title": "Relationship",
+          "type": "string"
+        },
+        "distance_from_entry": {
+          "description": "Topological distance from entry node",
+          "title": "Distance From Entry",
+          "type": "integer"
+        },
+        "is_critical_path": {
+          "default": false,
+          "description": "Is this edge on critical path",
+          "title": "Is Critical Path",
+          "type": "boolean"
+        },
+        "was_discovered": {
+          "default": false,
+          "description": "Was this edge discovered by AI",
+          "title": "Was Discovered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "weight",
+        "relationship",
+        "distance_from_entry"
+      ],
+      "title": "EdgeTopology",
+      "type": "object"
+    },
+    "EvaluationMetadata": {
+      "description": "Complete evaluation metadata.",
+      "properties": {
+        "nodes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/NodeEvaluation"
+          },
+          "description": "Per-node evaluation details",
+          "title": "Nodes",
+          "type": "object"
+        },
+        "totals": {
+          "$ref": "#/$defs/EvaluationTotals"
+        },
+        "token_breakdown": {
+          "$ref": "#/$defs/TokenBreakdown"
+        }
+      },
+      "required": [
+        "nodes",
+        "totals",
+        "token_breakdown"
+      ],
+      "title": "EvaluationMetadata",
+      "type": "object"
+    },
+    "EvaluationTotals": {
+      "description": "Aggregate evaluation statistics.",
+      "properties": {
+        "total_tokens": {
+          "minimum": 0,
+          "title": "Total Tokens",
+          "type": "integer"
+        },
+        "total_cost_usd": {
+          "minimum": 0.0,
+          "title": "Total Cost Usd",
+          "type": "number"
+        },
+        "total_time_ms": {
+          "minimum": 0.0,
+          "title": "Total Time Ms",
+          "type": "number"
+        },
+        "cache_hits": {
+          "minimum": 0,
+          "title": "Cache Hits",
+          "type": "integer"
+        },
+        "cache_misses": {
+          "minimum": 0,
+          "title": "Cache Misses",
+          "type": "integer"
+        },
+        "failed_evaluations": {
+          "minimum": 0,
+          "title": "Failed Evaluations",
+          "type": "integer"
+        },
+        "retries_performed": {
+          "minimum": 0,
+          "title": "Retries Performed",
+          "type": "integer"
+        },
+        "nodes_from_cache": {
+          "minimum": 0,
+          "title": "Nodes From Cache",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_tokens",
+        "total_cost_usd",
+        "total_time_ms",
+        "cache_hits",
+        "cache_misses",
+        "failed_evaluations",
+        "retries_performed",
+        "nodes_from_cache"
+      ],
+      "title": "EvaluationTotals",
+      "type": "object"
+    },
+    "Firm": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "countries_active": {
+          "items": {
+            "$ref": "#/$defs/Country"
+          },
+          "title": "Countries Active",
+          "type": "array"
+        },
+        "sectors": {
+          "items": {
+            "$ref": "#/$defs/Sectors"
+          },
+          "title": "Sectors",
+          "type": "array"
+        },
+        "services": {
+          "items": {
+            "$ref": "#/$defs/OperationType"
+          },
+          "title": "Services",
+          "type": "array"
+        },
+        "strategic_focuses": {
+          "items": {
+            "$ref": "#/$defs/StrategicFocus"
+          },
+          "title": "Strategic Focuses",
+          "type": "array"
+        },
+        "preferred_project_timeline": {
+          "title": "Preferred Project Timeline",
+          "type": "integer"
+        },
+        "embedding": {
+          "description": "Vector embedding for similarity calculations",
+          "items": {
+            "type": "number"
+          },
+          "title": "Embedding",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "countries_active",
+        "sectors",
+        "services",
+        "strategic_focuses",
+        "preferred_project_timeline"
+      ],
+      "title": "Firm",
+      "type": "object"
+    },
+    "GapTrigger": {
+      "description": "Gap that triggered node discovery.",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "gap_weight": {
+          "description": "Edge weight that triggered discovery",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Gap Weight",
+          "type": "number"
+        },
+        "gap_threshold": {
+          "description": "Threshold for gap detection",
+          "title": "Gap Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "gap_weight",
+        "gap_threshold"
+      ],
+      "title": "GapTrigger",
+      "type": "object"
+    },
+    "GraphStatistics": {
+      "description": "Network analysis statistics.",
+      "properties": {
+        "centrality": {
+          "additionalProperties": {
+            "$ref": "#/$defs/NodeCentrality"
+          },
+          "description": "Centrality measures per node",
+          "title": "Centrality",
+          "type": "object"
+        },
+        "paths": {
+          "$ref": "#/$defs/PathAnalysis"
+        },
+        "clustering": {
+          "$ref": "#/$defs/ClusteringCoefficients"
+        }
+      },
+      "required": [
+        "centrality",
+        "paths",
+        "clustering"
+      ],
+      "title": "GraphStatistics",
+      "type": "object"
+    },
+    "GraphTopology": {
+      "description": "Complete graph topology representation.",
+      "properties": {
+        "adjacency_matrix": {
+          "description": "NxN adjacency matrix with edge weights",
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "title": "Adjacency Matrix",
+          "type": "array"
+        },
+        "node_index": {
+          "description": "Node ID to matrix index mapping",
+          "items": {
+            "type": "string"
+          },
+          "title": "Node Index",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/EdgeTopology"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/NodeTopology"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "statistics": {
+          "$ref": "#/$defs/TopologyStatistics"
+        }
+      },
+      "required": [
+        "adjacency_matrix",
+        "node_index",
+        "edges",
+        "nodes",
+        "statistics"
+      ],
+      "title": "GraphTopology",
+      "type": "object"
+    },
+    "IncomingRisk": {
+      "description": "Risk contribution from a parent node.",
+      "properties": {
+        "from": {
+          "title": "From",
+          "type": "string"
+        },
+        "contributed": {
+          "description": "Risk contributed by parent",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Contributed",
+          "type": "number"
+        },
+        "edge_weight": {
+          "description": "Edge weight from parent",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Edge Weight",
+          "type": "number"
+        },
+        "attenuation": {
+          "description": "Distance attenuation factor",
+          "title": "Attenuation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "from",
+        "contributed",
+        "edge_weight",
+        "attenuation"
+      ],
+      "title": "IncomingRisk",
+      "type": "object"
+    },
+    "ModelVersions": {
+      "description": "Model versions used in analysis.",
+      "properties": {
+        "llm": {
+          "description": "LLM model name",
+          "title": "Llm",
+          "type": "string"
+        },
+        "cross_encoder": {
+          "description": "Cross-encoder model name",
+          "title": "Cross Encoder",
+          "type": "string"
+        },
+        "dspy_version": {
+          "description": "DSPy version",
+          "title": "Dspy Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "llm",
+        "cross_encoder",
+        "dspy_version"
+      ],
+      "title": "ModelVersions",
+      "type": "object"
+    },
+    "MonteCarloParameters": {
+      "description": "Complete Monte Carlo simulation parameters.",
+      "properties": {
+        "sampling_distributions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/NodeSamplingDistributions"
+          },
+          "description": "Per-node sampling distributions",
+          "title": "Sampling Distributions",
+          "type": "object"
+        },
+        "simulation_config": {
+          "$ref": "#/$defs/SimulationConfig"
+        },
+        "covariance_matrix": {
+          "description": "NxN covariance matrix for correlated sampling",
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "title": "Covariance Matrix",
+          "type": "array"
+        },
+        "dependencies": {
+          "description": "Conditional dependencies between nodes",
+          "items": {
+            "$ref": "#/$defs/ConditionalDependency"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sampling_distributions",
+        "simulation_config",
+        "covariance_matrix"
+      ],
+      "title": "MonteCarloParameters",
+      "type": "object"
+    },
+    "NodeAssessment": {
+      "description": "Assessment of a single node based on Influence vs Importance.",
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "node_name": {
+          "title": "Node Name",
+          "type": "string"
+        },
+        "importance_score": {
+          "description": "Criticality of node to project success",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Importance Score",
+          "type": "number"
+        },
+        "influence_score": {
+          "description": "Firm control/influence over node",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Influence Score",
+          "type": "number"
+        },
+        "risk_level": {
+          "description": "Derived risk: Importance * (1.0 - Influence)",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Risk Level",
+          "type": "number"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "type": "string"
+        },
+        "is_on_critical_path": {
+          "default": false,
+          "title": "Is On Critical Path",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "node_id",
+        "node_name",
+        "importance_score",
+        "influence_score",
+        "risk_level",
+        "reasoning"
+      ],
+      "title": "NodeAssessment",
+      "type": "object"
+    },
+    "NodeCentrality": {
+      "description": "Centrality measures for a node.",
+      "properties": {
+        "betweenness": {
+          "description": "Betweenness centrality",
+          "minimum": 0.0,
+          "title": "Betweenness",
+          "type": "number"
+        },
+        "closeness": {
+          "description": "Closeness centrality",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Closeness",
+          "type": "number"
+        },
+        "degree": {
+          "description": "Degree centrality",
+          "minimum": 0,
+          "title": "Degree",
+          "type": "integer"
+        },
+        "eigenvector": {
+          "description": "Eigenvector centrality",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Eigenvector",
+          "type": "number"
+        },
+        "pagerank": {
+          "description": "PageRank score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pagerank",
+          "type": "number"
+        }
+      },
+      "required": [
+        "betweenness",
+        "closeness",
+        "degree",
+        "eigenvector",
+        "pagerank"
+      ],
+      "title": "NodeCentrality",
+      "type": "object"
+    },
+    "NodeClassification": {
+      "description": "Classification of a single node in the Influence vs Importance matrix.",
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "node_name": {
+          "title": "Node Name",
+          "type": "string"
+        },
+        "influence_score": {
+          "title": "Influence Score",
+          "type": "number"
+        },
+        "importance_score": {
+          "title": "Importance Score",
+          "type": "number"
+        },
+        "quadrant": {
+          "$ref": "#/$defs/RiskQuadrant"
+        }
+      },
+      "required": [
+        "node_id",
+        "node_name",
+        "influence_score",
+        "importance_score",
+        "quadrant"
+      ],
+      "title": "NodeClassification",
+      "type": "object"
+    },
+    "NodeEvaluation": {
+      "description": "Evaluation details for a single node.",
+      "properties": {
+        "evaluation_time_ms": {
+          "description": "Time taken to evaluate this node",
+          "title": "Evaluation Time Ms",
+          "type": "number"
+        },
+        "tokens_used": {
+          "description": "Tokens consumed for this evaluation",
+          "minimum": 0,
+          "title": "Tokens Used",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "description": "Cost in USD",
+          "minimum": 0.0,
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "retry_attempts": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Retry Attempts",
+          "type": "integer"
+        },
+        "cache_hit": {
+          "default": false,
+          "title": "Cache Hit",
+          "type": "boolean"
+        },
+        "model_used": {
+          "title": "Model Used",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evaluation_time_ms",
+        "tokens_used",
+        "cost_usd",
+        "model_used",
+        "timestamp"
+      ],
+      "title": "NodeEvaluation",
+      "type": "object"
+    },
+    "NodePropagation": {
+      "description": "Propagation details for a single node.",
+      "properties": {
+        "local_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Local Risk",
+          "type": "number"
+        },
+        "incoming_risk": {
+          "items": {
+            "$ref": "#/$defs/IncomingRisk"
+          },
+          "title": "Incoming Risk",
+          "type": "array"
+        },
+        "propagated_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Propagated Risk",
+          "type": "number"
+        },
+        "outgoing_risk": {
+          "items": {
+            "$ref": "#/$defs/OutgoingRisk"
+          },
+          "title": "Outgoing Risk",
+          "type": "array"
+        },
+        "propagation_multiplier": {
+          "title": "Propagation Multiplier",
+          "type": "number"
+        },
+        "formula": {
+          "default": "risk = local + (max_parent * local * propagation_factor)",
+          "description": "Formula used for propagation",
+          "title": "Formula",
+          "type": "string"
+        }
+      },
+      "required": [
+        "local_risk",
+        "propagated_risk",
+        "propagation_multiplier"
+      ],
+      "title": "NodePropagation",
+      "type": "object"
+    },
+    "NodeRiskDistribution": {
+      "description": "Risk distribution for a single node.",
+      "properties": {
+        "importance": {
+          "$ref": "#/$defs/DistributionParameters"
+        },
+        "influence": {
+          "$ref": "#/$defs/DistributionParameters"
+        },
+        "risk": {
+          "$ref": "#/$defs/RiskComponents"
+        }
+      },
+      "required": [
+        "importance",
+        "influence",
+        "risk"
+      ],
+      "title": "NodeRiskDistribution",
+      "type": "object"
+    },
+    "NodeSamplingDistributions": {
+      "description": "Sampling distributions for node parameters.",
+      "properties": {
+        "importance": {
+          "$ref": "#/$defs/SamplingDistribution"
+        },
+        "influence": {
+          "$ref": "#/$defs/SamplingDistribution"
+        }
+      },
+      "required": [
+        "importance",
+        "influence"
+      ],
+      "title": "NodeSamplingDistributions",
+      "type": "object"
+    },
+    "NodeTopology": {
+      "description": "Enhanced node with topology metadata.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "index": {
+          "description": "Position in adjacency matrix (0-indexed)",
+          "title": "Index",
+          "type": "integer"
+        },
+        "depth": {
+          "description": "Layers from entry node",
+          "title": "Depth",
+          "type": "integer"
+        },
+        "parents": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Parents",
+          "type": "array"
+        },
+        "children": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Children",
+          "type": "array"
+        },
+        "degree_in": {
+          "description": "Number of incoming edges",
+          "minimum": 0,
+          "title": "Degree In",
+          "type": "integer"
+        },
+        "degree_out": {
+          "description": "Number of outgoing edges",
+          "minimum": 0,
+          "title": "Degree Out",
+          "type": "integer"
+        },
+        "was_discovered": {
+          "default": false,
+          "description": "Was this node discovered by AI",
+          "title": "Was Discovered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "index",
+        "depth",
+        "degree_in",
+        "degree_out"
+      ],
+      "title": "NodeTopology",
+      "type": "object"
+    },
+    "OperationType": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "category": {
+          "description": "Service category from categories.json",
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "category",
+        "description"
+      ],
+      "title": "OperationType",
+      "type": "object"
+    },
+    "OutgoingRisk": {
+      "description": "Risk transmitted to a child node.",
+      "properties": {
+        "to": {
+          "title": "To",
+          "type": "string"
+        },
+        "transmitted": {
+          "description": "Risk passed to child",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Transmitted",
+          "type": "number"
+        },
+        "multiplier": {
+          "description": "Propagation multiplier",
+          "title": "Multiplier",
+          "type": "number"
+        }
+      },
+      "required": [
+        "to",
+        "transmitted",
+        "multiplier"
+      ],
+      "title": "OutgoingRisk",
+      "type": "object"
+    },
+    "PathAnalysis": {
+      "description": "Path analysis statistics.",
+      "properties": {
+        "total_paths": {
+          "title": "Total Paths",
+          "type": "integer"
+        },
+        "critical_paths_count": {
+          "title": "Critical Paths Count",
+          "type": "integer"
+        },
+        "average_path_length": {
+          "title": "Average Path Length",
+          "type": "number"
+        },
+        "longest_path": {
+          "title": "Longest Path",
+          "type": "integer"
+        },
+        "shortest_path": {
+          "title": "Shortest Path",
+          "type": "integer"
+        },
+        "bottleneck_nodes": {
+          "description": "Nodes with high betweenness",
+          "items": {
+            "type": "string"
+          },
+          "title": "Bottleneck Nodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "total_paths",
+        "critical_paths_count",
+        "average_path_length",
+        "longest_path",
+        "shortest_path",
+        "bottleneck_nodes"
+      ],
+      "title": "PathAnalysis",
+      "type": "object"
+    },
+    "Project": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "country": {
+          "$ref": "#/$defs/Country"
+        },
+        "sector": {
+          "title": "Sector",
+          "type": "string"
+        },
+        "service_requirements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Service Requirements",
+          "type": "array"
+        },
+        "timeline": {
+          "title": "Timeline",
+          "type": "integer"
+        },
+        "ops_requirements": {
+          "items": {
+            "$ref": "#/$defs/OperationType"
+          },
+          "title": "Ops Requirements",
+          "type": "array"
+        },
+        "entry_criteria": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectEntry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "success_criteria": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectExit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "embedding": {
+          "description": "Vector embedding for similarity calculations",
+          "items": {
+            "type": "number"
+          },
+          "title": "Embedding",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "country",
+        "sector",
+        "service_requirements",
+        "timeline",
+        "ops_requirements"
+      ],
+      "title": "Project",
+      "type": "object"
+    },
+    "ProjectEntry": {
+      "properties": {
+        "pre_requisites": {
+          "description": "Mandatory conditions to be met before project start",
+          "items": {
+            "type": "string"
+          },
+          "title": "Pre Requisites",
+          "type": "array"
+        },
+        "mobilization_time": {
+          "description": "Time in months required to start operations",
+          "title": "Mobilization Time",
+          "type": "integer"
+        },
+        "entry_node_id": {
+          "description": "ID of the first node in the infrastructure DAG",
+          "title": "Entry Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pre_requisites",
+        "mobilization_time",
+        "entry_node_id"
+      ],
+      "title": "ProjectEntry",
+      "type": "object"
+    },
+    "ProjectExit": {
+      "properties": {
+        "success_metrics": {
+          "description": "KPIs or deliverables required for successful completion",
+          "items": {
+            "type": "string"
+          },
+          "title": "Success Metrics",
+          "type": "array"
+        },
+        "mandate_end_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO date for mandate completion",
+          "title": "Mandate End Date"
+        },
+        "exit_node_id": {
+          "description": "ID of the final/sink node in the infrastructure DAG",
+          "title": "Exit Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "success_metrics",
+        "exit_node_id"
+      ],
+      "title": "ProjectExit",
+      "type": "object"
+    },
+    "PropagationConfig": {
+      "description": "Configuration used for propagation.",
+      "properties": {
+        "propagation_factor": {
+          "description": "Risk compound multiplier",
+          "title": "Propagation Factor",
+          "type": "number"
+        },
+        "multiplier": {
+          "description": "Critical path multiplier",
+          "title": "Multiplier",
+          "type": "number"
+        },
+        "attenuation_factor": {
+          "description": "Distance decay factor",
+          "title": "Attenuation Factor",
+          "type": "number"
+        },
+        "method": {
+          "default": "topological_sort",
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "propagation_factor",
+        "multiplier",
+        "attenuation_factor"
+      ],
+      "title": "PropagationConfig",
+      "type": "object"
+    },
+    "PropagationTrace": {
+      "description": "Complete risk propagation trace.",
+      "properties": {
+        "nodes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/NodePropagation"
+          },
+          "description": "Per-node propagation breakdown",
+          "title": "Nodes",
+          "type": "object"
+        },
+        "config": {
+          "$ref": "#/$defs/PropagationConfig"
+        }
+      },
+      "required": [
+        "nodes",
+        "config"
+      ],
+      "title": "PropagationTrace",
+      "type": "object"
+    },
+    "RiskComponents": {
+      "description": "Risk breakdown for a single node.",
+      "properties": {
+        "point_estimate": {
+          "description": "importance \u00d7 (1 - influence)",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Point Estimate",
+          "type": "number"
+        },
+        "propagated": {
+          "description": "After risk propagation",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Propagated",
+          "type": "number"
+        },
+        "local": {
+          "description": "Before propagation",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Local",
+          "type": "number"
+        },
+        "distribution": {
+          "default": "derived",
+          "description": "Calculated from importance/influence",
+          "title": "Distribution",
+          "type": "string"
+        },
+        "samples_available": {
+          "default": false,
+          "description": "Are Monte Carlo samples available",
+          "title": "Samples Available",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "point_estimate",
+        "propagated",
+        "local"
+      ],
+      "title": "RiskComponents",
+      "type": "object"
+    },
+    "RiskDistributions": {
+      "description": "Complete risk distribution data for all nodes.",
+      "properties": {
+        "nodes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/NodeRiskDistribution"
+          },
+          "description": "Per-node risk distributions",
+          "title": "Nodes",
+          "type": "object"
+        },
+        "correlation_pairs": {
+          "description": "Pairwise correlations between node risks",
+          "items": {
+            "$ref": "#/$defs/CorrelationPair"
+          },
+          "title": "Correlation Pairs",
+          "type": "array"
+        },
+        "correlation_method": {
+          "default": "pearson",
+          "title": "Correlation Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodes"
+      ],
+      "title": "RiskDistributions",
+      "type": "object"
+    },
+    "RiskQuadrant": {
+      "description": "Quadrants derived from Influence (X) and Importance (Y).",
+      "enum": [
+        "Type A (High Influence / High Importance)",
+        "Type B (High Influence / Low Importance)",
+        "Type C (Low Influence / High Importance)",
+        "Type D (Low Influence / Low Importance)"
+      ],
+      "title": "RiskQuadrant",
+      "type": "string"
+    },
+    "SamplingDistribution": {
+      "description": "Sampling distribution for a parameter.",
+      "properties": {
+        "type": {
+          "description": "Distribution type: beta, normal, uniform",
+          "title": "Type",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Distribution parameters",
+          "title": "Params",
+          "type": "object"
+        },
+        "bounds": {
+          "description": "Valid range [min, max]",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Bounds",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "params",
+        "bounds"
+      ],
+      "title": "SamplingDistribution",
+      "type": "object"
+    },
+    "Sectors": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "description": "Sector identifier from sectors.json",
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "title": "Sectors",
+      "type": "object"
+    },
+    "SimulationConfig": {
+      "description": "Recommended simulation configuration.",
+      "properties": {
+        "recommended_samples": {
+          "default": 10000,
+          "title": "Recommended Samples",
+          "type": "integer"
+        },
+        "warmup_samples": {
+          "default": 1000,
+          "title": "Warmup Samples",
+          "type": "integer"
+        },
+        "parallel_chains": {
+          "default": 4,
+          "title": "Parallel Chains",
+          "type": "integer"
+        },
+        "convergence_diagnostic": {
+          "default": "rhat",
+          "title": "Convergence Diagnostic",
+          "type": "string"
+        },
+        "seed": {
+          "default": 42,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "title": "SimulationConfig",
+      "type": "object"
+    },
+    "StrategicFocus": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "description": "Strategic focus area from strategic_focus.json",
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "title": "StrategicFocus",
+      "type": "object"
+    },
+    "SummaryMetrics": {
+      "description": "Aggregate project-level metrics.",
+      "properties": {
+        "aggregate_project_score": {
+          "description": "Overall project viability score (inverse of average risk)",
+          "title": "Aggregate Project Score",
+          "type": "number"
+        },
+        "total_token_cost": {
+          "description": "Total OpenAI API tokens consumed",
+          "title": "Total Token Cost",
+          "type": "integer"
+        },
+        "critical_failure_likelihood": {
+          "description": "Derived probability of critical path failure",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Critical Failure Likelihood",
+          "type": "number"
+        },
+        "nodes_evaluated": {
+          "title": "Nodes Evaluated",
+          "type": "integer"
+        },
+        "total_nodes": {
+          "title": "Total Nodes",
+          "type": "integer"
+        },
+        "critical_dependency_count": {
+          "description": "Count of nodes in High Importance / Low Influence quadrant",
+          "title": "Critical Dependency Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "aggregate_project_score",
+        "total_token_cost",
+        "critical_failure_likelihood",
+        "nodes_evaluated",
+        "total_nodes",
+        "critical_dependency_count"
+      ],
+      "title": "SummaryMetrics",
+      "type": "object"
+    },
+    "TokenBreakdown": {
+      "description": "Token usage breakdown by operation type.",
+      "properties": {
+        "node_evaluation": {
+          "minimum": 0,
+          "title": "Node Evaluation",
+          "type": "integer"
+        },
+        "discovery": {
+          "minimum": 0,
+          "title": "Discovery",
+          "type": "integer"
+        },
+        "system_overhead": {
+          "default": 0,
+          "minimum": 0,
+          "title": "System Overhead",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "node_evaluation",
+        "discovery"
+      ],
+      "title": "TokenBreakdown",
+      "type": "object"
+    },
+    "TopologyStatistics": {
+      "description": "Graph topology statistics.",
+      "properties": {
+        "total_nodes": {
+          "title": "Total Nodes",
+          "type": "integer"
+        },
+        "total_edges": {
+          "title": "Total Edges",
+          "type": "integer"
+        },
+        "max_depth": {
+          "title": "Max Depth",
+          "type": "integer"
+        },
+        "average_degree": {
+          "title": "Average Degree",
+          "type": "number"
+        },
+        "density": {
+          "description": "Edge density = edges / (nodes * (nodes-1))",
+          "title": "Density",
+          "type": "number"
+        },
+        "longest_path_length": {
+          "title": "Longest Path Length",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_nodes",
+        "total_edges",
+        "max_depth",
+        "average_degree",
+        "density",
+        "longest_path_length"
+      ],
+      "title": "TopologyStatistics",
+      "type": "object"
+    },
+    "TraversalStatus": {
+      "description": "Status of graph traversal.",
+      "enum": [
+        "COMPLETE",
+        "INCOMPLETE",
+        "ERROR"
+      ],
+      "title": "TraversalStatus",
+      "type": "string"
+    }
+  },
+  "description": "Complete analysis output for infrastructure project risk assessment.",
+  "properties": {
+    "firm": {
+      "$ref": "#/$defs/Firm"
+    },
+    "project": {
+      "$ref": "#/$defs/Project"
+    },
+    "traversal_status": {
+      "$ref": "#/$defs/TraversalStatus"
+    },
+    "traversal_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Traversal Message"
+    },
+    "node_assessments": {
+      "additionalProperties": {
+        "$ref": "#/$defs/NodeAssessment"
+      },
+      "description": "Full detailed assessment for every node in the graph",
+      "title": "Node Assessments",
+      "type": "object"
+    },
+    "all_chains": {
+      "description": "Every possible path through the graph, ranked by risk",
+      "items": {
+        "$ref": "#/$defs/CriticalChain"
+      },
+      "title": "All Chains",
+      "type": "array"
+    },
+    "matrix_classifications": {
+      "additionalProperties": {
+        "items": {
+          "$ref": "#/$defs/NodeClassification"
+        },
+        "type": "array"
+      },
+      "description": "Nodes mapped to Influence vs Importance quadrants",
+      "propertyNames": {
+        "$ref": "#/$defs/RiskQuadrant"
+      },
+      "title": "Matrix Classifications",
+      "type": "object"
+    },
+    "summary": {
+      "$ref": "#/$defs/SummaryMetrics"
+    },
+    "recommendation": {
+      "$ref": "#/$defs/BidRecommendation"
+    },
+    "graph_topology": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GraphTopology"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Complete graph structure with adjacency matrix and topology metrics"
+    },
+    "risk_distributions": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RiskDistributions"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Statistical distributions for Monte Carlo simulation"
+    },
+    "propagation_trace": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PropagationTrace"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Detailed risk propagation trace per node"
+    },
+    "discovery_metadata": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DiscoveryMetadata"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Metadata about AI-discovered nodes and gaps"
+    },
+    "evaluation_metadata": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluationMetadata"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Performance metrics and token costs per node"
+    },
+    "configuration_snapshot": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfigurationSnapshot"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Complete configuration used for this analysis"
+    },
+    "graph_statistics": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GraphStatistics"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Network centrality and path analysis metrics"
+    },
+    "monte_carlo_parameters": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MonteCarloParameters"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pre-computed parameters for Monte Carlo simulation"
+    }
+  },
+  "required": [
+    "firm",
+    "project",
+    "traversal_status",
+    "node_assessments",
+    "all_chains",
+    "matrix_classifications",
+    "summary",
+    "recommendation"
+  ],
+  "title": "AnalysisOutput",
+  "type": "object"
+}

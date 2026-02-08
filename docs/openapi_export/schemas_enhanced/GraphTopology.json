@@ -1,0 +1,212 @@
+{
+  "$defs": {
+    "EdgeTopology": {
+      "description": "Enhanced edge with topology metadata.",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "weight": {
+          "description": "Cross-encoder similarity score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "relationship": {
+          "title": "Relationship",
+          "type": "string"
+        },
+        "distance_from_entry": {
+          "description": "Topological distance from entry node",
+          "title": "Distance From Entry",
+          "type": "integer"
+        },
+        "is_critical_path": {
+          "default": false,
+          "description": "Is this edge on critical path",
+          "title": "Is Critical Path",
+          "type": "boolean"
+        },
+        "was_discovered": {
+          "default": false,
+          "description": "Was this edge discovered by AI",
+          "title": "Was Discovered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "weight",
+        "relationship",
+        "distance_from_entry"
+      ],
+      "title": "EdgeTopology",
+      "type": "object"
+    },
+    "NodeTopology": {
+      "description": "Enhanced node with topology metadata.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "index": {
+          "description": "Position in adjacency matrix (0-indexed)",
+          "title": "Index",
+          "type": "integer"
+        },
+        "depth": {
+          "description": "Layers from entry node",
+          "title": "Depth",
+          "type": "integer"
+        },
+        "parents": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Parents",
+          "type": "array"
+        },
+        "children": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Children",
+          "type": "array"
+        },
+        "degree_in": {
+          "description": "Number of incoming edges",
+          "minimum": 0,
+          "title": "Degree In",
+          "type": "integer"
+        },
+        "degree_out": {
+          "description": "Number of outgoing edges",
+          "minimum": 0,
+          "title": "Degree Out",
+          "type": "integer"
+        },
+        "was_discovered": {
+          "default": false,
+          "description": "Was this node discovered by AI",
+          "title": "Was Discovered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "index",
+        "depth",
+        "degree_in",
+        "degree_out"
+      ],
+      "title": "NodeTopology",
+      "type": "object"
+    },
+    "TopologyStatistics": {
+      "description": "Graph topology statistics.",
+      "properties": {
+        "total_nodes": {
+          "title": "Total Nodes",
+          "type": "integer"
+        },
+        "total_edges": {
+          "title": "Total Edges",
+          "type": "integer"
+        },
+        "max_depth": {
+          "title": "Max Depth",
+          "type": "integer"
+        },
+        "average_degree": {
+          "title": "Average Degree",
+          "type": "number"
+        },
+        "density": {
+          "description": "Edge density = edges / (nodes * (nodes-1))",
+          "title": "Density",
+          "type": "number"
+        },
+        "longest_path_length": {
+          "title": "Longest Path Length",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_nodes",
+        "total_edges",
+        "max_depth",
+        "average_degree",
+        "density",
+        "longest_path_length"
+      ],
+      "title": "TopologyStatistics",
+      "type": "object"
+    }
+  },
+  "description": "Complete graph topology representation.",
+  "properties": {
+    "adjacency_matrix": {
+      "description": "NxN adjacency matrix with edge weights",
+      "items": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Adjacency Matrix",
+      "type": "array"
+    },
+    "node_index": {
+      "description": "Node ID to matrix index mapping",
+      "items": {
+        "type": "string"
+      },
+      "title": "Node Index",
+      "type": "array"
+    },
+    "edges": {
+      "items": {
+        "$ref": "#/$defs/EdgeTopology"
+      },
+      "title": "Edges",
+      "type": "array"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/NodeTopology"
+      },
+      "title": "Nodes",
+      "type": "array"
+    },
+    "statistics": {
+      "$ref": "#/$defs/TopologyStatistics"
+    }
+  },
+  "required": [
+    "adjacency_matrix",
+    "node_index",
+    "edges",
+    "nodes",
+    "statistics"
+  ],
+  "title": "GraphTopology",
+  "type": "object"
+}

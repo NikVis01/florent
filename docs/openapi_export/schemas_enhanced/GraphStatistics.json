@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "ClusteringCoefficients": {
+      "description": "Clustering coefficient data.",
+      "properties": {
+        "global_coefficient": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Global Coefficient",
+          "type": "number"
+        },
+        "per_node": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Local clustering per node",
+          "title": "Per Node",
+          "type": "object"
+        }
+      },
+      "required": [
+        "global_coefficient",
+        "per_node"
+      ],
+      "title": "ClusteringCoefficients",
+      "type": "object"
+    },
+    "NodeCentrality": {
+      "description": "Centrality measures for a node.",
+      "properties": {
+        "betweenness": {
+          "description": "Betweenness centrality",
+          "minimum": 0.0,
+          "title": "Betweenness",
+          "type": "number"
+        },
+        "closeness": {
+          "description": "Closeness centrality",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Closeness",
+          "type": "number"
+        },
+        "degree": {
+          "description": "Degree centrality",
+          "minimum": 0,
+          "title": "Degree",
+          "type": "integer"
+        },
+        "eigenvector": {
+          "description": "Eigenvector centrality",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Eigenvector",
+          "type": "number"
+        },
+        "pagerank": {
+          "description": "PageRank score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pagerank",
+          "type": "number"
+        }
+      },
+      "required": [
+        "betweenness",
+        "closeness",
+        "degree",
+        "eigenvector",
+        "pagerank"
+      ],
+      "title": "NodeCentrality",
+      "type": "object"
+    },
+    "PathAnalysis": {
+      "description": "Path analysis statistics.",
+      "properties": {
+        "total_paths": {
+          "title": "Total Paths",
+          "type": "integer"
+        },
+        "critical_paths_count": {
+          "title": "Critical Paths Count",
+          "type": "integer"
+        },
+        "average_path_length": {
+          "title": "Average Path Length",
+          "type": "number"
+        },
+        "longest_path": {
+          "title": "Longest Path",
+          "type": "integer"
+        },
+        "shortest_path": {
+          "title": "Shortest Path",
+          "type": "integer"
+        },
+        "bottleneck_nodes": {
+          "description": "Nodes with high betweenness",
+          "items": {
+            "type": "string"
+          },
+          "title": "Bottleneck Nodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "total_paths",
+        "critical_paths_count",
+        "average_path_length",
+        "longest_path",
+        "shortest_path",
+        "bottleneck_nodes"
+      ],
+      "title": "PathAnalysis",
+      "type": "object"
+    }
+  },
+  "description": "Network analysis statistics.",
+  "properties": {
+    "centrality": {
+      "additionalProperties": {
+        "$ref": "#/$defs/NodeCentrality"
+      },
+      "description": "Centrality measures per node",
+      "title": "Centrality",
+      "type": "object"
+    },
+    "paths": {
+      "$ref": "#/$defs/PathAnalysis"
+    },
+    "clustering": {
+      "$ref": "#/$defs/ClusteringCoefficients"
+    }
+  },
+  "required": [
+    "centrality",
+    "paths",
+    "clustering"
+  ],
+  "title": "GraphStatistics",
+  "type": "object"
+}

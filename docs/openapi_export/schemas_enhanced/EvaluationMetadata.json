@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "EvaluationTotals": {
+      "description": "Aggregate evaluation statistics.",
+      "properties": {
+        "total_tokens": {
+          "minimum": 0,
+          "title": "Total Tokens",
+          "type": "integer"
+        },
+        "total_cost_usd": {
+          "minimum": 0.0,
+          "title": "Total Cost Usd",
+          "type": "number"
+        },
+        "total_time_ms": {
+          "minimum": 0.0,
+          "title": "Total Time Ms",
+          "type": "number"
+        },
+        "cache_hits": {
+          "minimum": 0,
+          "title": "Cache Hits",
+          "type": "integer"
+        },
+        "cache_misses": {
+          "minimum": 0,
+          "title": "Cache Misses",
+          "type": "integer"
+        },
+        "failed_evaluations": {
+          "minimum": 0,
+          "title": "Failed Evaluations",
+          "type": "integer"
+        },
+        "retries_performed": {
+          "minimum": 0,
+          "title": "Retries Performed",
+          "type": "integer"
+        },
+        "nodes_from_cache": {
+          "minimum": 0,
+          "title": "Nodes From Cache",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_tokens",
+        "total_cost_usd",
+        "total_time_ms",
+        "cache_hits",
+        "cache_misses",
+        "failed_evaluations",
+        "retries_performed",
+        "nodes_from_cache"
+      ],
+      "title": "EvaluationTotals",
+      "type": "object"
+    },
+    "NodeEvaluation": {
+      "description": "Evaluation details for a single node.",
+      "properties": {
+        "evaluation_time_ms": {
+          "description": "Time taken to evaluate this node",
+          "title": "Evaluation Time Ms",
+          "type": "number"
+        },
+        "tokens_used": {
+          "description": "Tokens consumed for this evaluation",
+          "minimum": 0,
+          "title": "Tokens Used",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "description": "Cost in USD",
+          "minimum": 0.0,
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "retry_attempts": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Retry Attempts",
+          "type": "integer"
+        },
+        "cache_hit": {
+          "default": false,
+          "title": "Cache Hit",
+          "type": "boolean"
+        },
+        "model_used": {
+          "title": "Model Used",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evaluation_time_ms",
+        "tokens_used",
+        "cost_usd",
+        "model_used",
+        "timestamp"
+      ],
+      "title": "NodeEvaluation",
+      "type": "object"
+    },
+    "TokenBreakdown": {
+      "description": "Token usage breakdown by operation type.",
+      "properties": {
+        "node_evaluation": {
+          "minimum": 0,
+          "title": "Node Evaluation",
+          "type": "integer"
+        },
+        "discovery": {
+          "minimum": 0,
+          "title": "Discovery",
+          "type": "integer"
+        },
+        "system_overhead": {
+          "default": 0,
+          "minimum": 0,
+          "title": "System Overhead",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "node_evaluation",
+        "discovery"
+      ],
+      "title": "TokenBreakdown",
+      "type": "object"
+    }
+  },
+  "description": "Complete evaluation metadata.",
+  "properties": {
+    "nodes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/NodeEvaluation"
+      },
+      "description": "Per-node evaluation details",
+      "title": "Nodes",
+      "type": "object"
+    },
+    "totals": {
+      "$ref": "#/$defs/EvaluationTotals"
+    },
+    "token_breakdown": {
+      "$ref": "#/$defs/TokenBreakdown"
+    }
+  },
+  "required": [
+    "nodes",
+    "totals",
+    "token_breakdown"
+  ],
+  "title": "EvaluationMetadata",
+  "type": "object"
+}

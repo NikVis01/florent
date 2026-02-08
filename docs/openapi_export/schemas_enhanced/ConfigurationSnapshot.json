@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "ModelVersions": {
+      "description": "Model versions used in analysis.",
+      "properties": {
+        "llm": {
+          "description": "LLM model name",
+          "title": "Llm",
+          "type": "string"
+        },
+        "cross_encoder": {
+          "description": "Cross-encoder model name",
+          "title": "Cross Encoder",
+          "type": "string"
+        },
+        "dspy_version": {
+          "description": "DSPy version",
+          "title": "Dspy Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "llm",
+        "cross_encoder",
+        "dspy_version"
+      ],
+      "title": "ModelVersions",
+      "type": "object"
+    }
+  },
+  "description": "Complete configuration snapshot for reproducibility.",
+  "properties": {
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "version": {
+      "description": "Florent version",
+      "title": "Version",
+      "type": "string"
+    },
+    "parameters": {
+      "additionalProperties": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "description": "All 41 configuration parameters organized by module",
+      "title": "Parameters",
+      "type": "object"
+    },
+    "models": {
+      "$ref": "#/$defs/ModelVersions"
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "parameters",
+    "models"
+  ],
+  "title": "ConfigurationSnapshot",
+  "type": "object"
+}

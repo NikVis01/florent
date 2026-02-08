@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "IncomingRisk": {
+      "description": "Risk contribution from a parent node.",
+      "properties": {
+        "from": {
+          "title": "From",
+          "type": "string"
+        },
+        "contributed": {
+          "description": "Risk contributed by parent",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Contributed",
+          "type": "number"
+        },
+        "edge_weight": {
+          "description": "Edge weight from parent",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Edge Weight",
+          "type": "number"
+        },
+        "attenuation": {
+          "description": "Distance attenuation factor",
+          "title": "Attenuation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "from",
+        "contributed",
+        "edge_weight",
+        "attenuation"
+      ],
+      "title": "IncomingRisk",
+      "type": "object"
+    },
+    "NodePropagation": {
+      "description": "Propagation details for a single node.",
+      "properties": {
+        "local_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Local Risk",
+          "type": "number"
+        },
+        "incoming_risk": {
+          "items": {
+            "$ref": "#/$defs/IncomingRisk"
+          },
+          "title": "Incoming Risk",
+          "type": "array"
+        },
+        "propagated_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Propagated Risk",
+          "type": "number"
+        },
+        "outgoing_risk": {
+          "items": {
+            "$ref": "#/$defs/OutgoingRisk"
+          },
+          "title": "Outgoing Risk",
+          "type": "array"
+        },
+        "propagation_multiplier": {
+          "title": "Propagation Multiplier",
+          "type": "number"
+        },
+        "formula": {
+          "default": "risk = local + (max_parent * local * propagation_factor)",
+          "description": "Formula used for propagation",
+          "title": "Formula",
+          "type": "string"
+        }
+      },
+      "required": [
+        "local_risk",
+        "propagated_risk",
+        "propagation_multiplier"
+      ],
+      "title": "NodePropagation",
+      "type": "object"
+    },
+    "OutgoingRisk": {
+      "description": "Risk transmitted to a child node.",
+      "properties": {
+        "to": {
+          "title": "To",
+          "type": "string"
+        },
+        "transmitted": {
+          "description": "Risk passed to child",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Transmitted",
+          "type": "number"
+        },
+        "multiplier": {
+          "description": "Propagation multiplier",
+          "title": "Multiplier",
+          "type": "number"
+        }
+      },
+      "required": [
+        "to",
+        "transmitted",
+        "multiplier"
+      ],
+      "title": "OutgoingRisk",
+      "type": "object"
+    },
+    "PropagationConfig": {
+      "description": "Configuration used for propagation.",
+      "properties": {
+        "propagation_factor": {
+          "description": "Risk compound multiplier",
+          "title": "Propagation Factor",
+          "type": "number"
+        },
+        "multiplier": {
+          "description": "Critical path multiplier",
+          "title": "Multiplier",
+          "type": "number"
+        },
+        "attenuation_factor": {
+          "description": "Distance decay factor",
+          "title": "Attenuation Factor",
+          "type": "number"
+        },
+        "method": {
+          "default": "topological_sort",
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "propagation_factor",
+        "multiplier",
+        "attenuation_factor"
+      ],
+      "title": "PropagationConfig",
+      "type": "object"
+    }
+  },
+  "description": "Complete risk propagation trace.",
+  "properties": {
+    "nodes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/NodePropagation"
+      },
+      "description": "Per-node propagation breakdown",
+      "title": "Nodes",
+      "type": "object"
+    },
+    "config": {
+      "$ref": "#/$defs/PropagationConfig"
+    }
+  },
+  "required": [
+    "nodes",
+    "config"
+  ],
+  "title": "PropagationTrace",
+  "type": "object"
+}

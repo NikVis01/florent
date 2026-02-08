@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "DiscoveredNode": {
+      "description": "Metadata for an AI-discovered node.",
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "discovered_at_iteration": {
+          "title": "Discovered At Iteration",
+          "type": "integer"
+        },
+        "triggered_by_gap": {
+          "$ref": "#/$defs/GapTrigger"
+        },
+        "persona_used": {
+          "description": "AI persona that discovered this node",
+          "title": "Persona Used",
+          "type": "string"
+        },
+        "confidence": {
+          "description": "Discovery confidence score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "discovery_reasoning": {
+          "description": "Why this node was discovered",
+          "title": "Discovery Reasoning",
+          "type": "string"
+        },
+        "insertion_point": {
+          "description": "Where in graph this node was inserted",
+          "title": "Insertion Point",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "name",
+        "discovered_at_iteration",
+        "triggered_by_gap",
+        "persona_used",
+        "confidence",
+        "discovery_reasoning",
+        "insertion_point"
+      ],
+      "title": "DiscoveredNode",
+      "type": "object"
+    },
+    "DiscoverySummary": {
+      "description": "Summary of discovery process.",
+      "properties": {
+        "total_discovered": {
+          "title": "Total Discovered",
+          "type": "integer"
+        },
+        "iterations_run": {
+          "title": "Iterations Run",
+          "type": "integer"
+        },
+        "gaps_filled": {
+          "title": "Gaps Filled",
+          "type": "integer"
+        },
+        "personas_used": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "Count of nodes discovered by each persona",
+          "title": "Personas Used",
+          "type": "object"
+        }
+      },
+      "required": [
+        "total_discovered",
+        "iterations_run",
+        "gaps_filled",
+        "personas_used"
+      ],
+      "title": "DiscoverySummary",
+      "type": "object"
+    },
+    "GapTrigger": {
+      "description": "Gap that triggered node discovery.",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "gap_weight": {
+          "description": "Edge weight that triggered discovery",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Gap Weight",
+          "type": "number"
+        },
+        "gap_threshold": {
+          "description": "Threshold for gap detection",
+          "title": "Gap Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "gap_weight",
+        "gap_threshold"
+      ],
+      "title": "GapTrigger",
+      "type": "object"
+    }
+  },
+  "description": "Complete discovery metadata.",
+  "properties": {
+    "discovered_nodes": {
+      "items": {
+        "$ref": "#/$defs/DiscoveredNode"
+      },
+      "title": "Discovered Nodes",
+      "type": "array"
+    },
+    "summary": {
+      "$ref": "#/$defs/DiscoverySummary"
+    }
+  },
+  "required": [
+    "summary"
+  ],
+  "title": "DiscoveryMetadata",
+  "type": "object"
+}

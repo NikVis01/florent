@@ -1,0 +1,194 @@
+{
+  "$defs": {
+    "CorrelationPair": {
+      "description": "Correlation between two nodes.",
+      "properties": {
+        "node_a": {
+          "title": "Node A",
+          "type": "string"
+        },
+        "node_b": {
+          "title": "Node B",
+          "type": "string"
+        },
+        "correlation": {
+          "description": "Pearson correlation coefficient",
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Correlation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "node_a",
+        "node_b",
+        "correlation"
+      ],
+      "title": "CorrelationPair",
+      "type": "object"
+    },
+    "DistributionParameters": {
+      "description": "Statistical distribution parameters.",
+      "properties": {
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "std_dev": {
+          "description": "Standard deviation / uncertainty",
+          "title": "Std Dev",
+          "type": "number"
+        },
+        "distribution": {
+          "description": "Distribution type: beta, normal, uniform",
+          "title": "Distribution",
+          "type": "string"
+        },
+        "alpha": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Beta distribution alpha parameter",
+          "title": "Alpha"
+        },
+        "beta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Beta distribution beta parameter",
+          "title": "Beta"
+        },
+        "confidence_interval_95": {
+          "description": "95% confidence interval [lower, upper]",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Confidence Interval 95",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mean",
+        "std_dev",
+        "distribution",
+        "confidence_interval_95"
+      ],
+      "title": "DistributionParameters",
+      "type": "object"
+    },
+    "NodeRiskDistribution": {
+      "description": "Risk distribution for a single node.",
+      "properties": {
+        "importance": {
+          "$ref": "#/$defs/DistributionParameters"
+        },
+        "influence": {
+          "$ref": "#/$defs/DistributionParameters"
+        },
+        "risk": {
+          "$ref": "#/$defs/RiskComponents"
+        }
+      },
+      "required": [
+        "importance",
+        "influence",
+        "risk"
+      ],
+      "title": "NodeRiskDistribution",
+      "type": "object"
+    },
+    "RiskComponents": {
+      "description": "Risk breakdown for a single node.",
+      "properties": {
+        "point_estimate": {
+          "description": "importance \u00d7 (1 - influence)",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Point Estimate",
+          "type": "number"
+        },
+        "propagated": {
+          "description": "After risk propagation",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Propagated",
+          "type": "number"
+        },
+        "local": {
+          "description": "Before propagation",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Local",
+          "type": "number"
+        },
+        "distribution": {
+          "default": "derived",
+          "description": "Calculated from importance/influence",
+          "title": "Distribution",
+          "type": "string"
+        },
+        "samples_available": {
+          "default": false,
+          "description": "Are Monte Carlo samples available",
+          "title": "Samples Available",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "point_estimate",
+        "propagated",
+        "local"
+      ],
+      "title": "RiskComponents",
+      "type": "object"
+    }
+  },
+  "description": "Complete risk distribution data for all nodes.",
+  "properties": {
+    "nodes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/NodeRiskDistribution"
+      },
+      "description": "Per-node risk distributions",
+      "title": "Nodes",
+      "type": "object"
+    },
+    "correlation_pairs": {
+      "description": "Pairwise correlations between node risks",
+      "items": {
+        "$ref": "#/$defs/CorrelationPair"
+      },
+      "title": "Correlation Pairs",
+      "type": "array"
+    },
+    "correlation_method": {
+      "default": "pearson",
+      "title": "Correlation Method",
+      "type": "string"
+    }
+  },
+  "required": [
+    "nodes"
+  ],
+  "title": "RiskDistributions",
+  "type": "object"
+}

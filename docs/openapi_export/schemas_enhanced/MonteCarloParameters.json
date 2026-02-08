@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "ConditionalDependency": {
+      "description": "Conditional dependency between nodes.",
+      "properties": {
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "relationship": {
+          "default": "conditional_probability",
+          "title": "Relationship",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "depends_on"
+      ],
+      "title": "ConditionalDependency",
+      "type": "object"
+    },
+    "NodeSamplingDistributions": {
+      "description": "Sampling distributions for node parameters.",
+      "properties": {
+        "importance": {
+          "$ref": "#/$defs/SamplingDistribution"
+        },
+        "influence": {
+          "$ref": "#/$defs/SamplingDistribution"
+        }
+      },
+      "required": [
+        "importance",
+        "influence"
+      ],
+      "title": "NodeSamplingDistributions",
+      "type": "object"
+    },
+    "SamplingDistribution": {
+      "description": "Sampling distribution for a parameter.",
+      "properties": {
+        "type": {
+          "description": "Distribution type: beta, normal, uniform",
+          "title": "Type",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Distribution parameters",
+          "title": "Params",
+          "type": "object"
+        },
+        "bounds": {
+          "description": "Valid range [min, max]",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Bounds",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "params",
+        "bounds"
+      ],
+      "title": "SamplingDistribution",
+      "type": "object"
+    },
+    "SimulationConfig": {
+      "description": "Recommended simulation configuration.",
+      "properties": {
+        "recommended_samples": {
+          "default": 10000,
+          "title": "Recommended Samples",
+          "type": "integer"
+        },
+        "warmup_samples": {
+          "default": 1000,
+          "title": "Warmup Samples",
+          "type": "integer"
+        },
+        "parallel_chains": {
+          "default": 4,
+          "title": "Parallel Chains",
+          "type": "integer"
+        },
+        "convergence_diagnostic": {
+          "default": "rhat",
+          "title": "Convergence Diagnostic",
+          "type": "string"
+        },
+        "seed": {
+          "default": 42,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "title": "SimulationConfig",
+      "type": "object"
+    }
+  },
+  "description": "Complete Monte Carlo simulation parameters.",
+  "properties": {
+    "sampling_distributions": {
+      "additionalProperties": {
+        "$ref": "#/$defs/NodeSamplingDistributions"
+      },
+      "description": "Per-node sampling distributions",
+      "title": "Sampling Distributions",
+      "type": "object"
+    },
+    "simulation_config": {
+      "$ref": "#/$defs/SimulationConfig"
+    },
+    "covariance_matrix": {
+      "description": "NxN covariance matrix for correlated sampling",
+      "items": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Covariance Matrix",
+      "type": "array"
+    },
+    "dependencies": {
+      "description": "Conditional dependencies between nodes",
+      "items": {
+        "$ref": "#/$defs/ConditionalDependency"
+      },
+      "title": "Dependencies",
+      "type": "array"
+    }
+  },
+  "required": [
+    "sampling_distributions",
+    "simulation_config",
+    "covariance_matrix"
+  ],
+  "title": "MonteCarloParameters",
+  "type": "object"
+}

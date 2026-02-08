@@ -521,6 +521,13 @@ Description: {node.type.description}"""
             exec_summary = self.execution_trace.get_summary()
             logger.info("analysis_complete_v2", **exec_summary)
 
+            # Build enhanced output sections for MATLAB/Monte Carlo
+            logger.info("building_enhanced_output_sections")
+            enhanced_builder = self._build_enhanced_sections(
+                matrix_classifications,
+                all_chains_output
+            )
+
             return AnalysisOutput(
                 firm=self.firm,
                 project=self.project,
@@ -530,6 +537,8 @@ Description: {node.type.description}"""
                 matrix_classifications=matrix_classifications,
                 summary=summary,
                 recommendation=recommendation,
+                # Enhanced sections
+                **enhanced_builder
             )
 
         except Exception as e:
@@ -564,3 +573,108 @@ Description: {node.type.description}"""
         """Extract top 3 opportunities from Strategic Wins."""
         strategic_wins = classifications.get(RiskQuadrant.TYPE_B, [])
         return [f"{n.node_name} (Influence: {n.influence_score:.2f})" for n in strategic_wins[:3]]
+
+    def _build_enhanced_sections(
+        self,
+        matrix_classifications: Dict,
+        all_chains: List
+    ) -> Dict:
+        """Build all enhanced output sections for MATLAB integration."""
+        from src.services.enhanced_output_builder import EnhancedOutputBuilder
+
+        try:
+            builder = EnhancedOutputBuilder(self.graph)
+
+            # Get critical path nodes
+            critical_path_nodes = set()
+            if all_chains:
+                critical_path_nodes = set(all_chains[0].node_ids)
+
+            # Get discovered nodes (placeholder - track this in graph builder)
+            discovered_nodes = set()
+
+            # Build all enhanced sections
+            enhanced = {}
+
+            # 1. Graph Topology
+            try:
+                enhanced['graph_topology'] = builder.build_graph_topology(
+                    critical_path_nodes=critical_path_nodes,
+                    discovered_nodes=discovered_nodes
+                )
+            except Exception as e:
+                logger.warning(f"Failed to build graph topology: {e}")
+                enhanced['graph_topology'] = None
+
+            # 2. Risk Distributions
+            try:
+                enhanced['risk_distributions'] = builder.build_risk_distributions(
+                    node_assessments=self.node_assessments,
+                    propagated_risks=None  # TODO: track propagated risks
+                )
+            except Exception as e:
+                logger.warning(f"Failed to build risk distributions: {e}")
+                enhanced['risk_distributions'] = None
+
+            # 3. Propagation Trace
+            try:
+                enhanced['propagation_trace'] = builder.build_propagation_trace(
+                    node_assessments=self.node_assessments,
+                    propagated_risks={}  # TODO: track propagated risks
+                )
+            except Exception as e:
+                logger.warning(f"Failed to build propagation trace: {e}")
+                enhanced['propagation_trace'] = None
+
+            # 4. Discovery Metadata (placeholder - track during graph building)
+            enhanced['discovery_metadata'] = None
+
+            # 5. Evaluation Metadata (placeholder - track during evaluation)
+            enhanced['evaluation_metadata'] = None
+
+            # 6. Configuration Snapshot
+            try:
+                enhanced['configuration_snapshot'] = builder.build_configuration_snapshot()
+            except Exception as e:
+                logger.warning(f"Failed to build config snapshot: {e}")
+                enhanced['configuration_snapshot'] = None
+
+            # 7. Graph Statistics
+            try:
+                enhanced['graph_statistics'] = builder.build_graph_statistics(
+                    critical_path_nodes=critical_path_nodes
+                )
+            except Exception as e:
+                logger.warning(f"Failed to build graph statistics: {e}")
+                enhanced['graph_statistics'] = None
+
+            # 8. Monte Carlo Parameters
+            try:
+                if enhanced.get('risk_distributions'):
+                    enhanced['monte_carlo_parameters'] = builder.build_monte_carlo_parameters(
+                        risk_distributions=enhanced['risk_distributions']
+                    )
+                else:
+                    enhanced['monte_carlo_parameters'] = None
+            except Exception as e:
+                logger.warning(f"Failed to build Monte Carlo parameters: {e}")
+                enhanced['monte_carlo_parameters'] = None
+
+            logger.info("enhanced_sections_built",
+                       sections_populated=sum(1 for v in enhanced.values() if v is not None))
+
+            return enhanced
+
+        except Exception as e:
+            logger.error(f"Failed to build enhanced sections: {e}")
+            # Return empty enhanced sections if builder fails
+            return {
+                'graph_topology': None,
+                'risk_distributions': None,
+                'propagation_trace': None,
+                'discovery_metadata': None,
+                'evaluation_metadata': None,
+                'configuration_snapshot': None,
+                'graph_statistics': None,
+                'monte_carlo_parameters': None
+            }

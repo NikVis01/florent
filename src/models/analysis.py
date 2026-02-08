@@ -5,6 +5,13 @@ from enum import Enum
 
 from src.models.entities import Firm, Project
 from src.services.agent.analysis.matrix_classifier import RiskQuadrant, NodeClassification
+from src.models.graph_topology import GraphTopology
+from src.models.risk_distributions import RiskDistributions
+from src.models.propagation_trace import PropagationTrace
+from src.models.discovery_metadata import DiscoveryMetadata
+from src.models.evaluation_metadata import EvaluationMetadata
+from src.models.config_snapshot import ConfigurationSnapshot
+from src.models.monte_carlo import MonteCarloParameters, GraphStatistics
 
 
 class TraversalStatus(str, Enum):
@@ -64,6 +71,7 @@ class BidRecommendation(BaseModel):
 class AnalysisOutput(BaseModel):
     """Complete analysis output for infrastructure project risk assessment."""
 
+    # ========== EXISTING CORE OUTPUT (unchanged) ==========
     # Input context
     firm: Firm
     project: Project
@@ -92,6 +100,55 @@ class AnalysisOutput(BaseModel):
 
     # Bid recommendation
     recommendation: BidRecommendation
+
+    # ========== ENHANCED OUTPUT FOR MATLAB/MONTE CARLO ==========
+    # Graph topology - reconstruct graph structure
+    graph_topology: Optional[GraphTopology] = Field(
+        default=None,
+        description="Complete graph structure with adjacency matrix and topology metrics"
+    )
+
+    # Risk distributions - Monte Carlo sampling parameters
+    risk_distributions: Optional[RiskDistributions] = Field(
+        default=None,
+        description="Statistical distributions for Monte Carlo simulation"
+    )
+
+    # Propagation trace - how risk flowed through graph
+    propagation_trace: Optional[PropagationTrace] = Field(
+        default=None,
+        description="Detailed risk propagation trace per node"
+    )
+
+    # Discovery metadata - AI-generated nodes
+    discovery_metadata: Optional[DiscoveryMetadata] = Field(
+        default=None,
+        description="Metadata about AI-discovered nodes and gaps"
+    )
+
+    # Evaluation metadata - performance and cost tracking
+    evaluation_metadata: Optional[EvaluationMetadata] = Field(
+        default=None,
+        description="Performance metrics and token costs per node"
+    )
+
+    # Configuration snapshot - reproducibility
+    configuration_snapshot: Optional[ConfigurationSnapshot] = Field(
+        default=None,
+        description="Complete configuration used for this analysis"
+    )
+
+    # Graph statistics - network analysis
+    graph_statistics: Optional[GraphStatistics] = Field(
+        default=None,
+        description="Network centrality and path analysis metrics"
+    )
+
+    # Monte Carlo parameters - simulation-ready data
+    monte_carlo_parameters: Optional[MonteCarloParameters] = Field(
+        default=None,
+        description="Pre-computed parameters for Monte Carlo simulation"
+    )
 
     class Config:
         """Pydantic config."""

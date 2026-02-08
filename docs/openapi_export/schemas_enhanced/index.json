@@ -1,0 +1,15 @@
+{
+  "schemas": {
+    "AnalysisOutput": "schemas_enhanced/AnalysisOutput.json",
+    "GraphTopology": "schemas_enhanced/GraphTopology.json",
+    "RiskDistributions": "schemas_enhanced/RiskDistributions.json",
+    "PropagationTrace": "schemas_enhanced/PropagationTrace.json",
+    "DiscoveryMetadata": "schemas_enhanced/DiscoveryMetadata.json",
+    "EvaluationMetadata": "schemas_enhanced/EvaluationMetadata.json",
+    "ConfigurationSnapshot": "schemas_enhanced/ConfigurationSnapshot.json",
+    "MonteCarloParameters": "schemas_enhanced/MonteCarloParameters.json",
+    "GraphStatistics": "schemas_enhanced/GraphStatistics.json"
+  },
+  "description": "JSON schemas generated from Pydantic dataclasses",
+  "generator": "Pydantic model_json_schema()"
+}

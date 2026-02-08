@@ -162,7 +162,7 @@ def create_summary_card(analysis: Dict[str, Any], output_dir: Path):
 
 
 def create_risk_matrix(analysis: Dict[str, Any], output_dir: Path):
-    """Create 2x2 risk matrix."""
+    """Create 2x2 risk matrix with jitter to prevent overlap."""
     print("Creating risk matrix...")
 
     fig, ax = plt.subplots(figsize=(12, 10))
@@ -176,16 +176,24 @@ def create_risk_matrix(analysis: Dict[str, Any], output_dir: Path):
     }
 
     for label, (x, y, color) in quadrants.items():
-        rect = Rectangle((x, y), 0.5, 0.5, facecolor=color, alpha=0.15,
-                        edgecolor='black', linewidth=2)
+        rect = Rectangle((x, y), 0.5, 0.5, facecolor=color, alpha=0.1,
+                        edgecolor='black', linewidth=1, linestyle='--')
         ax.add_patch(rect)
-        ax.text(x + 0.25, y + 0.47, label, ha='center', va='top', fontsize=12,
-                fontweight='bold', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        ax.text(x + 0.25, y + 0.47, label, ha='center', va='top', fontsize=14,
+                fontweight='black', alpha=0.6, color=color)
 
-    # Plot nodes
+    # Plot nodes with jitter
     classifications = analysis.get("matrix_classifications", {})
     node_assessments = analysis.get("node_assessments", {})
+    
+    # Pre-calculate top risks for forced labeling
+    top_risks = sorted(node_assessments.items(), 
+                       key=lambda x: x[1].get("risk_level", 0), 
+                       reverse=True)[:8]
+    top_risk_ids = [item[0] for item in top_risks]
 
+    np.random.seed(42) # Consistent jitter
+    
     for quadrant, nodes in classifications.items():
         color = COLORS.get(f"type_{quadrant.lower().replace('type ', '').strip()}", 'gray')
 
@@ -193,27 +201,41 @@ def create_risk_matrix(analysis: Dict[str, Any], output_dir: Path):
             node_id = node_entry if isinstance(node_entry, str) else node_entry.get("node_id")
             assessment = node_assessments.get(node_id, {})
 
+            # Base coordinates
             influence = assessment.get("influence_score", 0.5)
             risk = assessment.get("risk_level", 0.5)
             name = assessment.get("node_name", node_id)
+            
+            # Add subtle jitter (max 0.04 spread)
+            influence_j = influence + (np.random.random() - 0.5) * 0.04
+            risk_j = risk + (np.random.random() - 0.5) * 0.04
+            
+            # Clip to bounds
+            influence_j = np.clip(influence_j, 0.02, 0.98)
+            risk_j = np.clip(risk_j, 0.02, 0.98)
 
-            ax.scatter(influence, risk, s=300, c=color, alpha=0.7,
-                      edgecolors='black', linewidth=2)
+            ax.scatter(influence_j, risk_j, s=400, c=color, alpha=0.8,
+                      edgecolors='white', linewidth=1.5, zorder=3)
 
-            if len(node_assessments) <= 12:
-                ax.annotate(name, (influence, risk), xytext=(5, 5),
-                           textcoords='offset points', fontsize=8,
-                           bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+            # Label if it's high risk or if the total node count is small
+            if node_id in top_risk_ids or len(node_assessments) <= 10:
+                ax.annotate(name, (influence_j, risk_j), xytext=(8, 8),
+                           textcoords='offset points', fontsize=9,
+                           fontweight='bold' if node_id in top_risk_ids else 'normal',
+                           bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8, edgecolor='none'),
+                           zorder=4)
 
     # Formatting
-    ax.axhline(y=0.5, color='black', linestyle='--', linewidth=2, alpha=0.4)
-    ax.axvline(x=0.5, color='black', linestyle='--', linewidth=2, alpha=0.4)
+    ax.axhline(y=0.5, color='#5f6368', linestyle='-', linewidth=1.5, alpha=0.3)
+    ax.axvline(x=0.5, color='#5f6368', linestyle='-', linewidth=1.5, alpha=0.3)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel('Firm Influence Score ->', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Risk / Importance Level ->', fontsize=12, fontweight='bold')
-    ax.set_title('Risk Action Matrix (2×2)', fontsize=16, fontweight='bold', pad=20)
-    ax.grid(True, alpha=0.2)
+    ax.set_xlabel('Firm Influence Score ->', fontsize=13, fontweight='bold', labelpad=15)
+    ax.set_ylabel('Risk / Importance Level ->', fontsize=13, fontweight='bold', labelpad=15)
+    ax.set_title('Risk Action Matrix (2×2)', fontsize=20, fontweight='black', pad=30)
+    
+    # Better grid
+    ax.grid(True, linestyle=':', alpha=0.2, zorder=0)
 
     plt.savefig(output_dir / "risk_matrix.png", dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
@@ -312,7 +334,7 @@ def create_network_graph_plotly(analysis: Dict[str, Any], output_dir: Path):
 
 
 def create_node_table(analysis: Dict[str, Any], output_dir: Path):
-    """Create clean node assessment table."""
+    """Create clean node assessment table with better density handling."""
     print("Creating node table...")
 
     node_assessments = analysis.get("node_assessments", {})
@@ -337,21 +359,40 @@ def create_node_table(analysis: Dict[str, Any], output_dir: Path):
         })
 
     df = pd.DataFrame(data).sort_values("Risk", ascending=False)
-
-    # Create figure
-    fig, ax = plt.subplots(figsize=(14, max(6, len(df) * 0.4)))
+    
+    # Handle very long tables by splitting or increasing height dramatically
+    num_nodes = len(df)
+    row_height = 0.35
+    header_height = 1.0
+    fig_height = max(8, num_nodes * row_height + header_height)
+    
+    # Create figure with extra space at top for title
+    fig, ax = plt.subplots(figsize=(14, fig_height))
     ax.axis('off')
 
-    # Color cells
+    # Color mapping for cells
     def get_color(val, col):
         if col == "Influence":
-            return COLORS['success'] if val > 0.7 else COLORS['warning'] if val > 0.4 else COLORS['danger']
+            if val > 0.7: return "#e6f4ea"  # Soft green
+            if val > 0.4: return "#fef7e0"  # Soft yellow
+            return "#fce8e6"  # Soft red
         elif col == "Risk":
-            return COLORS['danger'] if val > 0.7 else COLORS['warning'] if val > 0.4 else COLORS['success']
+            if val > 0.7: return "#fce8e6"
+            if val > 0.4: return "#fef7e0"
+            return "#e6f4ea"
         return 'white'
 
+    # Build cell colors and display text
     cell_colors = []
+    display_data = []
+    
     for _, row in df.iterrows():
+        display_data.append([
+            row['Node'],
+            f"{row['Influence']:.2f}",
+            f"{row['Risk']:.2f}",
+            row['Classification']
+        ])
         cell_colors.append([
             'white',
             get_color(row['Influence'], 'Influence'),
@@ -359,28 +400,30 @@ def create_node_table(analysis: Dict[str, Any], output_dir: Path):
             'white'
         ])
 
-    # Format display
-    df_display = df.copy()
-    df_display['Influence'] = df['Influence'].apply(lambda x: f'{x:.2f}')
-    df_display['Risk'] = df['Risk'].apply(lambda x: f'{x:.2f}')
-
+    # Create table
     table = ax.table(
-        cellText=df_display.values,
-        colLabels=df_display.columns,
-        cellLoc='center',
-        loc='center',
+        cellText=display_data,
+        colLabels=["Node Name", "Influence Score", "Risk Level", "Matrix Category"],
+        cellLoc='left',
+        loc='upper center',
         cellColours=cell_colors,
-        colColours=[COLORS['primary']] * len(df_display.columns)
+        colColours=[COLORS['primary']] * 4,
+        colWidths=[0.4, 0.15, 0.15, 0.3]
     )
 
     table.auto_set_font_size(False)
     table.set_fontsize(10)
-    table.scale(1, 2)
+    table.scale(1, 1.8)
 
-    for i in range(len(df_display.columns)):
-        table[(0, i)].set_text_props(weight='bold', color='white')
+    # Style header explicitly
+    for i in range(4):
+        table[(0, i)].set_text_props(weight='bold', color='white', ha='center')
+        table[(0, i)].set_facecolor(COLORS['primary'])
 
-    ax.set_title('Node Risk Assessments', fontsize=14, fontweight='bold', pad=20)
+    # Add padding to title to prevent overlap
+    plt.title('Node Risk Assessments', fontsize=18, fontweight='bold', pad=40)
+    
+    plt.subplots_adjust(top=0.92) # Ensure title has space
 
     plt.savefig(output_dir / "node_table.png", dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
