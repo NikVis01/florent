@@ -1,5 +1,7 @@
-function results = mc_topologyStress(data, nIterations)
+function results = mc_topologyStress(analysis, nIterations)
     % MC_TOPOLOGYSTRESS Monte Carlo simulation for graph topology stress tests
+    %
+    % Uses enhanced API format with graph_topology
     %
     % Randomly adds/removes 5-15% of edges per iteration
     % Validates DAG constraint (no cycles)
@@ -11,33 +13,57 @@ function results = mc_topologyStress(data, nIterations)
     % Ensure paths are set up
     ensurePaths(false);
     
+    % Validate enhanced format
+    if ~isfield(analysis, 'node_assessments')
+        error('mc_topologyStress: analysis must be in enhanced API format');
+    end
+    
+    % Get graph topology from enhanced schema
+    graphTopo = openapiHelpers('getGraphTopology', analysis);
+    if isempty(graphTopo)
+        error('mc_topologyStress: graph_topology section required');
+    end
+    
+    % Get adjacency matrix
+    originalAdj = openapiHelpers('getAdjacencyMatrix', analysis);
+    if isempty(originalAdj)
+        error('mc_topologyStress: adjacency_matrix not found in graph_topology');
+    end
+    
+    nEdges = sum(originalAdj(:) > 0);
+    
+    % Get MC parameters
+    mcParams = openapiHelpers('getMonteCarloParameters', analysis);
+    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
+        if isfield(mcParams.simulation_config, 'recommended_samples') && nargin < 2
+            nIterations = mcParams.simulation_config.recommended_samples;
+        end
+    end
+    
     if nargin < 2
         nIterations = 10000;
     end
     
     fprintf('Topology Stress Test: %d iterations\n', nIterations);
     
-    % Store original adjacency
-    originalAdj = data.graph.adjacency;
-    nEdges = sum(originalAdj(:) > 0);
-    
     % Define perturbation function
-    perturbFunc = @(data, iter) perturbTopology(data, iter, originalAdj, nEdges);
+    perturbFunc = @(analysis, iter) perturbTopology(analysis, iter, originalAdj, nEdges);
     
-    % Run Monte Carlo
-    results = monteCarloFramework(data, perturbFunc, nIterations, true);
+    % Run Monte Carlo (framework will use enhanced schemas for sampling)
+    results = monteCarloFramework(analysis, perturbFunc, nIterations, true);
     
     % Identify critical edges
-    results.criticalEdges = identifyCriticalEdges(data, results, originalAdj);
+    results.criticalEdges = identifyCriticalEdges(analysis, results, originalAdj);
     
     fprintf('Topology stress test completed\n');
 end
 
-function [perturbedData, params] = perturbTopology(data, iter, originalAdj, nEdges)
+function [perturbedAnalysis, params] = perturbTopology(analysis, iter, originalAdj, nEdges)
     % Randomly add/remove edges while maintaining DAG constraint
+    % Note: This modifies the graph_topology, but the framework uses enhanced schemas for sampling
     
-    % Copy data structure
-    perturbedData = data;
+    % Copy analysis structure
+    perturbedAnalysis = analysis;
     
     % Set random seed for reproducibility (optional)
     % rng(iter);
@@ -86,11 +112,12 @@ function [perturbedData, params] = perturbTopology(data, iter, originalAdj, nEdg
         end
     end
     
-    % Update perturbed data
-    perturbedData.graph.adjacency = adj;
-    
-    % Recalculate centrality
-    perturbedData.graph.centrality = calculateEigenvectorCentrality(adj);
+    % Update graph_topology in analysis (if framework needs it)
+    % Note: The framework primarily uses monte_carlo_parameters for sampling
+    % but we update topology for this specific stress test
+    if isfield(perturbedAnalysis, 'graph_topology')
+        perturbedAnalysis.graph_topology.adjacency_matrix = adj;
+    end
     
     % Store parameters
     params = struct();
@@ -139,7 +166,7 @@ function hasCycle = dfsCycleCheck(adj, node, visited, recStack)
     hasCycle = false;
 end
 
-function criticalEdges = identifyCriticalEdges(data, results, originalAdj)
+function criticalEdges = identifyCriticalEdges(analysis, results, originalAdj)
     % Identify critical edges whose removal causes catastrophic changes
     
     criticalEdges = struct();

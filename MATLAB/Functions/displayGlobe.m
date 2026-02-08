@@ -36,9 +36,32 @@ function fig = displayGlobe(data, stabilityData, config, axesHandle)
     
     geoData = loadGeographicData(countryCode, config);
     
-    % Get node data
-    risk = stabilityData.meanScores.risk;
-    influence = stabilityData.meanScores.influence;
+    % Get node data - check if stabilityData is actually analysis (enhanced API format)
+    if isstruct(stabilityData) && isfield(stabilityData, 'node_assessments')
+        % Enhanced API format
+        analysis = stabilityData;
+        risk = openapiHelpers('getAllRiskLevels', analysis);
+        influence = openapiHelpers('getAllInfluenceScores', analysis);
+        nodeIds = openapiHelpers('getNodeIds', analysis);
+        
+        % Get graph topology for adjacency
+        graphTopo = openapiHelpers('getGraphTopology', analysis);
+        if ~isempty(graphTopo) && isfield(graphTopo, 'adjacency_matrix')
+            adjMatrix = graphTopo.adjacency_matrix;
+            if iscell(adjMatrix)
+                adjMatrix = cell2mat(adjMatrix);
+            end
+            % Store in data structure for compatibility
+            if ~isfield(data, 'graph')
+                data.graph = struct();
+            end
+            data.graph.adjacency = adjMatrix;
+        end
+    else
+        % Legacy format
+        risk = stabilityData.meanScores.risk;
+        influence = stabilityData.meanScores.influence;
+    end
     quadrants = classifyQuadrant(risk, influence);
     
     % Define quadrant colors

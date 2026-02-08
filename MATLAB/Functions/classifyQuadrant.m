@@ -8,14 +8,35 @@ function quadrant = classifyQuadrant(risk, influence, riskThreshold, influenceTh
     %   Q4: Low Risk, Low Influence -> "Delegate"
     %
     % Inputs:
-    %   risk - Risk score (scalar or vector)
-    %   influence - Influence score (scalar or vector, same size as risk)
+    %   risk - Risk score (scalar or vector) OR analysis structure (OpenAPI format)
+    %   influence - Influence score (scalar or vector, same size as risk) OR nodeId if risk is analysis
     %   riskThreshold - Threshold for high/low risk (default: median if not provided)
     %   influenceThreshold - Threshold for high/low influence (default: median if not provided)
     %
     % Output:
     %   quadrant - Cell array of quadrant labels ('Q1', 'Q2', 'Q3', 'Q4')
     %              or single string if scalar inputs
+    %
+    % Usage:
+    %   % Traditional usage with scores
+    %   quadrant = classifyQuadrant(0.7, 0.8);
+    %
+    %   % OpenAPI format usage
+    %   quadrant = classifyQuadrant(analysis, 'node1');
+    %
+    %   % Or extract values first using openapiHelpers
+    %   risk = openapiHelpers('getRiskLevel', analysis, 'node1');
+    %   influence = openapiHelpers('getInfluenceScore', analysis, 'node1');
+    %   quadrant = classifyQuadrant(risk, influence);
+    
+    % Check if first argument is an analysis structure (OpenAPI format)
+    if isstruct(risk) && isfield(risk, 'node_assessments') && ischar(influence)
+        % OpenAPI format: risk is analysis, influence is nodeId
+        nodeId = influence;
+        analysis = risk;
+        risk = openapiHelpers('getRiskLevel', analysis, nodeId);
+        influence = openapiHelpers('getInfluenceScore', analysis, nodeId);
+    end
     
     % Handle scalar vs vector inputs
     isScalar = isscalar(risk) && isscalar(influence);

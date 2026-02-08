@@ -81,16 +81,47 @@ function data = loadAnalysisData(config, projectId, firmId)
         end
     end
     
-    % Load from API or file
-    [data, success, errorMsg] = safeExecute(@getRiskData, ...
-        config.api.baseUrl, projectId, firmId);
-    
-    if ~success
-        warning('Failed to load data: %s\nUsing mock data', errorMsg);
-        data = getRiskData(); % Will use mock data
+    % Load from API (returns OpenAPI format by default)
+    % NO FALLBACK - must get real data from API
+    % Get budget from config, default to 100 if not present
+    if isfield(config, 'api') && isfield(config.api, 'budget')
+        budget = config.api.budget;
+    else
+        budget = 100; % Default budget
     end
     
-    % Validate data
+    [data, success, errorMsg] = safeExecute(@getRiskData, ...
+        config.api.baseUrl, projectId, firmId, budget, true); % useOpenAPIFormat=true
+    
+    if ~success
+        error('Failed to load data from API: %s\n\nAPI must be running and accessible at %s\nProject: %s, Firm: %s', ...
+            errorMsg, config.api.baseUrl, projectId, firmId);
+    end
+    
+    if isempty(data)
+        error('API returned empty data for project %s, firm %s', projectId, firmId);
+    end
+    
+    % Validate data - must be in enhanced API format
+    if ~isfield(data, 'node_assessments')
+        error('Data must be in enhanced API format with node_assessments field');
+    end
+    
+    % Validate enhanced sections are present
+    enhancedSections = {'graph_topology', 'risk_distributions', 'monte_carlo_parameters'};
+    missingSections = {};
+    for i = 1:length(enhancedSections)
+        if ~isfield(data, enhancedSections{i}) || isempty(data.(enhancedSections{i}))
+            missingSections{end+1} = enhancedSections{i};
+        end
+    end
+    
+    if ~isempty(missingSections)
+        warning('Missing enhanced sections: %s. Some functionality may be limited.', ...
+            strjoin(missingSections, ', '));
+    end
+    
+    % Validate data structure
     [isValid, errors, warnings] = validateData(data);
     
     if ~isValid
@@ -103,7 +134,7 @@ function data = loadAnalysisData(config, projectId, firmId)
         end
     end
     
-    % Store IDs
+    % Store IDs (enhanced API format)
     data.projectId = projectId;
     data.firmId = firmId;
     
@@ -117,8 +148,28 @@ end
 
 function results = runMCSimulations(data, config)
     % Run Monte Carlo simulations with caching
+    %
+    % Uses enhanced API format with monte_carlo_parameters
     
     fprintf('Running Monte Carlo simulations...\n');
+    
+    % Validate enhanced format
+    if ~isfield(data, 'node_assessments')
+        error('runMCSimulations: data must be in enhanced API format');
+    end
+    
+    % Get MC parameters from enhanced schema
+    mcParams = openapiHelpers('getMonteCarloParameters', data);
+    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
+        % Use recommended samples from enhanced schema if available
+        if isfield(mcParams.simulation_config, 'recommended_samples')
+            recommendedIterations = mcParams.simulation_config.recommended_samples;
+            if recommendedIterations > 0
+                fprintf('  Using recommended iterations from enhanced schema: %d\n', recommendedIterations);
+                config.monteCarlo.nIterations = recommendedIterations;
+            end
+        end
+    end
     
     % Generate cache key for MC results
     cacheKey = cacheManager('generateKey', data, config);
@@ -139,7 +190,7 @@ function results = runMCSimulations(data, config)
     
     results = struct();
     
-    % Run all MC simulations
+    % Run all MC simulations (pass enhanced data directly)
     [results.parameterSensitivity, success1] = safeExecute(@mc_parameterSensitivity, ...
         data, config.monteCarlo.nIterations);
     
@@ -201,18 +252,19 @@ function figs = generateVisualizations(data, stabilityData, config)
     
     figs = struct();
     
-    % Generate each visualization
+    % Generate each visualization (pass enhanced data directly)
+    % Note: visualization functions now accept enhanced API format
     [figs.fig2x2, success1] = safeExecute(@plot2x2MatrixWithEllipses, ...
-        stabilityData, data, true);
+        data, stabilityData, true); % Pass data as first param (enhanced format)
     
     [figs.fig3d, success2] = safeExecute(@plot3DRiskLandscape, ...
-        stabilityData, data, true);
+        data, stabilityData, true); % Pass data as first param (enhanced format)
     
     [figs.figGlobe, success3] = safeExecute(@displayGlobe, ...
-        data, stabilityData, config);
+        data, data, config); % Pass data for both params (enhanced format)
     
     [figs.figStability, success4] = safeExecute(@plotStabilityNetwork, ...
-        data, stabilityData, true);
+        data, stabilityData, true); % Pass data as first param (enhanced format)
     
     [figs.figHeatmap, success5] = safeExecute(@plotParameterSensitivity, ...
         struct('parameterSensitivity', stabilityData.allResults.parameterSensitivity), true);

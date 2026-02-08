@@ -89,7 +89,7 @@ classdef FlorentAPIClientWrapper < handle
             end
         end
         
-        function data = analyzeProject(obj, projectId, firmId, budget, firmData, projectData)
+        function data = analyzeProject(obj, projectId, firmId, budget, firmData, projectData, useOpenAPIFormat)
             % ANALYZEPROJECT Run analysis using project and firm IDs
             %
             % Arguments:
@@ -98,43 +98,75 @@ classdef FlorentAPIClientWrapper < handle
             %   budget     - Analysis budget (default: 100)
             %   firmData   - Optional firm data structure (if provided, used instead of file path)
             %   projectData - Optional project data structure (if provided, used instead of file path)
+            %   useOpenAPIFormat - If true, return raw analysis structure (default: true)
             %
             % Returns:
-            %   data - Transformed analysis data structure
+            %   data - Analysis data structure (raw OpenAPI format if useOpenAPIFormat=true,
+            %          or transformed legacy format if false)
             
             if nargin < 4
                 budget = 100;
             end
+            if nargin < 7
+                useOpenAPIFormat = true; % Default to OpenAPI format
+            end
             
             % If inline data is provided, use analyzeProjectWithData instead
             if nargin >= 5 && ~isempty(firmData) && nargin >= 6 && ~isempty(projectData)
-                data = obj.analyzeProjectWithData(firmData, projectData, budget);
+                data = obj.analyzeProjectWithData(firmData, projectData, budget, useOpenAPIFormat);
                 return;
             end
             
             % Build request (will use backend lookup if no inline data provided)
             request = buildAnalysisRequest(projectId, firmId, budget, firmData, projectData);
             
+            % Validate request against OpenAPI schema if available
+            try
+                if ~openapiHelpers('validateRequest', request)
+                    warning('Request validation failed against OpenAPI schema, but proceeding anyway');
+                end
+            catch
+                % Schema validation not available - continue
+            end
+            
             % Call API
             response = obj.callAnalyzeEndpoint(request);
             
-            % Transform response
-            data = parseAnalysisResponse(response, projectId, firmId);
+            % Return raw analysis structure or transform
+            if useOpenAPIFormat
+                % Return raw OpenAPI structure
+                if isfield(response, 'analysis')
+                    data = response.analysis;
+                    % Add metadata
+                    data.projectId = projectId;
+                    data.firmId = firmId;
+                else
+                    error('API response missing analysis field');
+                end
+            else
+                % Transform to legacy format (backward compatibility)
+                data = parseAnalysisResponse(response, projectId, firmId);
+            end
         end
         
-        function data = analyzeProjectWithData(obj, firmData, projectData, budget)
+        function data = analyzeProjectWithData(obj, firmData, projectData, budget, useOpenAPIFormat)
             % ANALYZEPROJECTWITHDATA Run analysis with inline data
             %
             % Arguments:
             %   firmData    - Firm data structure or JSON string
             %   projectData - Project data structure or JSON string
             %   budget      - Analysis budget (default: 100)
+            %   useOpenAPIFormat - If true, return raw analysis structure (default: true)
             %
             % Returns:
-            %   data - Transformed analysis data structure
+            %   data - Analysis data structure (raw OpenAPI format if useOpenAPIFormat=true,
+            %          or transformed legacy format if false)
             
             if nargin < 4
                 budget = 100;
+            end
+            if nargin < 5
+                useOpenAPIFormat = true; % Default to OpenAPI format
             end
             
             % Build request with inline data
@@ -159,8 +191,21 @@ classdef FlorentAPIClientWrapper < handle
             projectId = projectData.id;
             firmId = firmData.id;
             
-            % Transform response
-            data = parseAnalysisResponse(response, projectId, firmId);
+            % Return raw analysis structure or transform
+            if useOpenAPIFormat
+                % Return raw OpenAPI structure
+                if isfield(response, 'analysis')
+                    data = response.analysis;
+                    % Add metadata
+                    data.projectId = projectId;
+                    data.firmId = firmId;
+                else
+                    error('API response missing analysis field');
+                end
+            else
+                % Transform to legacy format (backward compatibility)
+                data = parseAnalysisResponse(response, projectId, firmId);
+            end
         end
         
         function response = callAnalyzeEndpoint(obj, request)

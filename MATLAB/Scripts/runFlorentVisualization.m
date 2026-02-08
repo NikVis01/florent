@@ -1,28 +1,48 @@
 % RUNFLORENTVISUALIZATION Simple script to run analysis and show figures
 %
 % Old-school MATLAB - just figures, no GUI bullshit
+% All data is fetched through OpenAPI calls - no local file scanning.
 %
 % Usage:
-%   runFlorentVisualization()
-%   runFlorentVisualization('proj_001', 'firm_001', 'test', 100)
+%   runFlorentVisualization('project_id', 'firm_id')
+%   runFlorentVisualization('project_id', 'firm_id', 'test', 100)
+%   runFlorentVisualization('src/data/poc/project.json', 'src/data/poc/firm.json')
 
 function runFlorentVisualization(projectId, firmId, mode, nIterations)
+    % RUNFLORENTVISUALIZATION Run analysis and generate visualizations
+    %
+    % Uses API data from specified project and firm IDs/paths.
+    % All data is fetched through OpenAPI calls - no local file scanning.
+    %
+    % Usage:
+    %   runFlorentVisualization('project_id', 'firm_id')
+    %   runFlorentVisualization('project_id', 'firm_id', 'test', 100)
+    %   runFlorentVisualization('src/data/poc/project.json', 'src/data/poc/firm.json')
+    %
+    % Arguments:
+    %   projectId - Project identifier or path (required)
+    %   firmId    - Firm identifier or path (required)
+    %   mode      - Analysis mode: 'test', 'production', 'interactive' (default: 'test')
+    %   nIterations - MC iterations (default: 100)
+    
+    % Require projectId and firmId
+    if nargin < 1 || isempty(projectId)
+        error('projectId is required. Usage: runFlorentVisualization(projectId, firmId, [mode], [nIterations])');
+    end
+    if nargin < 2 || isempty(firmId)
+        error('firmId is required. Usage: runFlorentVisualization(projectId, firmId, [mode], [nIterations])');
+    end
+    
     fprintf('\n');
     fprintf('========================================\n');
     fprintf('  FLORENT RISK ANALYSIS\n');
     fprintf('========================================\n');
     
-    % Defaults
-    if nargin < 1
-        projectId = 'proj_001';
-    end
-    if nargin < 2
-        firmId = 'firm_001';
-    end
-    if nargin < 3
+    % Optional parameters with defaults
+    if nargin < 3 || isempty(mode)
         mode = 'test';
     end
-    if nargin < 4
+    if nargin < 4 || isempty(nIterations)
         nIterations = 100;
     end
     
@@ -71,12 +91,36 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
     warning('on', 'parallel:convenience:LocalPoolStartup');
     warning('on', 'parallel:convenience:LocalPoolShutdown');
     
-    % Extract data
-    data = results.data;
+    % Extract data - results.data is the raw OpenAPI analysis structure
+    analysis = results.data;
     stabilityData = results.stabilityData;
     
-    if isempty(stabilityData) || isempty(data)
-        error('No data to visualize');
+    if isempty(analysis)
+        error('No analysis data to visualize');
+    end
+    
+    % Validate that analysis is in OpenAPI format
+    if ~isstruct(analysis) || ~isfield(analysis, 'node_assessments')
+        error('Analysis data is not in OpenAPI format. Expected node_assessments field.');
+    end
+    
+    % If stabilityData is empty (MC not run), create minimal structure from analysis
+    if isempty(stabilityData)
+        warning('No stability data from MC simulations. Using analysis data directly.');
+        % Create minimal stabilityData structure for compatibility
+        nodeIds = openapiHelpers('getNodeIds', analysis);
+        influence = openapiHelpers('getAllInfluenceScores', analysis);
+        risk = openapiHelpers('getAllRiskLevels', analysis);
+        
+        stabilityData = struct();
+        stabilityData.nodeIds = nodeIds;
+        stabilityData.meanScores = struct();
+        stabilityData.meanScores.influence = influence;
+        stabilityData.meanScores.risk = risk;
+        stabilityData.overallStability = ones(length(nodeIds), 1); % Default stability
+        stabilityData.scoreVariance = struct();
+        stabilityData.scoreVariance.influence = zeros(length(nodeIds), 1);
+        stabilityData.scoreVariance.risk = zeros(length(nodeIds), 1);
     end
     
     % Create visualizations in ONE figure window
@@ -95,30 +139,37 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
     ax4 = axes('Parent', fig, 'Position', [0.50 0.05 0.45 0.40]);
     
     % Plot directly into these axes (no figure creation in plotting functions)
+    % Note: Functions check parameters to detect OpenAPI format (node_assessments field)
     fprintf('    - 2x2 Matrix\n');
     try
-        plot2x2MatrixWithEllipses(stabilityData, data, false, ax1);
+        % plot2x2MatrixWithEllipses(stabilityData, data, ...) - checks first param for analysis
+        plot2x2MatrixWithEllipses(analysis, stabilityData, false, ax1);
     catch ME
         warning('2x2 Matrix failed: %s', ME.message);
     end
     
     fprintf('    - 3D Landscape\n');
     try
-        plot3DRiskLandscape(stabilityData, data, false, ax2);
+        % plot3DRiskLandscape(stabilityData, data, ...) - checks first param for analysis
+        plot3DRiskLandscape(analysis, stabilityData, false, ax2);
     catch ME
         warning('3D Landscape failed: %s', ME.message);
     end
     
     fprintf('    - Globe\n');
     try
-        displayGlobe(data, stabilityData, config, ax3);
+        % displayGlobe(data, stabilityData, ...) - uses first param for project info,
+        % checks second param for analysis structure (node_assessments)
+        % Pass analysis as first param for project info, and analysis as second for node data
+        displayGlobe(analysis, analysis, config, ax3);
     catch ME
         warning('Globe failed: %s', ME.message);
     end
     
     fprintf('    - Stability Network\n');
     try
-        plotStabilityNetwork(data, stabilityData, false, ax4);
+        % plotStabilityNetwork(data, stabilityData, ...) - checks first param for analysis
+        plotStabilityNetwork(analysis, stabilityData, false, ax4);
     catch ME
         warning('Network failed: %s', ME.message);
     end
@@ -131,18 +182,50 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
     fprintf('========================================\n\n');
     
     % Display summary
-    if isfield(stabilityData, 'nodeIds')
-        nNodes = length(stabilityData.nodeIds);
-        avgStability = mean(stabilityData.overallStability);
-        avgRisk = mean(stabilityData.meanScores.risk);
-        avgInfluence = mean(stabilityData.meanScores.influence);
-        
-        fprintf('Summary:\n');
-        fprintf('  Nodes: %d\n', nNodes);
-        fprintf('  Avg Stability: %.3f\n', avgStability);
-        fprintf('  Avg Risk: %.3f\n', avgRisk);
-        fprintf('  Avg Influence: %.3f\n', avgInfluence);
-        fprintf('\n');
+    fprintf('\n=== Analysis Summary ===\n');
+    
+    % Get node IDs from analysis
+    nodeIds = openapiHelpers('getNodeIds', analysis);
+    nNodes = length(nodeIds);
+    fprintf('Total Nodes: %d\n', nNodes);
+    
+    % Get scores from analysis
+    risk = openapiHelpers('getAllRiskLevels', analysis);
+    influence = openapiHelpers('getAllInfluenceScores', analysis);
+    
+    if ~isempty(risk) && ~isempty(influence)
+        fprintf('Average Risk: %.3f\n', mean(risk));
+        fprintf('Average Influence: %.3f\n', mean(influence));
     end
+    
+    % Get stability if available
+    if isfield(stabilityData, 'overallStability') && ~isempty(stabilityData.overallStability)
+        fprintf('Average Stability: %.3f\n', mean(stabilityData.overallStability));
+    end
+    
+    % Get summary metrics from analysis if available
+    if isfield(analysis, 'summary')
+        summary = analysis.summary;
+        if isfield(summary, 'aggregate_project_score')
+            fprintf('Aggregate Project Score: %.3f\n', summary.aggregate_project_score);
+        end
+        if isfield(summary, 'critical_failure_likelihood')
+            fprintf('Critical Failure Likelihood: %.3f\n', summary.critical_failure_likelihood);
+        end
+    end
+    
+    % Get recommendation if available
+    if isfield(analysis, 'recommendation')
+        rec = analysis.recommendation;
+        if isfield(rec, 'should_bid')
+            fprintf('Recommendation: %s\n', char(string(rec.should_bid).replace("1", "BID").replace("0", "DO NOT BID")));
+        end
+        if isfield(rec, 'confidence')
+            fprintf('Confidence: %.3f\n', rec.confidence);
+        end
+    end
+    
+    fprintf('\n');
 end
+
 

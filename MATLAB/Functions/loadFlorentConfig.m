@@ -130,6 +130,13 @@ function logConfig(config)
     fprintf('Parallel: %s\n', mat2str(config.monteCarlo.useParallel));
     fprintf('Cache Enabled: %s\n', mat2str(config.cache.enabled));
     fprintf('API Base URL: %s\n', config.api.baseUrl);
+    if isfield(config.api, 'budget')
+        budgetSource = '';
+        if isfield(config, 'apiDefaultsLoaded') && config.apiDefaultsLoaded
+            budgetSource = ' (from OpenAPI schema)';
+        end
+        fprintf('API Budget: %d%s\n', config.api.budget, budgetSource);
+    end
     fprintf('Data Dir: %s\n', config.paths.dataDir);
     fprintf('Figures Dir: %s\n', config.paths.figuresDir);
     fprintf('=============================\n\n');

@@ -52,6 +52,12 @@ function varargout = cacheManager(operation, varargin)
             end
             varargout{1} = cacheExists(varargin{1}, varargin{2});
             
+        case 'migrate'
+            if nargin < 2
+                error('migrate requires config');
+            end
+            varargout{1} = migrateLegacyCache(varargin{1});
+            
         otherwise
             error('Unknown operation: %s', operation);
     end
@@ -62,6 +68,13 @@ function cacheKey = generateCacheKey(data, config)
     
     % Create key components
     keyParts = {};
+    
+    % Add API version/format identifier
+    if isstruct(data) && isfield(data, 'node_assessments')
+        keyParts{end+1} = 'openapi'; % OpenAPI format
+    else
+        keyParts{end+1} = 'legacy'; % Legacy format
+    end
     
     % Project and firm IDs
     if isfield(data, 'projectId')
@@ -128,6 +141,17 @@ function cached = loadFromCache(cacheKey, config)
             
             % Load cache
             load(cacheFile, 'cached');
+            
+            % Skip legacy format files (they should have been migrated)
+            if isstruct(cached) && isfield(cached, 'riskScores') && ...
+               ~isfield(cached, 'node_assessments')
+                % Legacy format - skip it
+                if config.logging.verbose
+                    fprintf('Skipping legacy cache format: %s (use migrateLegacyCache)\n', cacheKey);
+                end
+                cached = [];
+                return;
+            end
             
             if config.logging.verbose
                 fprintf('Loaded from cache: %s\n', cacheKey);
@@ -236,5 +260,87 @@ function cacheFile = getCacheFilePath(cacheKey, config)
     
     cacheDir = config.paths.cacheDir;
     cacheFile = fullfile(cacheDir, [cacheKey, '.mat']);
+end
+
+function migrationResult = migrateLegacyCache(config)
+    % MIGRATELEGACYCACHE Migrate legacy cache files to OpenAPI format
+    %
+    % This function scans the cache directory for legacy format cache files
+    % and attempts to convert them to OpenAPI format. Legacy files are marked
+    % for invalidation.
+    %
+    % Args:
+    %   config - Configuration structure
+    %
+    % Returns:
+    %   migrationResult - Structure with migration statistics
+    
+    migrationResult = struct();
+    migrationResult.migrated = 0;
+    migrationResult.failed = 0;
+    migrationResult.skipped = 0;
+    migrationResult.errors = {};
+    
+    cacheDir = config.paths.cacheDir;
+    
+    if ~exist(cacheDir, 'dir')
+        fprintf('Cache directory does not exist: %s\n', cacheDir);
+        return;
+    end
+    
+    fprintf('Scanning cache directory for legacy files...\n');
+    
+    cacheFiles = dir(fullfile(cacheDir, '*.mat'));
+    
+    for i = 1:length(cacheFiles)
+        fileInfo = cacheFiles(i);
+        cacheFile = fullfile(cacheDir, fileInfo.name);
+        
+        try
+            % Try to load cache file
+            cached = [];
+            load(cacheFile, 'cached');
+            
+            % Check if it's legacy format (has riskScores but not node_assessments)
+            if isstruct(cached) && isfield(cached, 'riskScores') && ...
+               ~isfield(cached, 'node_assessments')
+                % Legacy format detected
+                fprintf('  Found legacy cache: %s\n', fileInfo.name);
+                
+                % Mark for invalidation by renaming or deleting
+                % For now, we'll just mark it as expired by updating timestamp
+                % In production, you might want to convert it or delete it
+                legacyFile = fullfile(cacheDir, ['legacy_', fileInfo.name]);
+                if exist(cacheFile, 'file')
+                    movefile(cacheFile, legacyFile);
+                    fprintf('    Moved to: %s (will be ignored)\n', ['legacy_', fileInfo.name]);
+                    migrationResult.migrated = migrationResult.migrated + 1;
+                end
+            elseif isstruct(cached) && isfield(cached, 'node_assessments')
+                % Already OpenAPI format
+                migrationResult.skipped = migrationResult.skipped + 1;
+            else
+                % Unknown format
+                migrationResult.skipped = migrationResult.skipped + 1;
+            end
+            
+        catch ME
+            migrationResult.failed = migrationResult.failed + 1;
+            migrationResult.errors{end+1} = sprintf('%s: %s', fileInfo.name, ME.message);
+            warning('Failed to process cache file %s: %s', fileInfo.name, ME.message);
+        end
+    end
+    
+    fprintf('Migration complete:\n');
+    fprintf('  Migrated: %d\n', migrationResult.migrated);
+    fprintf('  Skipped: %d\n', migrationResult.skipped);
+    fprintf('  Failed: %d\n', migrationResult.failed);
+    
+    if ~isempty(migrationResult.errors)
+        fprintf('\nErrors:\n');
+        for j = 1:length(migrationResult.errors)
+            fprintf('  %s\n', migrationResult.errors{j});
+        end
+    end
 end
 

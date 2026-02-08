@@ -1,6 +1,13 @@
 function data = parseAnalysisResponse(response, projectId, firmId)
     % PARSEANALYSISRESPONSE Transform API response to MATLAB data structure
     %
+    % DEPRECATED: This function is deprecated. Enhanced API schemas must be used.
+    % All code should use the enhanced API format directly with openapiHelpers.m functions.
+    % This function is kept for backward compatibility only but should not be used.
+    %
+    % WARNING: Using this function will result in loss of enhanced schema data.
+    %          Use enhanced API format with graph_topology, risk_distributions, etc.
+    %
     % This function transforms the /analyze endpoint response into the data
     % structure expected by existing MATLAB code, maintaining backward
     % compatibility.
@@ -19,6 +26,8 @@ function data = parseAnalysisResponse(response, projectId, firmId)
     %     - riskScores: risk and influence scores per node
     %     - parameters: default parameters
     %     - classifications: 2x2 matrix quadrant per node
+    
+    warning('parseAnalysisResponse is deprecated. Use OpenAPI format directly with openapiHelpers.m');
     
     % Validate response
     if ~isfield(response, 'status')

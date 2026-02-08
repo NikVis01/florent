@@ -1,8 +1,9 @@
-function results = mc_failureProbDist(data, nIterations)
+function results = mc_failureProbDist(analysis, nIterations)
     % MC_FAILUREPROBDIST Monte Carlo simulation for failure probability distributions
     %
-    % Samples P(failure) from Beta(α, β) distributions per node
-    % Uses different α,β per node based on risk level
+    % Uses enhanced API format with risk_distributions and monte_carlo_parameters
+    %
+    % Samples from Beta distributions in risk_distributions per node
     %
     % Tracks: risk score distributions, critical chain variance
     %
@@ -11,22 +12,40 @@ function results = mc_failureProbDist(data, nIterations)
     % Ensure paths are set up
     ensurePaths(false);
     
+    % Validate enhanced format
+    if ~isfield(analysis, 'node_assessments')
+        error('mc_failureProbDist: analysis must be in enhanced API format');
+    end
+    
+    % Get MC parameters from enhanced schema
+    mcParams = openapiHelpers('getMonteCarloParameters', analysis);
+    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
+        if isfield(mcParams.simulation_config, 'recommended_samples') && nargin < 2
+            nIterations = mcParams.simulation_config.recommended_samples;
+        end
+    end
+    
     if nargin < 2
         nIterations = 10000;
     end
     
     fprintf('Failure Probability Distribution Analysis: %d iterations\n', nIterations);
     
-    % Define perturbation function
-    perturbFunc = @(data, iter) perturbFailureProbabilities(data, iter);
-    
-    % Run Monte Carlo
-    results = monteCarloFramework(data, perturbFunc, nIterations, true);
+    % Use monteCarloFramework which uses enhanced MC parameters for sampling
+    % The framework will sample from risk_distributions automatically
+    results = monteCarloFramework(analysis, @perturbFailureForMC, nIterations, true);
     
     % Calculate distribution statistics
-    results.distributions = calculateDistributionStats(data, results);
+    results.distributions = calculateDistributionStats(analysis, results);
     
     fprintf('Failure probability distribution analysis completed\n');
+end
+
+function [perturbedAnalysis, params] = perturbFailureForMC(analysis, iter)
+    % Perturb for MC - framework handles sampling from enhanced schemas
+    perturbedAnalysis = analysis;
+    params = struct();
+    params.iteration = iter;
 end
 
 function [perturbedData, params] = perturbFailureProbabilities(data, iter)
@@ -89,11 +108,11 @@ function [perturbedData, params] = perturbFailureProbabilities(data, iter)
     params.betaParams.beta = beta;
 end
 
-function distributions = calculateDistributionStats(data, results)
+function distributions = calculateDistributionStats(analysis, results)
     % Calculate distribution statistics for failure probabilities
     
     distributions = struct();
-    distributions.nodeIds = data.riskScores.nodeIds;
+    distributions.nodeIds = openapiHelpers('getNodeIds', analysis);
     nNodes = length(distributions.nodeIds);
     
     % Mean and standard deviation (already in results)

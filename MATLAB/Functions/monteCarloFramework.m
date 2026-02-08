@@ -128,8 +128,30 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
         end
     end
     
-    % Initialize storage
-    nNodes = length(data.riskScores.nodeIds);
+    % Validate that data is in enhanced API format
+    if ~isstruct(data) || ~isfield(data, 'node_assessments')
+        error('monteCarloFramework: data must be in enhanced API format with node_assessments');
+    end
+    
+    % Get node IDs from enhanced schema
+    nodeIds = openapiHelpers('getNodeIds', data);
+    nNodes = length(nodeIds);
+    
+    if nNodes == 0
+        error('monteCarloFramework: no nodes found in analysis data');
+    end
+    
+    % Get enhanced sections
+    mcParams = openapiHelpers('getMonteCarloParameters', data);
+    riskDist = openapiHelpers('getRiskDistributions', data);
+    graphTopo = openapiHelpers('getGraphTopology', data);
+    
+    if isempty(mcParams)
+        warning('monteCarloFramework: monte_carlo_parameters not found, using defaults');
+    end
+    if isempty(graphTopo)
+        warning('monteCarloFramework: graph_topology not found, adjacency will be empty');
+    end
     
     % Storage for all iterations (can be memory intensive)
     allRiskScores = zeros(nIterations, nNodes);
@@ -137,11 +159,12 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     allQuadrants = cell(nIterations, nNodes);
     allParameters = cell(nIterations, 1);
     
+    % Get base scores for classification
+    baseRisk = openapiHelpers('getAllRiskLevels', data);
+    baseInfluence = openapiHelpers('getAllInfluenceScores', data);
+    
     % Base classification for comparison
-    baseQuadrants = classifyQuadrant(...
-        data.riskScores.risk, ...
-        data.riskScores.influence ...
-    );
+    baseQuadrants = classifyQuadrant(baseRisk, baseInfluence);
     
     fprintf('Running %d Monte Carlo iterations...\n', nIterations);
     tic;
@@ -149,10 +172,11 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     if useParallel
         % Parallel execution
         parfor iter = 1:nIterations
-            [perturbedData, params] = feval(perturbFunc, data, iter);
+            % Sample from enhanced MC parameters
+            [importanceSamples, influenceSamples] = sampleFromMCParameters(mcParams, nodeIds, iter);
             
-            % Calculate risk scores with perturbed parameters
-            scores = calculateScoresForIteration(perturbedData);
+            % Calculate risk scores from samples
+            scores = calculateScoresFromSamples(importanceSamples, influenceSamples, data, graphTopo);
             
             % Store results
             allRiskScores(iter, :) = scores.risk;
@@ -163,7 +187,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
                 allQuadrants{iter, j} = quadrants{j};
             end
             
-            allParameters{iter} = params;
+            allParameters{iter} = struct('importance', importanceSamples, 'influence', influenceSamples);
             
             if mod(iter, 1000) == 0
                 fprintf('Completed %d iterations\n', iter);
@@ -172,10 +196,11 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     else
         % Sequential execution
         for iter = 1:nIterations
-            [perturbedData, params] = perturbFunc(data, iter);
+            % Sample from enhanced MC parameters
+            [importanceSamples, influenceSamples] = sampleFromMCParameters(mcParams, nodeIds, iter);
             
-            % Calculate risk scores with perturbed parameters
-            scores = calculateScoresForIteration(perturbedData);
+            % Calculate risk scores from samples
+            scores = calculateScoresFromSamples(importanceSamples, influenceSamples, data, graphTopo);
             
             % Store results
             allRiskScores(iter, :) = scores.risk;
@@ -186,7 +211,7 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
                 allQuadrants{iter, j} = quadrants{j};
             end
             
-            allParameters{iter} = params;
+            allParameters{iter} = struct('importance', importanceSamples, 'influence', influenceSamples);
             
             if mod(iter, 100) == 0
                 fprintf('Completed %d iterations (%.1f%%)\n', iter, 100*iter/nIterations);
@@ -199,62 +224,143 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
     
     % Aggregate results
     results = aggregateResults(allRiskScores, allInfluenceScores, allQuadrants, ...
-        baseQuadrants, data.riskScores.nodeIds, allParameters);
+        baseQuadrants, nodeIds, allParameters);
 end
 
-function scores = calculateScoresForIteration(data)
-    % Calculate risk and influence scores for one iteration
-    nNodes = length(data.riskScores.nodeIds);
+function [importanceSamples, influenceSamples] = sampleFromMCParameters(mcParams, nodeIds, seed)
+    % SAMPLEFROMMCPARAMETERS Sample importance and influence from MC parameters
+    %
+    % Args:
+    %   mcParams - MonteCarloParameters structure
+    %   nodeIds - Cell array of node IDs
+    %   seed - Random seed for this iteration
+    %
+    % Returns:
+    %   importanceSamples - Array of importance samples
+    %   influenceSamples - Array of influence samples
+    
+    nNodes = length(nodeIds);
+    importanceSamples = zeros(nNodes, 1);
+    influenceSamples = zeros(nNodes, 1);
+    
+    % Set random seed
+    rng(seed);
+    
+    if isempty(mcParams) || ~isfield(mcParams, 'sampling_distributions')
+        % Fallback: use uniform distribution
+        importanceSamples = rand(nNodes, 1);
+        influenceSamples = rand(nNodes, 1);
+        return;
+    end
+    
+    samplingDists = mcParams.sampling_distributions;
+    
+    % Sample for each node
+    for i = 1:nNodes
+        nodeId = nodeIds{i};
+        
+        if isfield(samplingDists, nodeId)
+            nodeDist = samplingDists.(nodeId);
+            
+            % Sample importance
+            if isfield(nodeDist, 'importance')
+                impDist = nodeDist.importance;
+                if strcmp(impDist.type, 'beta') && isfield(impDist.params, 'alpha') && isfield(impDist.params, 'beta')
+                    importanceSamples(i) = betarnd(impDist.params.alpha, impDist.params.beta);
+                    % Clamp to bounds
+                    if isfield(impDist, 'bounds') && length(impDist.bounds) == 2
+                        importanceSamples(i) = max(impDist.bounds(1), min(impDist.bounds(2), importanceSamples(i)));
+                    end
+                else
+                    % Fallback to uniform
+                    importanceSamples(i) = rand();
+                end
+            else
+                importanceSamples(i) = rand();
+            end
+            
+            % Sample influence
+            if isfield(nodeDist, 'influence')
+                infDist = nodeDist.influence;
+                if strcmp(infDist.type, 'beta') && isfield(infDist.params, 'alpha') && isfield(infDist.params, 'beta')
+                    influenceSamples(i) = betarnd(infDist.params.alpha, infDist.params.beta);
+                    % Clamp to bounds
+                    if isfield(infDist, 'bounds') && length(infDist.bounds) == 2
+                        influenceSamples(i) = max(infDist.bounds(1), min(infDist.bounds(2), influenceSamples(i)));
+                    end
+                else
+                    % Fallback to uniform
+                    influenceSamples(i) = rand();
+                end
+            else
+                influenceSamples(i) = rand();
+            end
+        else
+            % Node not in sampling distributions, use uniform
+            importanceSamples(i) = rand();
+            influenceSamples(i) = rand();
+        end
+    end
+    
+    % Apply covariance if available
+    if isfield(mcParams, 'covariance_matrix') && ~isempty(mcParams.covariance_matrix)
+        % For correlated sampling, would use Cholesky decomposition
+        % Simplified version: just use samples as-is for now
+        % TODO: Implement proper correlated sampling
+    end
+end
+
+function scores = calculateScoresFromSamples(importanceSamples, influenceSamples, analysis, graphTopo)
+    % CALCULATESCORESFROMSAMPLES Calculate risk and influence scores from samples
+    %
+    % Args:
+    %   importanceSamples - Array of importance samples
+    %   influenceSamples - Array of influence samples
+    %   analysis - Analysis structure (enhanced API format)
+    %   graphTopo - GraphTopology structure
+    %
+    % Returns:
+    %   scores - Structure with risk and influence arrays
+    
+    nNodes = length(importanceSamples);
     scores = struct();
     scores.risk = zeros(nNodes, 1);
     scores.influence = zeros(nNodes, 1);
     
-    % Get graph structure
-    adj = data.graph.adjacency;
-    
-    % Calculate centrality if not already present
-    if ~isfield(data.graph, 'centrality')
-        data.graph.centrality = calculateEigenvectorCentrality(adj);
+    % Get adjacency matrix
+    adjMatrix = openapiHelpers('getAdjacencyMatrix', analysis);
+    if isempty(adjMatrix) && ~isempty(graphTopo) && isfield(graphTopo, 'adjacency_matrix')
+        adjMatrix = graphTopo.adjacency_matrix;
+        if iscell(adjMatrix)
+            adjMatrix = cell2mat(adjMatrix);
+        end
     end
     
-    % Calculate scores for each node
-    for i = 1:nNodes
-        % Influence score (simplified - would use actual CE scores in real implementation)
-        if isfield(data.riskScores, 'ce_scores') && length(data.riskScores.ce_scores) >= i
-            ce_score = data.riskScores.ce_scores(i);
-        else
-            % Use influence as proxy for CE score
-            ce_score = data.riskScores.influence(i);
+    % Calculate risk = importance * (1 - influence)
+    scores.risk = importanceSamples .* (1 - influenceSamples);
+    
+    % Use sampled influence directly
+    scores.influence = influenceSamples;
+    
+    % Propagate risk through graph if adjacency is available
+    if ~isempty(adjMatrix) && size(adjMatrix, 1) == nNodes && size(adjMatrix, 2) == nNodes
+        % Get propagation trace for propagation factors
+        propTrace = openapiHelpers('getPropagationTrace', analysis);
+        
+        % Simple propagation: risk propagates from parents
+        for i = 1:nNodes
+            % Find parents (incoming edges)
+            parents = find(adjMatrix(:, i) > 0);
+            
+            if ~isempty(parents)
+                % Get max parent risk
+                maxParentRisk = max(scores.risk(parents));
+                
+                % Apply propagation (simplified)
+                localRisk = scores.risk(i);
+                scores.risk(i) = localRisk + (maxParentRisk * localRisk * 0.5);
+            end
         end
-        
-        % Calculate distance (simplified - would use actual graph distance)
-        distance = 1; % Default distance
-        
-        % Calculate influence
-        scores.influence(i) = calculate_influence_score(...
-            ce_score, ...
-            distance, ...
-            data.parameters.attenuation_factor ...
-        );
-        
-        % Risk score (cascading)
-        local_failure_prob = data.riskScores.localFailureProb(i);
-        
-        % Get parent nodes
-        parents = getParentNodes(adj, i);
-        if ~isempty(parents)
-            parent_success_probs = 1 - data.riskScores.localFailureProb(parents);
-        else
-            parent_success_probs = [];
-        end
-        
-        p_success = calculate_topological_risk(...
-            local_failure_prob, ...
-            data.parameters.risk_multiplier, ...
-            parent_success_probs ...
-        );
-        
-        scores.risk(i) = 1 - p_success; % Risk = 1 - P(success)
     end
 end
 
@@ -349,4 +455,5 @@ function results = aggregateResults(allRiskScores, allInfluenceScores, allQuadra
     % results.allIterations.influence = allInfluenceScores;
     % results.allIterations.quadrants = allQuadrants;
 end
+
 

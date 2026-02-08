@@ -8,9 +8,10 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     %   - Animation: unstable nodes pulse/change color (optional)
     %
     % Inputs:
-    %   data - Base data structure with graph
-    %   stabilityData - Aggregated stability data
+    %   data - Base data structure with graph OR analysis structure (OpenAPI format)
+    %   stabilityData - Aggregated stability data (optional if data is analysis)
     %   saveFig - Save figure (default: true)
+    %   axesHandle - Optional axes handle to plot into
     %
     % Output:
     %   fig - Figure handle
@@ -21,13 +22,53 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     
     fprintf('Creating stability network visualization...\n');
     
-    adj = data.graph.adjacency;
-    nNodes = size(adj, 1);
+    % Check if data is actually an analysis structure (enhanced API format)
+    if isstruct(data) && isfield(data, 'node_assessments')
+        % Enhanced API format - extract from enhanced schemas
+        analysis = data;
+        nodeIds = openapiHelpers('getNodeIds', analysis);
+        risk = openapiHelpers('getAllRiskLevels', analysis);
+        influence = openapiHelpers('getAllInfluenceScores', analysis);
+        
+        % Get adjacency from graph_topology (enhanced schema)
+        adjMatrix = openapiHelpers('getAdjacencyMatrix', analysis);
+        if isempty(adjMatrix)
+            % Fallback: try graph_topology directly
+            graphTopo = openapiHelpers('getGraphTopology', analysis);
+            if ~isempty(graphTopo) && isfield(graphTopo, 'adjacency_matrix')
+                adjMatrix = graphTopo.adjacency_matrix;
+                if iscell(adjMatrix)
+                    adjMatrix = cell2mat(adjMatrix);
+                end
+            end
+        end
+        
+        if isempty(adjMatrix)
+            % Empty adjacency if not available
+            adjMatrix = zeros(length(nodeIds), length(nodeIds));
+        end
+        
+        % Calculate stability (use risk as proxy if not available)
+        if isempty(stabilityData) || ~isfield(stabilityData, 'overallStability')
+            stability = 1 - risk; % Simple proxy: lower risk = higher stability
+        else
+            stability = stabilityData.overallStability;
+        end
+        
+        % Store for compatibility
+        adj = adjMatrix;
+    else
+        % Legacy format
+        adj = data.graph.adjacency;
+        nodeIds = stabilityData.nodeIds;
+        
+        % Get stability scores and quadrants
+        stability = stabilityData.overallStability;
+        risk = stabilityData.meanScores.risk;
+        influence = stabilityData.meanScores.influence;
+    end
     
-    % Get stability scores and quadrants
-    stability = stabilityData.overallStability;
-    risk = stabilityData.meanScores.risk;
-    influence = stabilityData.meanScores.influence;
+    nNodes = size(adj, 1);
     quadrants = classifyQuadrant(risk, influence);
     
     % Define quadrant colors
@@ -47,7 +88,7 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     end
     
     % Create graph object
-    G = digraph(adj, stabilityData.nodeIds);
+    G = digraph(adj, nodeIds);
     
     % Calculate node sizes (proportional to stability, with minimum size)
     nodeSizes = 30 + 200 * stability; % Scale stability to node size

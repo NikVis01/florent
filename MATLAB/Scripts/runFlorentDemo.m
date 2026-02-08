@@ -27,14 +27,9 @@ function runFlorentDemo(mode)
     
     fprintf('Loading data for Project: %s, Firm: %s\n', projectId, firmId);
     
-    % Load data
-    try
-        data = getRiskData(config.api.baseUrl, projectId, firmId);
-        fprintf('Data loaded successfully\n\n');
-    catch ME
-        warning('Failed to load data from API: %s\nUsing mock data', ME.message);
-        data = getRiskData(); % Will use mock data
-    end
+    % Load data - NO FALLBACK, must get real data from API
+    data = getRiskData(config.api.baseUrl, projectId, firmId);
+    fprintf('Data loaded successfully\n\n');
     
     % Run quick MC simulation
     fprintf('Running quick Monte Carlo simulation (%d iterations)...\n', ...

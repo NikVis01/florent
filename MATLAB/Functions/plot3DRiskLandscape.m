@@ -6,9 +6,10 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
     % Animation: parameter sweep showing node drift (optional)
     %
     % Inputs:
-    %   stabilityData - Aggregated stability data
-    %   data - Base data structure with graph
+    %   stabilityData - Aggregated stability data OR analysis structure (OpenAPI format)
+    %   data - Base data structure with graph (optional if stabilityData is analysis)
     %   saveFig - Save figure (default: true)
+    %   axesHandle - Optional axes handle to plot into
     %
     % Output:
     %   fig - Figure handle
@@ -17,15 +18,58 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
         saveFig = true;
     end
     
-    % Get scores
-    influence = stabilityData.meanScores.influence;
-    risk = stabilityData.meanScores.risk;
-    
-    % Calculate centrality if not available
-    if isfield(data.graph, 'centrality')
-        centrality = data.graph.centrality;
+    % Check if first parameter is analysis structure (enhanced API format)
+    if isstruct(stabilityData) && isfield(stabilityData, 'node_assessments')
+        % Enhanced API format - extract from enhanced schemas
+        analysis = stabilityData;
+        nodeIds = openapiHelpers('getNodeIds', analysis);
+        influence = openapiHelpers('getAllInfluenceScores', analysis);
+        risk = openapiHelpers('getAllRiskLevels', analysis);
+        
+        % Get centrality from graph_statistics (enhanced schema)
+        graphStats = openapiHelpers('getGraphStatistics', analysis);
+        nNodes = length(nodeIds);
+        centrality = zeros(nNodes, 1);
+        
+        if ~isempty(graphStats) && isfield(graphStats, 'centrality')
+            for i = 1:nNodes
+                nodeId = nodeIds{i};
+                nodeCentrality = openapiHelpers('getCentrality', analysis, nodeId);
+                if ~isempty(nodeCentrality)
+                    % Use eigenvector centrality if available, otherwise pagerank
+                    if isfield(nodeCentrality, 'eigenvector')
+                        centrality(i) = nodeCentrality.eigenvector;
+                    elseif isfield(nodeCentrality, 'pagerank')
+                        centrality(i) = nodeCentrality.pagerank;
+                    else
+                        centrality(i) = 0.5; % Default
+                    end
+                else
+                    centrality(i) = 0.5; % Default
+                end
+            end
+        else
+            % Fallback: calculate from graph_topology
+            adjMatrix = openapiHelpers('getAdjacencyMatrix', analysis);
+            if ~isempty(adjMatrix)
+                centrality = calculateEigenvectorCentrality(adjMatrix);
+            else
+                centrality = ones(nNodes, 1) * 0.5;
+            end
+        end
     else
-        centrality = calculateEigenvectorCentrality(data.graph.adjacency);
+        % Legacy format
+        influence = stabilityData.meanScores.influence;
+        risk = stabilityData.meanScores.risk;
+        
+        % Calculate centrality if not available
+        if isfield(data, 'graph') && isfield(data.graph, 'centrality')
+            centrality = data.graph.centrality;
+        elseif isfield(data, 'graph') && isfield(data.graph, 'adjacency')
+            centrality = calculateEigenvectorCentrality(data.graph.adjacency);
+        else
+            centrality = ones(length(influence), 1) * 0.5;
+        end
     end
     
     % Classify quadrants

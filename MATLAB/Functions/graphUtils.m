@@ -244,3 +244,112 @@ function children = getChildNodes(adj, nodeIdx)
     children = find(adj(nodeIdx, :) > 0);
 end
 
+function adj = buildAdjacencyFromChains(chains, nodeIds)
+    % BUILDADJACENCYFROMCHAINS Builds adjacency matrix from all_chains array
+    %
+    % DEPRECATED: Use graph_topology.adjacency_matrix from enhanced API instead.
+    % This function is kept for backward compatibility only.
+    %
+    % Inputs:
+    %   chains - Cell array or struct array of chains from analysis.all_chains
+    %            Each chain has 'node_ids' (or 'nodes') and optionally 'cumulative_risk'
+    %   nodeIds - Cell array of all node IDs (defines node order)
+    %
+    % Output:
+    %   adj - NxN adjacency matrix
+    %
+    % Note: Enhanced API provides graph_topology.adjacency_matrix directly.
+    %       Use openapiHelpers('getAdjacencyMatrix', analysis) instead.
+    
+    warning('buildAdjacencyFromChains is deprecated. Use graph_topology.adjacency_matrix from enhanced API.');
+    
+    nNodes = length(nodeIds);
+    adj = zeros(nNodes, nNodes);
+    
+    % Create node ID to index mapping
+    nodeIdMap = containers.Map();
+    for i = 1:nNodes
+        nodeIdMap(nodeIds{i}) = i;
+    end
+    
+    % Process chains
+    if iscell(chains)
+        chainArray = chains;
+    elseif isstruct(chains)
+        if length(chains) == 1 && isscalar(chains)
+            chainArray = {chains};
+        else
+            chainArray = cell(length(chains), 1);
+            for i = 1:length(chains)
+                chainArray{i} = chains(i);
+            end
+        end
+    else
+        return; % Empty or invalid
+    end
+    
+    % Extract edges from each chain
+    edges = {};
+    for chainIdx = 1:length(chainArray)
+        chain = chainArray{chainIdx};
+        
+        % Get node IDs from chain
+        chainNodes = [];
+        if isfield(chain, 'node_ids') && ~isempty(chain.node_ids)
+            chainNodes = chain.node_ids;
+        elseif isfield(chain, 'nodes') && ~isempty(chain.nodes)
+            chainNodes = chain.nodes;
+        end
+        
+        if isempty(chainNodes) || length(chainNodes) < 2
+            continue;
+        end
+        
+        % Get weight from chain (use cumulative_risk if available)
+        chainWeight = 1.0;
+        if isfield(chain, 'cumulative_risk')
+            chainWeight = chain.cumulative_risk;
+        elseif isfield(chain, 'aggregate_risk')
+            chainWeight = chain.aggregate_risk;
+        end
+        
+        % Create edges between consecutive nodes
+        for i = 1:(length(chainNodes) - 1)
+            % Handle both cell array and array formats
+            if iscell(chainNodes)
+                srcId = chainNodes{i};
+                tgtId = chainNodes{i+1};
+            else
+                srcId = chainNodes(i);
+                tgtId = chainNodes(i+1);
+                if isnumeric(srcId)
+                    srcId = num2str(srcId);
+                end
+                if isnumeric(tgtId)
+                    tgtId = num2str(tgtId);
+                end
+            end
+            
+            % Convert to char if string
+            if isstring(srcId)
+                srcId = char(srcId);
+            end
+            if isstring(tgtId)
+                tgtId = char(tgtId);
+            end
+            
+            % Create edge
+            edge = struct();
+            edge.source = srcId;
+            edge.target = tgtId;
+            edge.weight = chainWeight;
+            edges{end+1} = edge;
+        end
+    end
+    
+    % Build adjacency matrix from edges
+    if ~isempty(edges)
+        adj = buildAdjacencyMatrix(nodeIds, edges);
+    end
+end
+

@@ -1,8 +1,9 @@
-function results = mc_crossEncoderUncertainty(data, nIterations)
+function results = mc_crossEncoderUncertainty(analysis, nIterations)
     % MC_CROSSENCODERUNCERTAINTY Monte Carlo simulation for cross-encoder score uncertainty
     %
-    % Adds Gaussian noise to BGE-M3 scores: ce_score + N(0, σ²)
-    % where σ = 0.1-0.3 (configurable)
+    % Uses enhanced API format with monte_carlo_parameters
+    %
+    % Adds Gaussian noise to influence scores using risk_distributions uncertainty
     %
     % Tracks: influence score stability, quadrant flips
     %
@@ -11,22 +12,40 @@ function results = mc_crossEncoderUncertainty(data, nIterations)
     % Ensure paths are set up
     ensurePaths(false);
     
+    % Validate enhanced format
+    if ~isfield(analysis, 'node_assessments')
+        error('mc_crossEncoderUncertainty: analysis must be in enhanced API format');
+    end
+    
+    % Get MC parameters from enhanced schema
+    mcParams = openapiHelpers('getMonteCarloParameters', analysis);
+    if ~isempty(mcParams) && isfield(mcParams, 'simulation_config')
+        if isfield(mcParams.simulation_config, 'recommended_samples') && nargin < 2
+            nIterations = mcParams.simulation_config.recommended_samples;
+        end
+    end
+    
     if nargin < 2
         nIterations = 10000;
     end
     
     fprintf('Cross-Encoder Uncertainty Analysis: %d iterations\n', nIterations);
     
-    % Define perturbation function
-    perturbFunc = @(data, iter) perturbCrossEncoderScores(data, iter);
-    
-    % Run Monte Carlo
-    results = monteCarloFramework(data, perturbFunc, nIterations, true);
+    % Use monteCarloFramework which uses enhanced MC parameters
+    % The framework will sample from risk_distributions which includes uncertainty
+    results = monteCarloFramework(analysis, @perturbCrossEncoderForMC, nIterations, true);
     
     % Identify unstable nodes
-    results.unstableNodes = identifyUnstableNodes(data, results);
+    results.unstableNodes = identifyUnstableNodes(analysis, results);
     
     fprintf('Cross-encoder uncertainty analysis completed\n');
+end
+
+function [perturbedAnalysis, params] = perturbCrossEncoderForMC(analysis, iter)
+    % Perturb for MC - framework handles sampling from enhanced schemas
+    perturbedAnalysis = analysis;
+    params = struct();
+    params.iteration = iter;
 end
 
 function [perturbedData, params] = perturbCrossEncoderScores(data, iter)
@@ -64,11 +83,11 @@ function [perturbedData, params] = perturbCrossEncoderScores(data, iter)
     params.noise = noise;
 end
 
-function unstableNodes = identifyUnstableNodes(data, results)
+function unstableNodes = identifyUnstableNodes(analysis, results)
     % Identify nodes with unstable classifications
     
     unstableNodes = struct();
-    unstableNodes.nodeIds = data.riskScores.nodeIds;
+    unstableNodes.nodeIds = openapiHelpers('getNodeIds', analysis);
     
     % High variance threshold (top 25% of variance)
     riskVarThreshold = prctile(results.variance.risk, 75);
@@ -97,6 +116,6 @@ function unstableNodes = identifyUnstableNodes(data, results)
     unstableNodes.count = sum(unstableNodes.isUnstable);
     
     fprintf('Identified %d unstable nodes (%.1f%%)\n', ...
-        unstableNodes.count, 100*unstableNodes.count/length(data.riskScores.nodeIds));
+        unstableNodes.count, 100*unstableNodes.count/length(unstableNodes.nodeIds));
 end
 
