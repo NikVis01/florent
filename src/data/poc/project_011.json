@@ -1,0 +1,56 @@
+{
+    "id": "proj_011",
+    "name": "Manila Bay Bridge",
+    "description": "24 km cable-stayed bridge connecting Manila to Cavite province to reduce traffic congestion.",
+    "country": {
+        "name": "Philippines",
+        "a2": "PH",
+        "a3": "PHL",
+        "num": "608",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    "sector": "transportation",
+    "service_requirements": [
+        "Marine Navigation Assessment",
+        "Seismic Engineering",
+        "Environmental Impact Study"
+    ],
+    "timeline": 66,
+    "ops_requirements": [
+        {
+            "name": "Foundation Works",
+            "category": "construction",
+            "description": "Deep-sea pile driving."
+        },
+        {
+            "name": "Bridge Superstructure",
+            "category": "construction",
+            "description": "Cable-stayed span construction."
+        },
+        {
+            "name": "Toll Collection System",
+            "category": "technology",
+            "description": "Automated toll infrastructure."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Congressional Approval",
+            "Japan Financing Secured"
+        ],
+        "mobilization_time": 18,
+        "entry_node_id": "node_geotechnical_study"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Bridge Capacity 40k vehicles/day",
+            "Seismic Rating 8.0"
+        ],
+        "mandate_end_date": "2032-03-31",
+        "exit_node_id": "node_bridge_opening"
+    }
+}

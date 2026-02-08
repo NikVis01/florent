@@ -1,0 +1,56 @@
+{
+    "id": "proj_012",
+    "name": "Lima Desalination Plant",
+    "description": "Large-scale seawater desalination facility to address water scarcity in coastal Peru.",
+    "country": {
+        "name": "Peru",
+        "a2": "PE",
+        "a3": "PER",
+        "num": "604",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "APEC"
+        ]
+    },
+    "sector": "water",
+    "service_requirements": [
+        "Marine Environmental Assessment",
+        "Water Distribution Integration",
+        "Energy Efficiency Study"
+    ],
+    "timeline": 38,
+    "ops_requirements": [
+        {
+            "name": "Desalination Technology",
+            "category": "equipment",
+            "description": "Reverse osmosis systems."
+        },
+        {
+            "name": "Intake/Outfall Construction",
+            "category": "construction",
+            "description": "Ocean water intake and brine disposal."
+        },
+        {
+            "name": "Pipeline Network",
+            "category": "construction",
+            "description": "Freshwater distribution pipes."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Environmental Permit",
+            "Coastal Zone Approval"
+        ],
+        "mobilization_time": 9,
+        "entry_node_id": "node_technology_selection"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Capacity 100M liters/day",
+            "Energy Use < 3.5 kWh/m\u00b3"
+        ],
+        "mandate_end_date": "2029-06-30",
+        "exit_node_id": "node_plant_operational"
+    }
+}

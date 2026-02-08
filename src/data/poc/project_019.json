@@ -1,0 +1,56 @@
+{
+    "id": "proj_019",
+    "name": "Singapore Deep Tunnel Sewerage Phase 3",
+    "description": "Deep underground sewerage system expansion with advanced wastewater treatment and water reclamation.",
+    "country": {
+        "name": "Singapore",
+        "a2": "SG",
+        "a3": "SGP",
+        "num": "702",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    "sector": "water",
+    "service_requirements": [
+        "Underground Space Planning",
+        "Water Quality Standards",
+        "NEWater Integration"
+    ],
+    "timeline": 84,
+    "ops_requirements": [
+        {
+            "name": "Deep Tunnel Excavation",
+            "category": "construction",
+            "description": "TBM tunneling at 50m depth."
+        },
+        {
+            "name": "Treatment Plant Construction",
+            "category": "construction",
+            "description": "Advanced membrane bioreactor plant."
+        },
+        {
+            "name": "Pumping Stations",
+            "category": "equipment",
+            "description": "Deep lift pumping infrastructure."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Parliamentary Approval",
+            "PUB Contract Award"
+        ],
+        "mobilization_time": 15,
+        "entry_node_id": "node_engineering_design"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Tunnel Length 40 km",
+            "Treatment Capacity 800k m\u00b3/day"
+        ],
+        "mandate_end_date": "2033-12-31",
+        "exit_node_id": "node_system_operational"
+    }
+}

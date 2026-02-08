@@ -1,0 +1,57 @@
+{
+    "id": "proj_006",
+    "name": "Nairobi Affordable Housing Development",
+    "description": "Construction of 10,000 affordable housing units with integrated social infrastructure.",
+    "country": {
+        "name": "Kenya",
+        "a2": "KE",
+        "a3": "KEN",
+        "num": "404",
+        "region": "Africa",
+        "sub_region": "Eastern Africa",
+        "affiliations": [
+            "African Union",
+            "East African Community"
+        ]
+    },
+    "sector": "housing",
+    "service_requirements": [
+        "Urban Planning Approval",
+        "Social Impact Assessment",
+        "Affordable Housing Financing"
+    ],
+    "timeline": 42,
+    "ops_requirements": [
+        {
+            "name": "Land Preparation",
+            "category": "construction",
+            "description": "Site clearing and leveling."
+        },
+        {
+            "name": "Building Construction",
+            "category": "construction",
+            "description": "Multi-story residential blocks."
+        },
+        {
+            "name": "Utilities Connection",
+            "category": "utilities",
+            "description": "Water, power, sewage hookup."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Land Title Transfer",
+            "Building Permits"
+        ],
+        "mobilization_time": 6,
+        "entry_node_id": "node_site_survey"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Units Delivered 10k",
+            "Occupancy Rate > 90%"
+        ],
+        "mandate_end_date": "2029-09-30",
+        "exit_node_id": "node_handover_residents"
+    }
+}

@@ -1,0 +1,57 @@
+{
+    "id": "proj_014",
+    "name": "Seoul District Heating Network",
+    "description": "Expansion of combined heat and power district heating system serving 200,000 households.",
+    "country": {
+        "name": "South Korea",
+        "a2": "KR",
+        "a3": "KOR",
+        "num": "410",
+        "region": "Asia",
+        "sub_region": "Eastern Asia",
+        "affiliations": [
+            "G20",
+            "OECD"
+        ]
+    },
+    "sector": "energy",
+    "service_requirements": [
+        "Energy Efficiency Assessment",
+        "Urban Planning Integration",
+        "Gas Supply Coordination"
+    ],
+    "timeline": 28,
+    "ops_requirements": [
+        {
+            "name": "CHP Plant Construction",
+            "category": "construction",
+            "description": "Combined heat and power facility."
+        },
+        {
+            "name": "Heat Distribution Network",
+            "category": "construction",
+            "description": "Underground hot water pipes."
+        },
+        {
+            "name": "Building Connections",
+            "category": "construction",
+            "description": "Connecting residential buildings."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "City Approval",
+            "Utility Coordination"
+        ],
+        "mobilization_time": 4,
+        "entry_node_id": "node_network_design"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Connected Households 200k",
+            "Energy Savings 30%"
+        ],
+        "mandate_end_date": "2028-03-31",
+        "exit_node_id": "node_network_operational"
+    }
+}

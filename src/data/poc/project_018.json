@@ -1,0 +1,56 @@
+{
+    "id": "proj_018",
+    "name": "Karachi Wind Farm Phase 1",
+    "description": "300 MW wind power generation facility in coastal Sindh province.",
+    "country": {
+        "name": "Pakistan",
+        "a2": "PK",
+        "a3": "PAK",
+        "num": "586",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    "sector": "energy",
+    "service_requirements": [
+        "Wind Resource Assessment",
+        "Grid Connection Approval",
+        "Land Lease Negotiation"
+    ],
+    "timeline": 30,
+    "ops_requirements": [
+        {
+            "name": "Wind Turbine Installation",
+            "category": "equipment",
+            "description": "Deploying 100 wind turbines."
+        },
+        {
+            "name": "Substation Construction",
+            "category": "construction",
+            "description": "Electrical substation and controls."
+        },
+        {
+            "name": "Access Roads",
+            "category": "construction",
+            "description": "Site access and maintenance roads."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "NEPRA License",
+            "Power Purchase Agreement"
+        ],
+        "mobilization_time": 8,
+        "entry_node_id": "node_site_assessment"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Capacity 300 MW",
+            "Capacity Factor > 30%"
+        ],
+        "mandate_end_date": "2028-12-31",
+        "exit_node_id": "node_grid_connected"
+    }
+}

@@ -1,0 +1,57 @@
+{
+    "id": "proj_003",
+    "name": "Hanoi Water Treatment Plant",
+    "description": "Modern wastewater treatment facility to serve 2 million residents and improve Mekong River water quality.",
+    "country": {
+        "name": "Vietnam",
+        "a2": "VN",
+        "a3": "VNM",
+        "num": "704",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN",
+            "APEC"
+        ]
+    },
+    "sector": "water",
+    "service_requirements": [
+        "Water Quality Baseline Study",
+        "Discharge Permit Compliance",
+        "Public Health Assessment"
+    ],
+    "timeline": 30,
+    "ops_requirements": [
+        {
+            "name": "Treatment Technology Selection",
+            "category": "engineering",
+            "description": "Selecting advanced treatment systems."
+        },
+        {
+            "name": "Pipeline Network",
+            "category": "construction",
+            "description": "Building sewage collection infrastructure."
+        },
+        {
+            "name": "Operations Training",
+            "category": "capacity_building",
+            "description": "Training local operators."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Environmental Permit",
+            "Budget Approval"
+        ],
+        "mobilization_time": 4,
+        "entry_node_id": "node_site_preparation"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "BOD Reduction > 90%",
+            "Zero Discharge Violations"
+        ],
+        "mandate_end_date": "2028-12-31",
+        "exit_node_id": "node_facility_handover"
+    }
+}

@@ -1,0 +1,58 @@
+{
+    "id": "proj_005",
+    "name": "Jakarta Flood Defense System",
+    "description": "Integrated flood management system including seawalls, pumping stations, and retention basins.",
+    "country": {
+        "name": "Indonesia",
+        "a2": "ID",
+        "a3": "IDN",
+        "num": "360",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN",
+            "G20",
+            "APEC"
+        ]
+    },
+    "sector": "water",
+    "service_requirements": [
+        "Hydrological Modeling",
+        "Coastal Engineering",
+        "Urban Drainage Planning"
+    ],
+    "timeline": 72,
+    "ops_requirements": [
+        {
+            "name": "Seawall Construction",
+            "category": "construction",
+            "description": "Building 15km coastal barrier."
+        },
+        {
+            "name": "Pumping Infrastructure",
+            "category": "equipment",
+            "description": "Installing flood water pumps."
+        },
+        {
+            "name": "Early Warning System",
+            "category": "technology",
+            "description": "Flood monitoring and alert system."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "World Bank Financing",
+            "Presidential Decree"
+        ],
+        "mobilization_time": 18,
+        "entry_node_id": "node_master_plan"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Flood Risk Reduction 60%",
+            "Protected Population 8M"
+        ],
+        "mandate_end_date": "2032-06-30",
+        "exit_node_id": "node_system_operational"
+    }
+}

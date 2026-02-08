@@ -1,0 +1,56 @@
+{
+    "id": "proj_015",
+    "name": "Bogot\u00e1 Bus Rapid Transit Expansion",
+    "description": "Extension of TransMilenio BRT system with 50 km of dedicated bus lanes and 30 new stations.",
+    "country": {
+        "name": "Colombia",
+        "a2": "CO",
+        "a3": "COL",
+        "num": "170",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "Pacific Alliance"
+        ]
+    },
+    "sector": "transportation",
+    "service_requirements": [
+        "Transit Planning",
+        "Right-of-Way Acquisition",
+        "Fare System Integration"
+    ],
+    "timeline": 40,
+    "ops_requirements": [
+        {
+            "name": "Busway Construction",
+            "category": "construction",
+            "description": "Dedicated bus-only lanes."
+        },
+        {
+            "name": "Station Construction",
+            "category": "construction",
+            "description": "Modern BRT stations."
+        },
+        {
+            "name": "Bus Fleet Procurement",
+            "category": "equipment",
+            "description": "Electric articulated buses."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "District Approval",
+            "ADB Loan Secured"
+        ],
+        "mobilization_time": 8,
+        "entry_node_id": "node_corridor_planning"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Daily Ridership > 500k",
+            "Travel Time Reduction 25%"
+        ],
+        "mandate_end_date": "2029-12-31",
+        "exit_node_id": "node_service_operational"
+    }
+}

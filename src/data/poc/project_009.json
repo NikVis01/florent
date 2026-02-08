@@ -1,0 +1,57 @@
+{
+    "id": "proj_009",
+    "name": "Istanbul Hospital Complex",
+    "description": "1,200-bed tertiary care hospital with medical research facilities and teaching programs.",
+    "country": {
+        "name": "Turkey",
+        "a2": "TR",
+        "a3": "TUR",
+        "num": "792",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "G20",
+            "NATO"
+        ]
+    },
+    "sector": "healthcare",
+    "service_requirements": [
+        "Healthcare Licensing",
+        "Medical Equipment Certification",
+        "Staff Recruitment Planning"
+    ],
+    "timeline": 54,
+    "ops_requirements": [
+        {
+            "name": "Hospital Construction",
+            "category": "construction",
+            "description": "Building main hospital structure."
+        },
+        {
+            "name": "Medical Equipment",
+            "category": "equipment",
+            "description": "Procuring surgical and diagnostic equipment."
+        },
+        {
+            "name": "IT Systems",
+            "category": "technology",
+            "description": "Hospital management system."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Health Ministry Approval",
+            "Zoning Clearance"
+        ],
+        "mobilization_time": 12,
+        "entry_node_id": "node_architectural_design"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Operational Beds 1200",
+            "Accreditation Achieved"
+        ],
+        "mandate_end_date": "2030-12-31",
+        "exit_node_id": "node_hospital_operational"
+    }
+}

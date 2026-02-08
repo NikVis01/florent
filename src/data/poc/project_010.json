@@ -1,0 +1,58 @@
+{
+    "id": "proj_010",
+    "name": "Riyadh Smart City District",
+    "description": "Development of a 5 km\u00b2 smart city district with IoT infrastructure and sustainable design.",
+    "country": {
+        "name": "Saudi Arabia",
+        "a2": "SA",
+        "a3": "SAU",
+        "num": "682",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "G20",
+            "OPEC",
+            "Arab League"
+        ]
+    },
+    "sector": "urban_development",
+    "service_requirements": [
+        "Smart City Master Planning",
+        "Technology Integration",
+        "Sustainability Certification"
+    ],
+    "timeline": 96,
+    "ops_requirements": [
+        {
+            "name": "Infrastructure Development",
+            "category": "construction",
+            "description": "Roads, utilities, telecommunications."
+        },
+        {
+            "name": "Building Construction",
+            "category": "construction",
+            "description": "Mixed-use smart buildings."
+        },
+        {
+            "name": "IoT Deployment",
+            "category": "technology",
+            "description": "Sensors and control systems."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Vision 2030 Alignment",
+            "Royal Decree"
+        ],
+        "mobilization_time": 24,
+        "entry_node_id": "node_concept_design"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Population 100k",
+            "Carbon Neutral Operations"
+        ],
+        "mandate_end_date": "2034-12-31",
+        "exit_node_id": "node_district_complete"
+    }
+}

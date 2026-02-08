@@ -1,0 +1,57 @@
+{
+    "id": "proj_007",
+    "name": "Buenos Aires Solar Farm",
+    "description": "500 MW solar photovoltaic farm to supply clean energy to the capital region.",
+    "country": {
+        "name": "Argentina",
+        "a2": "AR",
+        "a3": "ARG",
+        "num": "032",
+        "region": "Americas",
+        "sub_region": "South America",
+        "affiliations": [
+            "G20",
+            "MERCOSUR"
+        ]
+    },
+    "sector": "energy",
+    "service_requirements": [
+        "Grid Connection Study",
+        "Land Lease Agreements",
+        "Carbon Credit Registration"
+    ],
+    "timeline": 30,
+    "ops_requirements": [
+        {
+            "name": "Solar Panel Procurement",
+            "category": "equipment",
+            "description": "Importing PV modules."
+        },
+        {
+            "name": "Substation Construction",
+            "category": "construction",
+            "description": "Building transmission substation."
+        },
+        {
+            "name": "Grid Integration",
+            "category": "engineering",
+            "description": "Connecting to national grid."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Environmental License",
+            "Grid Approval"
+        ],
+        "mobilization_time": 8,
+        "entry_node_id": "node_engineering_design"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Capacity 500 MW",
+            "Capacity Factor > 25%"
+        ],
+        "mandate_end_date": "2028-06-30",
+        "exit_node_id": "node_commercial_operation"
+    }
+}

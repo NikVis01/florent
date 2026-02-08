@@ -1,0 +1,58 @@
+{
+    "id": "proj_002",
+    "name": "Mumbai Metro Line 7 Extension",
+    "description": "Extension of metro line serving suburban districts to reduce road congestion and improve urban mobility.",
+    "country": {
+        "name": "India",
+        "a2": "IN",
+        "a3": "IND",
+        "num": "356",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "BRICS",
+            "G20",
+            "SAARC"
+        ]
+    },
+    "sector": "transportation",
+    "service_requirements": [
+        "Urban Planning Integration",
+        "Right-of-Way Acquisition",
+        "Rail Safety Certification"
+    ],
+    "timeline": 60,
+    "ops_requirements": [
+        {
+            "name": "Tunnel Boring",
+            "category": "construction",
+            "description": "Underground tunneling through dense urban area."
+        },
+        {
+            "name": "Station Construction",
+            "category": "construction",
+            "description": "Building 12 new metro stations."
+        },
+        {
+            "name": "Rolling Stock Procurement",
+            "category": "equipment",
+            "description": "Acquiring metro train sets."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "State Government Approval",
+            "Land Acquisition Complete"
+        ],
+        "mobilization_time": 12,
+        "entry_node_id": "node_design_phase"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Daily Ridership > 300k",
+            "On-time Performance > 95%"
+        ],
+        "mandate_end_date": "2031-03-31",
+        "exit_node_id": "node_operations_transfer"
+    }
+}

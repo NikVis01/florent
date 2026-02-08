@@ -1,0 +1,58 @@
+{
+    "id": "proj_001",
+    "name": "Lagos Port Expansion",
+    "description": "Deep-water port expansion to increase cargo capacity and reduce vessel waiting times in West Africa's busiest port.",
+    "country": {
+        "name": "Nigeria",
+        "a2": "NG",
+        "a3": "NGA",
+        "num": "566",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "ECOWAS",
+            "African Union",
+            "OPEC"
+        ]
+    },
+    "sector": "transportation",
+    "service_requirements": [
+        "Marine Engineering Assessment",
+        "Trade Flow Analysis",
+        "Customs Integration Planning"
+    ],
+    "timeline": 48,
+    "ops_requirements": [
+        {
+            "name": "Dredging Operations",
+            "category": "construction",
+            "description": "Deepening harbor to accommodate larger vessels."
+        },
+        {
+            "name": "Crane Infrastructure",
+            "category": "equipment",
+            "description": "Installing automated container handling systems."
+        },
+        {
+            "name": "Security Systems",
+            "category": "security",
+            "description": "Port security and surveillance infrastructure."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Maritime Authority Approval",
+            "Environmental Clearance"
+        ],
+        "mobilization_time": 9,
+        "entry_node_id": "node_feasibility_study"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Container Throughput +40%",
+            "Vessel Turnaround Time < 48hrs"
+        ],
+        "mandate_end_date": "2030-06-30",
+        "exit_node_id": "node_port_handover"
+    }
+}

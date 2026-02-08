@@ -1,0 +1,56 @@
+{
+    "id": "proj_016",
+    "name": "Dhaka Industrial Park Development",
+    "description": "800-hectare industrial park with garment manufacturing facilities and export processing zones.",
+    "country": {
+        "name": "Bangladesh",
+        "a2": "BD",
+        "a3": "BGD",
+        "num": "050",
+        "region": "Asia",
+        "sub_region": "Southern Asia",
+        "affiliations": [
+            "SAARC"
+        ]
+    },
+    "sector": "industrial",
+    "service_requirements": [
+        "Industrial Zoning Approval",
+        "Environmental Compliance",
+        "Export Zone Licensing"
+    ],
+    "timeline": 48,
+    "ops_requirements": [
+        {
+            "name": "Land Development",
+            "category": "construction",
+            "description": "Site preparation and infrastructure."
+        },
+        {
+            "name": "Factory Construction",
+            "category": "construction",
+            "description": "Industrial buildings."
+        },
+        {
+            "name": "Utilities Infrastructure",
+            "category": "utilities",
+            "description": "Power, water, sewage systems."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Government Approval",
+            "Environmental Clearance"
+        ],
+        "mobilization_time": 12,
+        "entry_node_id": "node_master_planning"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Occupancy Rate 80%",
+            "Export Value $500M/year"
+        ],
+        "mandate_end_date": "2030-06-30",
+        "exit_node_id": "node_park_operational"
+    }
+}

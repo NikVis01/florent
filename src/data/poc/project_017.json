@@ -1,0 +1,57 @@
+{
+    "id": "proj_017",
+    "name": "Dubai Hyperloop Test Track",
+    "description": "10 km hyperloop test track for ultra-high-speed ground transportation technology validation.",
+    "country": {
+        "name": "United Arab Emirates",
+        "a2": "AE",
+        "a3": "ARE",
+        "num": "784",
+        "region": "Asia",
+        "sub_region": "Western Asia",
+        "affiliations": [
+            "GCC",
+            "Arab League"
+        ]
+    },
+    "sector": "transportation",
+    "service_requirements": [
+        "Innovation Zone Approval",
+        "Safety Certification",
+        "Technology Transfer Agreements"
+    ],
+    "timeline": 36,
+    "ops_requirements": [
+        {
+            "name": "Tube Construction",
+            "category": "construction",
+            "description": "Low-pressure tube infrastructure."
+        },
+        {
+            "name": "Propulsion System",
+            "category": "equipment",
+            "description": "Magnetic levitation technology."
+        },
+        {
+            "name": "Control Systems",
+            "category": "technology",
+            "description": "Automated control and safety systems."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Ruler Decree",
+            "Technology Partner Agreement"
+        ],
+        "mobilization_time": 6,
+        "entry_node_id": "node_technology_validation"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Test Speed > 700 km/h",
+            "Safety Tests Passed"
+        ],
+        "mandate_end_date": "2029-12-31",
+        "exit_node_id": "node_certification_complete"
+    }
+}

@@ -1,0 +1,57 @@
+{
+    "id": "proj_013",
+    "name": "Accra International Trade Hub",
+    "description": "Modern logistics and trade facilitation center with warehousing and customs facilities.",
+    "country": {
+        "name": "Ghana",
+        "a2": "GH",
+        "a3": "GHA",
+        "num": "288",
+        "region": "Africa",
+        "sub_region": "Western Africa",
+        "affiliations": [
+            "ECOWAS",
+            "African Union"
+        ]
+    },
+    "sector": "logistics",
+    "service_requirements": [
+        "Trade Policy Alignment",
+        "Customs Automation",
+        "Warehouse Management Systems"
+    ],
+    "timeline": 32,
+    "ops_requirements": [
+        {
+            "name": "Warehouse Construction",
+            "category": "construction",
+            "description": "Climate-controlled storage facilities."
+        },
+        {
+            "name": "Logistics Technology",
+            "category": "technology",
+            "description": "Inventory tracking and customs systems."
+        },
+        {
+            "name": "Road Access",
+            "category": "construction",
+            "description": "Highway connection and internal roads."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Trade Ministry License",
+            "Land Acquisition"
+        ],
+        "mobilization_time": 6,
+        "entry_node_id": "node_site_development"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Storage Capacity 500k m\u00b3",
+            "Customs Processing < 24hrs"
+        ],
+        "mandate_end_date": "2028-09-30",
+        "exit_node_id": "node_hub_operational"
+    }
+}

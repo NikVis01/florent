@@ -1,0 +1,57 @@
+{
+    "id": "proj_004",
+    "name": "Cairo 5G Network Rollout",
+    "description": "Deployment of 5G telecommunications infrastructure across Greater Cairo metropolitan area.",
+    "country": {
+        "name": "Egypt",
+        "a2": "EG",
+        "a3": "EGY",
+        "num": "818",
+        "region": "Africa",
+        "sub_region": "Northern Africa",
+        "affiliations": [
+            "African Union",
+            "Arab League"
+        ]
+    },
+    "sector": "telecommunications",
+    "service_requirements": [
+        "Spectrum Licensing",
+        "Network Architecture Design",
+        "Cybersecurity Assessment"
+    ],
+    "timeline": 24,
+    "ops_requirements": [
+        {
+            "name": "Cell Tower Deployment",
+            "category": "equipment",
+            "description": "Installing 5G base stations."
+        },
+        {
+            "name": "Fiber Backbone",
+            "category": "construction",
+            "description": "Laying fiber optic network."
+        },
+        {
+            "name": "Network Testing",
+            "category": "testing",
+            "description": "Performance and security testing."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Telecom License",
+            "Site Permits"
+        ],
+        "mobilization_time": 3,
+        "entry_node_id": "node_planning"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Coverage > 85%",
+            "Avg Speed > 500 Mbps"
+        ],
+        "mandate_end_date": "2027-12-31",
+        "exit_node_id": "node_network_live"
+    }
+}

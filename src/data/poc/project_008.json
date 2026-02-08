@@ -1,0 +1,56 @@
+{
+    "id": "proj_008",
+    "name": "Bangkok Airport Rail Link Phase 2",
+    "description": "High-speed rail connection linking Suvarnabhumi Airport to eastern suburbs.",
+    "country": {
+        "name": "Thailand",
+        "a2": "TH",
+        "a3": "THA",
+        "num": "764",
+        "region": "Asia",
+        "sub_region": "South-Eastern Asia",
+        "affiliations": [
+            "ASEAN"
+        ]
+    },
+    "sector": "transportation",
+    "service_requirements": [
+        "Aviation Authority Coordination",
+        "Rail Safety Standards",
+        "Ticketing Integration"
+    ],
+    "timeline": 36,
+    "ops_requirements": [
+        {
+            "name": "Track Construction",
+            "category": "construction",
+            "description": "Elevated rail guideway."
+        },
+        {
+            "name": "Station Development",
+            "category": "construction",
+            "description": "Building 8 new stations."
+        },
+        {
+            "name": "Train Procurement",
+            "category": "equipment",
+            "description": "High-speed rail cars."
+        }
+    ],
+    "entry_criteria": {
+        "pre_requisites": [
+            "Transport Ministry Approval",
+            "Route Finalization"
+        ],
+        "mobilization_time": 10,
+        "entry_node_id": "node_detailed_design"
+    },
+    "success_criteria": {
+        "success_metrics": [
+            "Travel Time < 20 min",
+            "Daily Passengers > 50k"
+        ],
+        "mandate_end_date": "2029-03-31",
+        "exit_node_id": "node_service_launch"
+    }
+}
