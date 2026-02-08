@@ -25,8 +25,15 @@ function request = buildAnalysisRequest(projectId, firmId, budget)
     projectRoot = fileparts(matlabDir);
     
     % Construct file paths
+    % Map project ID to filename (proj_001 -> project_001.json)
+    if startsWith(projectId, 'proj_')
+        projectFileName = ['project', projectId(5:end), '.json'];
+    else
+        projectFileName = [projectId, '.json'];
+    end
+    
     firmPath = fullfile(projectRoot, 'src', 'data', 'poc', [firmId, '.json']);
-    projectPath = fullfile(projectRoot, 'src', 'data', 'poc', [projectId, '.json']);
+    projectPath = fullfile(projectRoot, 'src', 'data', 'poc', projectFileName);
     
     % Check if files exist
     if ~exist(firmPath, 'file')

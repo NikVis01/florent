@@ -230,9 +230,9 @@ function figs = generateVisualizations(data, stabilityData, config)
 end
 
 function dashboard = createDashboard(data, stabilityData, figs, config)
-    % Create comprehensive dashboard
+    % Create comprehensive dashboard (NO FIGURES - handled separately)
     
-    fprintf('Creating dashboard...\n');
+    fprintf('Creating dashboard structure (no figures)...\n');
     
     dashboard = struct();
     dashboard.data = data;
@@ -241,15 +241,10 @@ function dashboard = createDashboard(data, stabilityData, figs, config)
     dashboard.config = config;
     dashboard.timestamp = now;
     
-    % Create dashboard figure
-    [dashboard.fig, success] = safeExecute(@createRiskDashboard, ...
-        data, stabilityData, stabilityData.allResults);
+    % Skip dashboard figure creation - handled by runFlorentVisualization
+    dashboard.fig = [];
     
-    if ~success
-        warning('Dashboard creation had issues');
-    end
-    
-    fprintf('Dashboard created\n');
+    fprintf('Dashboard structure created (no figures)\n');
 end
 
 function exportReports(dashboard, config)

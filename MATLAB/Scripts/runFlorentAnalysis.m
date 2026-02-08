@@ -84,27 +84,16 @@ function results = runFlorentAnalysis(projectId, firmId, mode, customConfig)
         error('Failed to aggregate results: %s', ME.message);
     end
     
-    % Phase 5: Generate visualizations
-    fprintf('Phase 5: Generating visualizations...\n');
-    try
-        figs = runAnalysisPipeline('visualize', data, stabilityData, config);
-        results.figures = figs;
-        fprintf('Visualizations generated\n\n');
-    catch ME
-        warning('Visualization generation had issues: %s', ME.message);
-        results.figures = struct();
-    end
+    % Phase 5: Skip visualization generation (handled by runFlorentVisualization)
+    fprintf('Phase 5: Skipping visualization generation (handled separately)\n');
+    results.figures = [];
+    fprintf('Visualization will be handled by runFlorentVisualization\n\n');
     
-    % Phase 6: Create dashboard
-    fprintf('Phase 6: Creating dashboard...\n');
-    try
-        dashboard = runAnalysisPipeline('dashboard', data, stabilityData, figs, config);
-        results.dashboard = dashboard;
-        fprintf('Dashboard created\n\n');
-    catch ME
-        warning('Dashboard creation had issues: %s', ME.message);
-        results.dashboard = struct();
-    end
+    % Phase 6: Skip dashboard creation (creates figures - handled separately)
+    fprintf('Phase 6: Skipping dashboard creation (no figures)\n');
+    results.dashboard = struct();
+    dashboard = struct(); % For export phase
+    fprintf('Dashboard creation skipped\n\n');
     
     % Phase 7: Export reports
     fprintf('Phase 7: Exporting reports...\n');

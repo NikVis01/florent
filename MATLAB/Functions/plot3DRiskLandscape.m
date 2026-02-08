@@ -31,9 +31,6 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
     % Classify quadrants
     quadrants = classifyQuadrant(risk, influence);
     
-    % Create figure
-    fig = figure('Position', [100, 100, 1200, 900]);
-    
     % Define quadrant colors
     colors = containers.Map();
     colors('Q1') = [0.8, 0.2, 0.2]; % Red - High Risk, High Influence
@@ -41,8 +38,8 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
     colors('Q3') = [0.9, 0.6, 0.1]; % Orange - High Risk, Low Influence
     colors('Q4') = [0.5, 0.5, 0.5]; % Gray - Low Risk, Low Influence
     
-    % Create figure or use provided axes
-    if isempty(axesHandle)
+    % Create figure or use provided axes (CHECK FIRST!)
+    if nargin < 4 || isempty(axesHandle)
         fig = figure('Position', [100, 100, 1200, 900]);
         ax = axes('Parent', fig);
     else

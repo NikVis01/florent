@@ -1081,6 +1081,93 @@ def create_recommendation_viz(analysis: Dict[str, Any], output_dir: Path):
     plt.close()
 
 
+def _draw_gauge(ax, value: float, max_value: float, color: str, label: str):
+    """Draw a simple gauge/progress bar visualization."""
+    percentage = min(value / max_value if max_value > 0 else 0, 1.0)
+    
+    # Background bar
+    ax.barh([0], [1.0], height=0.3, color=COLORS['light_gray'], alpha=0.3, left=0)
+    # Filled bar
+    ax.barh([0], [percentage], height=0.3, color=color, alpha=0.8, left=0)
+    
+    # Value text
+    ax.text(0.5, 0.5, f'{value:.0f}', ha='center', va='center',
+           fontsize=24, fontweight='bold', color=COLORS['slate'],
+           transform=ax.transAxes)
+    ax.text(0.5, 0.15, label, ha='center', va='center',
+           fontsize=10, color=COLORS['slate'], transform=ax.transAxes)
+    
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-0.2, 0.2)
+    ax.axis('off')
+
+
+def _draw_risk_gauge(ax, risk_value: float, label: str):
+    """Draw a risk gauge with color coding."""
+    risk_pct = min(risk_value * 100, 100)
+    
+    # Determine color based on risk level
+    if risk_pct > 70:
+        color = COLORS['danger']
+        risk_level = "HIGH"
+    elif risk_pct > 40:
+        color = COLORS['warning']
+        risk_level = "MEDIUM"
+    else:
+        color = COLORS['success']
+        risk_level = "LOW"
+    
+    # Circular gauge representation (simplified as progress bar)
+    ax.barh([0], [1.0], height=0.4, color=COLORS['light_gray'], alpha=0.3, left=0)
+    ax.barh([0], [risk_pct / 100], height=0.4, color=color, alpha=0.8, left=0)
+    
+    # Value and label
+    ax.text(0.5, 0.6, f'{risk_pct:.1f}%', ha='center', va='center',
+           fontsize=22, fontweight='bold', color=color, transform=ax.transAxes)
+    ax.text(0.5, 0.3, label, ha='center', va='center',
+           fontsize=10, color=COLORS['slate'], transform=ax.transAxes)
+    ax.text(0.5, 0.1, risk_level, ha='center', va='center',
+           fontsize=9, fontweight='bold', color=color, transform=ax.transAxes)
+    
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-0.3, 0.3)
+    ax.axis('off')
+
+
+def _draw_metric_card(ax, value, label: str, icon_color: str = None, show_bar: bool = False):
+    """Draw an enhanced metric card with visual elements."""
+    if icon_color is None:
+        icon_color = COLORS['primary']
+    
+    # Background
+    ax.set_facecolor(COLORS['light_gray'])
+    
+    # Value display
+    if isinstance(value, (int, float)):
+        value_str = f'{value:.0f}' if value == int(value) else f'{value:.1f}'
+    else:
+        value_str = str(value)
+    
+    ax.text(0.5, 0.65, value_str, ha='center', va='center',
+           fontsize=26, fontweight='bold', color=icon_color,
+           transform=ax.transAxes)
+    
+    # Label
+    ax.text(0.5, 0.3, label, ha='center', va='center',
+           fontsize=11, color=COLORS['slate'], transform=ax.transAxes)
+    
+    # Optional progress bar at bottom
+    if show_bar and isinstance(value, (int, float)) and value > 0:
+        max_val = max(value * 1.5, 100)  # Dynamic max
+        bar_width = min(value / max_val, 1.0)
+        ax.barh([0.05], [bar_width], height=0.03, color=icon_color, alpha=0.6,
+               left=0.1, transform=ax.transAxes)
+    
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis('off')
+
+
 def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
     """Create a comprehensive single-page report."""
     print("\n📊 Creating comprehensive report...")
@@ -1090,17 +1177,21 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
 
     summary = analysis.get("summary", {})
     recommendation = analysis.get("recommendation", {})
+    
+    # Extract firm and project names from nested structure
+    firm_data = analysis.get("firm", {})
+    project_data = analysis.get("project", {})
+    firm_name = firm_data.get("name", summary.get("firm_id", "Unknown"))
+    project_name = project_data.get("name", summary.get("project_id", "Unknown"))
 
     # Header Section
     ax_header = fig.add_subplot(gs[0, :])
-    firm_id = summary.get("firm_id", "Unknown")
-    project_id = summary.get("project_id", "Unknown")
     bankability = summary.get("overall_bankability", 0) * 100
 
     ax_header.text(0.5, 0.7, f'PROJECT RISK ANALYSIS REPORT',
                   ha='center', va='center', fontsize=24, fontweight='black',
                   transform=ax_header.transAxes, color=COLORS['primary'])
-    ax_header.text(0.5, 0.4, f'Firm: {firm_id} | Project: {project_id}',
+    ax_header.text(0.5, 0.4, f'Firm: {firm_name} | Project: {project_name}',
                   ha='center', va='center', fontsize=14,
                   transform=ax_header.transAxes, color=COLORS['slate'])
     ax_header.text(0.5, 0.15, f'Bankability Rating: {bankability:.1f}%',
@@ -1110,52 +1201,205 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
     ax_header.axis('off')
 
     # Executive Summary Metrics
-    metrics_data = [
-        ("Nodes Analyzed", summary.get("nodes_analyzed", 0)),
-        ("Avg Risk", f"{summary.get('average_risk', 0)*100:.1f}%"),
-        ("Max Risk", f"{summary.get('maximum_risk', 0)*100:.1f}%"),
-        ("Critical Chains", summary.get("critical_chains_detected", 0)),
-        ("High Risk Nodes", summary.get("high_risk_nodes", 0)),
-        ("Budget Used", summary.get("budget_used", 0)),
-    ]
+    # Figure 2: Nodes Analyzed
+    ax2 = fig.add_subplot(gs[1, 0])
+    nodes_analyzed = summary.get("nodes_analyzed", 0)
+    total_nodes = len(analysis.get("node_assessments", {}))
+    if total_nodes == 0:
+        total_nodes = max(nodes_analyzed, 1)  # Fallback to avoid division by zero
+    _draw_gauge(ax2, nodes_analyzed, total_nodes, COLORS['primary'], "Nodes Analyzed")
+    
+    # Figure 3: Avg Risk
+    ax3 = fig.add_subplot(gs[1, 1])
+    avg_risk = summary.get("average_risk", 0)
+    _draw_risk_gauge(ax3, avg_risk, "Average Risk")
+    
+    # Figure 4: Max Risk
+    ax4 = fig.add_subplot(gs[1, 2])
+    max_risk = summary.get("maximum_risk", 0)
+    _draw_risk_gauge(ax4, max_risk, "Maximum Risk")
+    
+    # Figure 5: Critical Chains
+    ax5 = fig.add_subplot(gs[2, 0])
+    critical_chains = summary.get("critical_chains_detected", 0)
+    # Determine color based on chain count
+    if critical_chains > 3:
+        chain_color = COLORS['danger']
+        chain_status = "CRITICAL"
+    elif critical_chains > 0:
+        chain_color = COLORS['warning']
+        chain_status = "WARNING"
+    else:
+        chain_color = COLORS['success']
+        chain_status = "SAFE"
+    
+    # Visual representation with icon-like indicator
+    ax5.barh([0.3], [min(critical_chains / 10.0, 1.0)], height=0.15, 
+            color=chain_color, alpha=0.8, left=0.1, transform=ax5.transAxes)
+    ax5.text(0.5, 0.65, f'{critical_chains}', ha='center', va='center',
+            fontsize=28, fontweight='bold', color=chain_color, transform=ax5.transAxes)
+    ax5.text(0.5, 0.35, "Critical Chains", ha='center', va='center',
+            fontsize=11, color=COLORS['slate'], transform=ax5.transAxes)
+    ax5.text(0.5, 0.15, chain_status, ha='center', va='center',
+            fontsize=9, fontweight='bold', color=chain_color, transform=ax5.transAxes)
+    ax5.set_xlim(0, 1)
+    ax5.set_ylim(0, 1)
+    ax5.axis('off')
+    ax5.set_facecolor(COLORS['light_gray'])
+    
+    # Figure 6: High Risk Nodes
+    ax6 = fig.add_subplot(gs[2, 1])
+    high_risk_nodes = summary.get("high_risk_nodes", 0)
+    _draw_metric_card(ax6, high_risk_nodes, "High Risk Nodes", 
+                     COLORS['danger'] if high_risk_nodes > 0 else COLORS['success'],
+                     show_bar=True)
+    
+    # Budget Used
+    ax_budget = fig.add_subplot(gs[2, 2])
+    budget_used = summary.get("budget_used", 0)
+    _draw_metric_card(ax_budget, budget_used, "Budget Used", COLORS['primary'], show_bar=True)
 
-    for i, (label, value) in enumerate(metrics_data):
-        row = 1 + i // 3
-        col = i % 3
-        ax = fig.add_subplot(gs[row, col])
-
-        ax.text(0.5, 0.6, str(value), ha='center', va='center',
-               fontsize=28, fontweight='bold', color=COLORS['primary'],
-               transform=ax.transAxes)
-        ax.text(0.5, 0.25, label, ha='center', va='center',
-               fontsize=11, color=COLORS['slate'],
-               transform=ax.transAxes)
-
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.axis('off')
-        ax.set_facecolor(COLORS['light_gray'])
-
-    # Add more sections...
+    # Figure 7: Recommendations Section (Redesigned)
     ax_recom = fig.add_subplot(gs[3:5, :])
     recommendations = summary.get("recommendations", [])
-    rec_text = "Strategic Recommendations:\n\n" + "\n\n".join([f"{i+1}. {rec}" for i, rec in enumerate(recommendations)])
-    ax_recom.text(0.05, 0.95, rec_text, transform=ax_recom.transAxes,
-                 fontsize=12, verticalalignment='top', linespacing=1.8,
-                 bbox=dict(boxstyle='round,pad=1.5', facecolor=COLORS['light_gray'], alpha=0.5))
+    
+    if not recommendations:
+        recommendations = ["No specific strategic recommendations detected."]
+    
+    # Improved layout with better spacing and visual hierarchy
+    y_start = 0.95
+    y_spacing = 0.15
+    
+    # Section header
+    ax_recom.text(0.02, y_start, "Strategic Recommendations", 
+                 transform=ax_recom.transAxes,
+                 fontsize=16, fontweight='bold', color=COLORS['primary'])
+    
+    # Display recommendations in a cleaner format
+    current_y = y_start - 0.08
+    for i, rec in enumerate(recommendations[:5]):  # Limit to 5 for readability
+        # Determine recommendation type and color
+        rec_lower = rec.lower()
+        if any(word in rec_lower for word in ['risk', 'danger', 'critical', 'decline', 'avoid']):
+            bullet_color = COLORS['danger']
+            bullet = "⚠"
+        elif any(word in rec_lower for word in ['opportunity', 'proceed', 'optimize', 'automate']):
+            bullet_color = COLORS['success']
+            bullet = "✓"
+        elif any(word in rec_lower for word in ['monitor', 'consider', 'mitigate']):
+            bullet_color = COLORS['warning']
+            bullet = "→"
+        else:
+            bullet_color = COLORS['primary']
+            bullet = "•"
+        
+        # Wrap long text manually (simpler approach)
+        max_chars = 70
+        if len(rec) > max_chars:
+            # Simple word wrap
+            words = rec.split()
+            lines = []
+            current_line = []
+            for word in words:
+                test_line = ' '.join(current_line + [word])
+                if len(test_line) <= max_chars:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        lines.append(' '.join(current_line))
+                    current_line = [word]
+            if current_line:
+                lines.append(' '.join(current_line))
+            rec_display = '\n'.join(lines)
+        else:
+            rec_display = rec
+        
+        # Calculate height needed for this recommendation
+        num_lines = rec_display.count('\n') + 1
+        rec_height = min(num_lines * 0.04, 0.12)
+        
+        # Bullet point with color
+        ax_recom.text(0.05, current_y, bullet, transform=ax_recom.transAxes,
+                     fontsize=16, color=bullet_color, fontweight='bold',
+                     verticalalignment='top')
+        
+        # Recommendation text with better formatting
+        ax_recom.text(0.12, current_y, rec_display, transform=ax_recom.transAxes,
+                     fontsize=10, color=COLORS['slate'], verticalalignment='top',
+                     bbox=dict(boxstyle='round,pad=0.6', 
+                              facecolor='white', alpha=0.8, 
+                              edgecolor=bullet_color, linewidth=1.5))
+        
+        current_y -= rec_height + 0.05
+    
+    # Background
+    ax_recom.add_patch(Rectangle((0.01, 0.05), 0.98, 0.90, 
+                                facecolor=COLORS['light_gray'], alpha=0.3,
+                                edgecolor=COLORS['border'], linewidth=2,
+                                transform=ax_recom.transAxes))
+    ax_recom.set_xlim(0, 1)
+    ax_recom.set_ylim(0, 1)
     ax_recom.axis('off')
 
-    # Decision box
+    # Figure 8: Decision Box (Enhanced)
     ax_decision = fig.add_subplot(gs[5, :])
+    
+    # Extract decision data with proper fallbacks
     should_bid = recommendation.get("should_bid", False)
+    confidence = recommendation.get("confidence", 0.0) * 100
+    key_risks = recommendation.get("key_risks", [])
+    key_opportunities = recommendation.get("key_opportunities", [])
+    
     decision_color = COLORS['success'] if should_bid else COLORS['danger']
     decision_text = "✓ RECOMMEND BID" if should_bid else "✗ DO NOT RECOMMEND"
-
-    ax_decision.text(0.5, 0.5, decision_text, ha='center', va='center',
-                    fontsize=22, fontweight='black', color=decision_color,
-                    transform=ax_decision.transAxes,
-                    bbox=dict(boxstyle='round,pad=1', facecolor=decision_color, alpha=0.2,
-                             edgecolor=decision_color, linewidth=3))
+    decision_icon = "✓" if should_bid else "✗"
+    
+    # Main decision text
+    ax_decision.text(0.5, 0.75, decision_text, ha='center', va='center',
+                    fontsize=24, fontweight='black', color=decision_color,
+                    transform=ax_decision.transAxes)
+    
+    # Confidence level
+    if confidence > 0:
+        ax_decision.text(0.5, 0.55, f'Confidence: {confidence:.1f}%', 
+                        ha='center', va='center',
+                        fontsize=14, fontweight='bold', color=COLORS['slate'],
+                        transform=ax_decision.transAxes)
+        
+        # Confidence bar
+        bar_width = confidence / 100.0
+        ax_decision.barh([0.4], [bar_width], height=0.08, color=decision_color, 
+                        alpha=0.6, left=0.25, transform=ax_decision.transAxes)
+        ax_decision.barh([0.4], [1.0], height=0.08, color=COLORS['light_gray'], 
+                        alpha=0.3, left=0.25, transform=ax_decision.transAxes)
+    
+    # Key risks and opportunities (if available)
+    info_y = 0.25
+    if key_risks:
+        risks_text = "Key Risks: " + ", ".join(key_risks[:3])
+        ax_decision.text(0.5, info_y, risks_text, ha='center', va='center',
+                        fontsize=10, color=COLORS['danger'], 
+                        transform=ax_decision.transAxes,
+                        bbox=dict(boxstyle='round,pad=0.5', facecolor='#ffe6e6', 
+                                 alpha=0.8, edgecolor=COLORS['danger'], linewidth=1))
+        info_y -= 0.12
+    
+    if key_opportunities:
+        opps_text = "Opportunities: " + ", ".join(key_opportunities[:3])
+        ax_decision.text(0.5, info_y, opps_text, ha='center', va='center',
+                        fontsize=10, color=COLORS['success'],
+                        transform=ax_decision.transAxes,
+                        bbox=dict(boxstyle='round,pad=0.5', facecolor='#e6f7e6', 
+                                 alpha=0.8, edgecolor=COLORS['success'], linewidth=1))
+    
+    # Decision box border
+    ax_decision.add_patch(Rectangle((0.05, 0.05), 0.90, 0.90,
+                                   facecolor=decision_color, alpha=0.1,
+                                   edgecolor=decision_color, linewidth=4,
+                                   transform=ax_decision.transAxes))
+    
+    ax_decision.set_xlim(0, 1)
+    ax_decision.set_ylim(0, 1)
     ax_decision.axis('off')
 
     output_path = output_dir / "comprehensive_report.png"

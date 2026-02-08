@@ -37,8 +37,14 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     colors('Q3') = [0.9, 0.6, 0.1]; % Orange
     colors('Q4') = [0.5, 0.5, 0.5]; % Gray
     
-    % Create figure
-    fig = figure('Position', [100, 100, 1400, 1000]);
+    % Create figure or use provided axes (CHECK FIRST!)
+    if nargin < 4 || isempty(axesHandle)
+        fig = figure('Position', [100, 100, 1400, 1000]);
+        ax = axes('Parent', fig);
+    else
+        ax = axesHandle;
+        fig = ax.Parent;
+    end
     
     % Create graph object
     G = digraph(adj, stabilityData.nodeIds);
