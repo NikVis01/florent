@@ -9,6 +9,7 @@ from src.models.entities import Firm, Project, ProjectEntry, ProjectExit
 from src.models.base import Country, Sectors, StrategicFocus, OperationType
 from src.models.graph import Graph, Node, Edge
 from src.services.agent.core.orchestrator_v2 import RiskOrchestrator
+from src.services.graph_builder import build_firm_contextual_graph
 from src.services.logging.logger import get_logger
 
 # Initialize AI Client (OpenAI via DSPy)
@@ -93,7 +94,7 @@ def parse_project(project_data: Dict[str, Any]) -> Project:
     )
 
 def build_infrastructure_graph(project: Project) -> Graph:
-    """Build initial graph from project requirements, ensuring no cycles."""
+    """Build initial graph from project requirements, ensuring no cycles and robust metadata handling."""
     if not project.ops_requirements:
         raise ValueError("Project has no ops_requirements")
 
@@ -101,15 +102,16 @@ def build_infrastructure_graph(project: Project) -> Graph:
     
     # 1. Collect all nodes
     # Entry
-    entry_id = project.entry_criteria.entry_node_id
-    node_map[entry_id] = Node(
-        id=entry_id,
-        name="Entry Point",
-        type=project.ops_requirements[0],
-        embedding=[0.1, 0.1, 0.1]
-    )
+    if project.entry_criteria:
+        entry_id = project.entry_criteria.entry_node_id
+        node_map[entry_id] = Node(
+            id=entry_id,
+            name="Entry Point",
+            type=project.ops_requirements[0],
+            embedding=[0.1, 0.1, 0.1]
+        )
     
-    # Ops (avoid duplicating entry/exit)
+    # Ops (avoid duplicating entry/exit ids)
     for i, op in enumerate(project.ops_requirements):
         op_id = f"op_{i}"
         if op_id not in node_map:
@@ -121,20 +123,21 @@ def build_infrastructure_graph(project: Project) -> Graph:
             )
             
     # Exit
-    exit_id = project.success_criteria.exit_node_id
-    if exit_id not in node_map:
-        node_map[exit_id] = Node(
-            id=exit_id,
-            name="Exit Point",
-            type=project.ops_requirements[-1],
-            embedding=[0.9, 0.9, 0.9]
-        )
+    if project.success_criteria:
+        exit_id = project.success_criteria.exit_node_id
+        if exit_id not in node_map:
+            node_map[exit_id] = Node(
+                id=exit_id,
+                name="Exit Point",
+                type=project.ops_requirements[-1],
+                embedding=[0.9, 0.9, 0.9]
+            )
 
     # 2. Sequence edges (linear pipeline for initial graph)
     nodes_ordered = list(node_map.values())
     edges = []
     for i in range(len(nodes_ordered) - 1):
-        # Avoid self-loops
+        # Prevent self-loops
         if nodes_ordered[i].id != nodes_ordered[i+1].id:
             edges.append(Edge(
                 source=nodes_ordered[i],
@@ -163,8 +166,8 @@ async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
 
         logger.info("entities_parsed", firm=firm.name, project=project.name)
 
-        # Build initial graph
-        graph = build_infrastructure_graph(project)
+        # Build firm-contextual graph with cross-encoder weighting
+        graph = await build_firm_contextual_graph(firm, project)
 
         # Run enhanced V2 analysis
         orchestrator = RiskOrchestrator(firm, project, graph)

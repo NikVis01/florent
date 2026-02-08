@@ -76,14 +76,13 @@ class TestRiskPropagationIntegration:
         matrix = generate_matrix(result)
 
         # Verify all quadrants exist
-        assert "mitigate" in matrix
-        assert "automate" in matrix
-        assert "contingency" in matrix
-        assert "delegate" in matrix
+        assert "Type A" in matrix
+        assert "Type B" in matrix
+        assert "Type C" in matrix
+        assert "Type D" in matrix
 
-        # With high influence and increasing risk, we should see nodes in critical quadrants
-        # Supplier and manufacturer likely in "mitigate" or "automate" (high influence)
-        high_influence_nodes = matrix["mitigate"] + matrix["automate"]
+        # With high influence and increasing risk, we should see nodes in Type A or Type B
+        high_influence_nodes = matrix["Type A"] + matrix["Type B"]
         assert "supplier" in high_influence_nodes or "manufacturer" in high_influence_nodes
 
         print("\n=== Risk Propagation Results ===")
@@ -166,11 +165,11 @@ class TestRiskPropagationIntegration:
         assert result["A"]["risk"] == pytest.approx(0.96, abs=1e-6)  # 0.8 * 1.2
         assert result["B"]["risk"] > result["B"]["local_risk"]
 
-        # Both should end up in "contingency" quadrant (high risk, low influence)
+        # Both should end up in "Type C" quadrant (high risk, low influence)
         # A has risk 0.96, influence 0.0 -> contingency
         matrix = generate_matrix(result)
-        assert "A" in matrix["contingency"]
-        assert "B" in matrix["contingency"]
+        assert "A" in matrix["Type C"]
+        assert "B" in matrix["Type C"]
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ from src.services.agent.analysis.matrix_classifier import (
     RiskQuadrant,
 )
 from src.models.base import OperationType
+from src.settings import settings
 from src.services.logging import get_logger
 
 logger = get_logger(__name__)
@@ -64,8 +65,8 @@ class RiskOrchestrator:
         self.visited: Set[str] = set()
         self.node_evaluator = dspy.Predict(NodeSignature)
         self.discovery_evaluator = dspy.Predict(DiscoverySignature)
-
-        # Will be populated during analysis
+        self.discovered_nodes_count = 0
+        self.DISCOVERY_LIMIT = int(getattr(settings, "GRAPH_MAX_DISCOVERED_NODES", 250))
         self.node_assessments: Dict[str, NodeAssessment] = {}
         self.critical_path_markers: Dict[str, bool] = {}
         self.token_count = 0
@@ -111,6 +112,10 @@ class RiskOrchestrator:
         cache_key = self._cache_key(node, self.firm.id, self.project.id)
         cached = self._load_from_cache(cache_key)
         if cached:
+            # We still trigger discovery for cached nodes to ensure graph expansion
+            # especially when discovery logic or personas have changed!
+            if self.discovered_nodes_count < self.DISCOVERY_LIMIT:
+                await self._discover_and_inject_nodes(node, self._build_node_requirements(node))
             return cached
 
         # Build context for DSPy
@@ -147,8 +152,8 @@ class RiskOrchestrator:
                 )
 
                 # TRIGGER RECURSIVE DISCOVERY
-                # We discover nodes for any high-importance node to "build" more of the graph
-                if assessment.importance_score > 0.4:
+                # Bumping: Every node now triggers discovery to maximize data density
+                if self.discovered_nodes_count < self.DISCOVERY_LIMIT:
                     await self._discover_and_inject_nodes(node, node_requirements)
 
                 # Save to cache
@@ -175,51 +180,115 @@ class RiskOrchestrator:
                     )
 
     async def _discover_and_inject_nodes(self, node: Node, requirements: str):
-        """Generatively discover hidden infrastructure dependencies and inject them into the graph."""
+        """Generatively discover hidden infrastructure dependencies across multiple personas concurrently."""
+        if self.discovered_nodes_count >= self.DISCOVERY_LIMIT:
+            return
+
         logger.info("recursive_discovery_triggered", node_id=node.id)
+        
+        # Load taxonomy for strict adherence
+        try:
+            taxonomy_path = Path(__file__).parent.parent.parent.parent / "data" / "taxonomy" / "services.json"
+            with open(taxonomy_path, "r") as f:
+                taxonomy = json.load(f)
+                valid_types = ", ".join([s["name"] for s in taxonomy])
+        except Exception as e:
+            logger.warning("taxonomy_load_failed", error=str(e))
+            valid_types = "Infrastructure, Logistics, Financing, Regulatory, Technical"
+
+        # Perspectives to simulate for diverse data generation
+        personas = [
+            "Technical Infrastructure Expert",
+            "Financial Risk & Compliance Auditor",
+            "Geopolitical & Regulatory Consultant"
+        ]
         
         # Build context of existing graph to avoid duplicates
         existing_nodes = ", ".join([n.name for n in self.graph.nodes])
+
+        async def _run_persona_discovery(persona: str):
+            """Internal helper to run DSPy in a thread to avoid blocking the event loop."""
+            try:
+                # dspy.Predict is typically synchronous, so we run it in a thread
+                discovery = await asyncio.to_thread(
+                    self.discovery_evaluator,
+                    node_requirements=requirements,
+                    existing_graph_context=existing_nodes,
+                    persona=persona,
+                    valid_types=valid_types
+                )
+                return persona, discovery
+            except Exception as e:
+                logger.warning("discovery_failed", node_id=node.id, persona=persona, error=str(e))
+                return persona, None
+
+        # Run all persona discoveries in parallel
+        tasks = [_run_persona_discovery(p) for p in personas]
+        results = await asyncio.gather(*tasks)
         
-        try:
-            discovery = self.discovery_evaluator(
-                node_requirements=requirements,
-                existing_graph_context=existing_nodes
-            )
-            
-            # Simple parser for "Name, Type, Description" format
+        for persona, discovery in results:
+            if not discovery:
+                continue
+                
+            if self.discovered_nodes_count >= self.DISCOVERY_LIMIT:
+                break
+                
+            # Parser for "Name, Category, Type, Description" format
             lines = [line.strip() for line in discovery.hidden_dependencies.split('\n') if ',' in line]
-            
+
+            # Get valid categories from registry
+            from src.models.base import get_categories
+            valid_categories_set = get_categories()
+
             for line in lines:
                 parts = [p.strip() for p in line.split(',')]
-                if len(parts) >= 3:
+                if len(parts) >= 4:
+                    name, category, type_name, desc = parts[0], parts[1], parts[2], parts[3]
+                elif len(parts) >= 3:
+                    # Fallback: if agent only returns 3 parts, use 'other' as category
                     name, type_name, desc = parts[0], parts[1], parts[2]
-                    new_id = f"gen_{hashlib.md5(name.encode()).hexdigest()[:8]}"
-                    
-                    if any(n.id == new_id for n in self.graph.nodes):
-                        continue
-                        
-                    # Create new node
-                    new_node = Node(
-                        id=new_id,
-                        name=name,
-                        type=OperationType(
-                            name=type_name,
-                            category="GeneratedValue",
-                            description=desc
-                        )
+                    category = "other"
+                else:
+                    continue
+
+                new_id = f"gen_{hashlib.md5(name.encode()).hexdigest()[:8]}"
+
+                if any(n.id == new_id for n in self.graph.nodes):
+                    continue
+
+                if self.discovered_nodes_count >= self.DISCOVERY_LIMIT:
+                    break
+
+                # Validate category
+                if category.lower() not in valid_categories_set:
+                    logger.warning(
+                        "invalid_category",
+                        category=category,
+                        node=name,
+                        persona=persona,
+                        msg="Using 'other' instead"
                     )
-                    
-                    # Inject into graph
-                    self.graph.add_node(new_node)
-                    self.graph.add_edge(node, new_node, weight=0.8, relationship="discovered dependency")
-                    
-                    logger.info("new_node_discovered", parent=node.id, new_node=new_node.name)
+                    category = "other"
+
+                # Create new node
+                new_node = Node(
+                    id=new_id,
+                    name=name,
+                    type=OperationType(
+                        name=type_name,
+                        category=category.lower(),
+                        description=f"[{persona}] {desc}"
+                    )
+                )
+
+                # Inject into graph
+                self.graph.add_node(new_node)
+                self.graph.add_edge(node, new_node, weight=0.8, relationship=f"discovered by {persona}", validate=False)
+
+                self.discovered_nodes_count += 1
+                logger.info("new_node_discovered", persona=persona, parent=node.id, new_node=new_node.name, total=self.discovered_nodes_count)
                     
             self.token_count += 500
-            
-        except Exception as e:
-            logger.warning("discovery_failed", node_id=node.id, error=str(e))
 
     def _build_firm_context(self) -> str:
         """Build firm capability context for DSPy."""
@@ -336,7 +405,7 @@ Description: {node.type.description}"""
         primary_chain = all_chains_output[0].node_ids if all_chains_output else []
         should_bid_result = should_bid(matrix_classifications, primary_chain)
 
-        critical_deps = len(matrix_classifications.get(RiskQuadrant.CRITICAL_DEPENDENCY, []))
+        critical_deps = len(matrix_classifications.get(RiskQuadrant.TYPE_C, []))
 
         recommendation = BidRecommendation(
             should_bid=should_bid_result,
@@ -393,10 +462,10 @@ Description: {node.type.description}"""
 
     def _extract_key_risks(self, classifications: Dict) -> List[str]:
         """Extract top 3 key risks from Critical Dependencies."""
-        critical_deps = classifications.get(RiskQuadrant.CRITICAL_DEPENDENCY, [])
+        critical_deps = classifications.get(RiskQuadrant.TYPE_C, [])
         return [f"{n.node_name} (Risk: {n.importance_score * (1-n.influence_score):.2f})" for n in critical_deps[:3]]
 
     def _extract_key_opportunities(self, classifications: Dict) -> List[str]:
         """Extract top 3 opportunities from Strategic Wins."""
-        strategic_wins = classifications.get(RiskQuadrant.STRATEGIC_WIN, [])
+        strategic_wins = classifications.get(RiskQuadrant.TYPE_B, [])
         return [f"{n.node_name} (Influence: {n.influence_score:.2f})" for n in strategic_wins[:3]]

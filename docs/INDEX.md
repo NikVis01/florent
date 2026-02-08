@@ -2,10 +2,11 @@
 
 **Project Florent** - Neuro-Symbolic Infrastructure Risk Analysis Engine
 
-**Version**: 1.0.0
-**Status**: ✅ Production Ready (264 tests, 100% passing)
-**REST API**: ✅ Fully Tested & Operational (19 API tests)
-**Last Updated**: 2026-02-07
+**Version**: 1.1.0
+**Status**: ✅ Production Ready (238 tests, 100% passing)
+**REST API**: ✅ Fully Tested & Operational
+**Cross-Encoder**: ✅ BGE-M3 Integration Active
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -35,8 +36,9 @@
 #### [System Audit (audit.md)](audit.md)
 **Status**: ✅ MVP Complete - 100% Functional
 - Complete implementation status
-- **264/264 tests passing** (100% coverage)
-- REST API fully tested (19 API tests)
+- **238/238 tests passing** (100% coverage)
+- REST API fully tested
+- Cross-encoder firm-contextual graph generation
 - Architecture overview
 - Live test results
 - Performance metrics
@@ -241,7 +243,7 @@ curl http://localhost:8000/schema/openapi.json -o openapi.json
 
 ## Test Coverage
 
-**Total Tests**: 264
+**Total Tests**: 238
 **Pass Rate**: 100% ✅
 
 ### By Module
@@ -264,7 +266,7 @@ curl http://localhost:8000/schema/openapi.json -o openapi.json
 
 ### Run Tests
 ```bash
-# All tests (264 total)
+# All tests (238 total)
 uv run pytest tests/ -v
 
 # Specific module

@@ -21,6 +21,7 @@ from src.services.pipeline import (
     detect_critical_chains,
     run_analysis
 )
+from src.services.analysis.matrix import generate_matrix
 from src.services.agent.core.orchestrator import NodeAssessment
 
 
@@ -323,7 +324,7 @@ class TestCompleteAnalysisPipeline(unittest.TestCase):
 
         # Verify output structure
         self.assertIn("node_assessments", result)
-        self.assertIn("action_matrix", result)
+        self.assertIn("matrix_classifications", result)
         self.assertIn("critical_chains", result)
         self.assertIn("summary", result)
 
@@ -338,12 +339,12 @@ class TestCompleteAnalysisPipeline(unittest.TestCase):
         self.assertEqual(summary["firm_id"], "firm_001")
         self.assertEqual(summary["project_id"], "proj_001")
 
-        # Verify action matrix has all quadrants
-        matrix = result["action_matrix"]
-        self.assertIn("mitigate", matrix)
-        self.assertIn("automate", matrix)
-        self.assertIn("contingency", matrix)
-        self.assertIn("delegate", matrix)
+        # Verify matrix classifications has all quadrants
+        matrix = result["matrix_classifications"]
+        self.assertIn("Type A", matrix)
+        self.assertIn("Type B", matrix)
+        self.assertIn("Type C", matrix)
+        self.assertIn("Type D", matrix)
 
 
 if __name__ == '__main__':

@@ -8,10 +8,10 @@ from pydantic import BaseModel
 
 class RiskQuadrant(str, Enum):
     """Quadrants derived from Influence (X) and Importance (Y)."""
-    STRATEGIC_WIN = "High Influence / Low Importance"
-    MANAGED_RISK = "High Influence / High Importance"
-    BASELINE_SUPPORT = "Low Influence / Low Importance"
-    CRITICAL_DEPENDENCY = "Low Influence / High Importance"
+    TYPE_A = "Type A (High Influence / High Importance)"
+    TYPE_B = "Type B (High Influence / Low Importance)"
+    TYPE_C = "Type C (Low Influence / High Importance)"
+    TYPE_D = "Type D (Low Influence / Low Importance)"
 
 
 class NodeClassification(BaseModel):
@@ -47,14 +47,14 @@ def classify_node(
     high_influence = influence_score > influence_threshold
     high_importance = importance_score > importance_threshold
 
-    if high_influence and not high_importance:
-        quadrant = RiskQuadrant.STRATEGIC_WIN
-    elif high_influence and high_importance:
-        quadrant = RiskQuadrant.MANAGED_RISK
-    elif not high_influence and not high_importance:
-        quadrant = RiskQuadrant.BASELINE_SUPPORT
-    else:  # Low influence, high importance
-        quadrant = RiskQuadrant.CRITICAL_DEPENDENCY
+    if high_influence and high_importance:
+        quadrant = RiskQuadrant.TYPE_A
+    elif high_influence and not high_importance:
+        quadrant = RiskQuadrant.TYPE_B
+    elif not high_influence and high_importance:
+        quadrant = RiskQuadrant.TYPE_C
+    else:  # Low influence, low importance
+        quadrant = RiskQuadrant.TYPE_D
 
     return NodeClassification(
         node_id=node_id,
@@ -108,7 +108,7 @@ def should_bid(
     Decision Rule: If the critical chain is dominated by "Critical Dependency" nodes
     (Low Influence / High Importance), the firm should NOT bid.
     """
-    critical_deps = classifications.get(RiskQuadrant.CRITICAL_DEPENDENCY, [])
+    critical_deps = classifications.get(RiskQuadrant.TYPE_C, [])
     critical_dep_ids = {node.node_id for node in critical_deps}
 
     if len(critical_chain_node_ids) == 0:

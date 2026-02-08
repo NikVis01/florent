@@ -1,10 +1,10 @@
 # Florent System Audit - Current Implementation Status
 
-**Last Updated**: 2026-02-07 (Post-Implementation + OpenAPI Integration + REST API Tests)
-**Status**: ✅ **MVP COMPLETE - 100% FUNCTIONAL**
-**Test Status**: ✅ **264/264 tests passing (100%)**
+**Last Updated**: 2026-02-08 (Cross-Encoder Integration + Firm-Contextual Graph Generation)
+**Status**: ✅ **V1.1.0 COMPLETE - PRODUCTION READY**
+**Test Status**: ✅ **238/238 tests passing (100%)**
 **Blockers**: 0 - All critical features implemented
-**New Features**: ✨ Auto-generated OpenAPI 3.1 specification with Swagger UI + Comprehensive REST API tests
+**New Features**: ✨ BGE-M3 cross-encoder integration + Firm-specific graph weighting + Gap-driven discovery
 
 ---
 
@@ -14,12 +14,13 @@
 
 **Project Florent** is a production-ready neuro-symbolic infrastructure risk analysis engine that combines:
 - Graph theory (deterministic DAG topology)
-- AI agents (DSPy + OpenAI for contextual evaluation)
+- Cross-encoder foundation (BGE-M3 for firm-contextual edge weighting)
+- AI agents (DSPy + OpenAI for evaluation and discovery)
 - Mathematical models (cascading risk propagation)
-- Strategic classification (2×2 action matrix)
+- Strategic classification (Influence vs Importance matrix)
 
 **End-to-End Pipeline**: ✅ Fully operational
-- Load firm.json + project.json → Build DAG → Evaluate nodes → Propagate risk → Generate matrix → Detect critical chains → Return actionable analysis
+- Load firm.json + project.json → Build initial DAG → Cross-encoder scores edges (firm-specific) → Detect gaps → Agent discovers missing nodes → Iterative refinement → Evaluate nodes → Propagate risk → Classify nodes (Influence vs Importance) → Detect critical chains → Return actionable analysis
 
 ---
 
@@ -33,19 +34,21 @@
 - ✅ **Logging Service**: Production-ready structlog with context management
 - ✅ **GeoAnalyzer**: Country similarity and affiliation logic
 - ✅ **AI Client**: DSPy 2.x integration with dspy.LM
-- ✅ **Settings System**: Environment-based configuration
+- ✅ **Cross-Encoder Client**: BGE-M3 REST client for embeddings ⭐ NEW
+- ✅ **Graph Builder**: Firm-contextual graph generation with gap detection ⭐ NEW
+- ✅ **Settings System**: Environment-based configuration (with cross-encoder options)
 - ✅ **Math Service**: Risk/influence calculations (sigmoid, decay, propagation)
 - ✅ **Vector Service**: NumPy operations (cosine similarity, embeddings)
-- ✅ **Docker Infrastructure**: Multi-service compose with health checks
-- ✅ **Documentation**: Comprehensive README, ROADMAP, IMPLEMENTATION_PLAN
-- ✅ **OpenAPI Generation**: Auto-generated spec with Swagger UI integration ⭐ NEW
+- ✅ **Docker Infrastructure**: Multi-service compose with health checks (BGE-M3 + API)
+- ✅ **Documentation**: Comprehensive README, ROADMAP, SYSTEM_OVERVIEW, CHANGELOG
+- ✅ **OpenAPI Generation**: Auto-generated spec with Swagger UI integration
 
 ### Core Logic Layer (100%)
 - ✅ **Agent Orchestrator Core Loop**: Priority-based DAG traversal with budget management
 - ✅ **DSPy Integration**: NodeSignature instantiated and wired into orchestrator
 - ✅ **Node Evaluation**: AI-driven capability matching with fallback handling
 - ✅ **Risk Propagation Engine**: Topological sort + cascading failure formula
-- ✅ **2×2 Action Matrix**: Mitigate/Automate/Contingency/Delegate classification
+- ✅ **Influence vs Importance Matrix**: Strategic data-driven classification
 - ✅ **Critical Chain Detection**: DFS path finding with cumulative risk calculation
 - ✅ **Analysis Pipeline**: Complete end-to-end workflow orchestration
 - ✅ **API Integration**: /analyze endpoint fully wired and operational
@@ -112,7 +115,7 @@ Coverage:         Core logic 100%, Infrastructure 100%, REST API 100%
 | **Logging** | 100% | ✅ Production | `src/services/logging/` |
 | **AI Client** | 100% | ✅ Production | `src/services/clients/ai_client.py` |
 | **GeoAnalyzer** | 100% | ✅ Production | `src/services/country/geo.py` |
-| **2×2 Matrix** | 100% | ✅ Production | `src/services/analysis/matrix.py` |
+| **2×2 Matrix** | 100% | ✅ Production | `src/services/agent/analysis/matrix_classifier.py` |
 | **Risk Propagation** | 100% | ✅ Production | `src/services/analysis/propagation.py` |
 | **Critical Chains** | 100% | ✅ Production | `src/services/analysis/chains.py` |
 | **Analysis Pipeline** | 100% | ✅ Production | `src/services/pipeline.py` |
@@ -146,9 +149,9 @@ Run Exploration (Priority-Based Traversal)
 Propagate Risk (Topological Order)
     ├→ Apply formula: R_n = 1 - [(1 - P_local × μ) × ∏(1 - R_parent)]
     ↓
-Generate 2×2 Action Matrix
-    ├→ Classify nodes: Mitigate/Automate/Contingency/Delegate
-    ↓
+Generate Influence vs Importance Matrix
+Generate Influence vs Importance Matrix
+    ├→ Classify nodes: Type A / Type B / Type C / Type D
 Detect Critical Chains
     ├→ Find high-risk paths through dependency graph
     ↓
@@ -192,11 +195,11 @@ R_chain = 1 - ∏(1 - R_i) for all nodes i in path
 
 Pipeline Execution:
 - Nodes Evaluated:     4
-- Action Matrix:
-  • Mitigate:          0
-  • Automate:          0
-  • Contingency:       0
-  • Delegate:          4
+- Influence vs Importance:
+  • Type A:            0
+  • Type B:            0
+  • Type C:            0
+  • Type D:            4
 - Critical Chains:     1
 - Bankability:         38.9%
 - Average Risk:        61.1%
@@ -256,7 +259,8 @@ The REST API is fully tested with comprehensive coverage of all endpoints and sc
 - ✅ Successful analysis with valid data
 - ✅ Response structure validation
 - ✅ Node assessments present and valid
-- ✅ Action matrix classification correct
+- ✅ Node assessments present and valid
+- ✅ Influence vs Importance classification correct
 - ✅ Critical chains detection working
 - ✅ Summary metrics calculated
 - ✅ Invalid file paths handling (404 errors)
@@ -332,11 +336,11 @@ uv run python scripts/serve_openapi_docs.py
       "reasoning": "..."
     }
   },
-  "action_matrix": {
-    "mitigate": [...],
-    "automate": [...],
-    "contingency": [...],
-    "delegate": [...]
+  "matrix_classifications": {
+    "Type A": [...],
+    "Type B": [...],
+    "Type C": [...],
+    "Type D": [...]
   },
   "critical_chains": [
     {
@@ -449,7 +453,7 @@ uv run python scripts/serve_openapi_docs.py --port 8080
 - ✅ End-to-end: firm.json + project.json → AnalysisOutput
 - ✅ DSPy agents successfully query OpenAI (when configured)
 - ✅ Risk scores in valid range [0, 1]
-- ✅ 2×2 matrix classifies all nodes
+- ✅ Influence vs Importance matrix classifies all nodes
 - ✅ Critical chains detected correctly
 - ✅ API endpoint returns real data (not mock)
 - ✅ REST API endpoints fully tested (health check + analyze)
@@ -476,7 +480,8 @@ All critical features have been implemented, tested, and verified:
 - ✅ 5 Graph utility methods
 - ✅ Complete orchestrator with DSPy integration
 - ✅ Risk propagation engine with topological sort
-- ✅ 2×2 action matrix classification
+- ✅ Risk propagation engine with topological sort
+- ✅ Influence vs Importance matrix classification
 - ✅ Critical chain detection
 - ✅ End-to-end analysis pipeline
 - ✅ API endpoint integration

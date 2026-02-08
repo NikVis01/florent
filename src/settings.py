@@ -21,10 +21,18 @@ class Settings:
         # BGE-M3 Settings
         self.BGE_M3_URL = os.getenv("BGE_M3_URL", "http://localhost:8080")
         self.BGE_M3_MODEL = os.getenv("BGE_M3_MODEL", "BAAI/bge-m3")
+        # Cross-encoder endpoint (same as BGE_M3_URL, uses embedding similarity)
+        self.CROSS_ENCODER_ENDPOINT = os.getenv("CROSS_ENCODER_ENDPOINT", self.BGE_M3_URL)
+        self.USE_CROSS_ENCODER = os.getenv("USE_CROSS_ENCODER", "true").lower() == "true"
 
         # Engine Constants
         self.DEFAULT_ATTENUATION_FACTOR = float(os.getenv("DEFAULT_ATTENUATION_FACTOR", "1.2"))
         self.MAX_TRAVERSAL_DEPTH = int(os.getenv("MAX_TRAVERSAL_DEPTH", "10"))
+        
+        # Graph Builder Settings
+        self.GRAPH_GAP_THRESHOLD = float(os.getenv("GRAPH_GAP_THRESHOLD", "0.3"))
+        self.GRAPH_MAX_ITERATIONS = int(os.getenv("GRAPH_MAX_ITERATIONS", "10"))
+        self.GRAPH_MAX_DISCOVERED_NODES = int(os.getenv("GRAPH_MAX_DISCOVERED_NODES", "50"))
 
         # Project Paths
         self.BASE_DIR = str(PROJECT_ROOT)

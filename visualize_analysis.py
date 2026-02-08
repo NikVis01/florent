@@ -28,10 +28,14 @@ COLORS = {
     "success": "#0d904f",    # Forest Green
     "warning": "#f9ab00",    # Amber
     "danger": "#d93025",     # Crimson
-    "mitigate": "#d93025",   # High Risk
-    "automate": "#0d904f",   # Safe Wins
-    "contingency": "#f9ab00", # Managed Risks
-    "delegate": "#1a73e8",   # Strategic Base
+    "type_a": "#0d904f",   # Type A (Mitigation)
+    "type_b": "#1a73e8",   # Type B (Optimization)
+    "type_c": "#d93025",   # Type C (Contingency)
+    "type_d": "#dadce0",   # Type D (Delegation)
+    "mitigate": "#d93025",    # Fallback/Legacy
+    "automate": "#1a73e8",    # Fallback/Legacy
+    "contingency": "#f9ab00", # Fallback/Legacy
+    "delegate": "#dadce0",    # Fallback/Legacy
     "slate": "#3c4043",
     "light_gray": "#f8f9fa",
     "border": "#dadce0"
@@ -128,17 +132,8 @@ def normalize_analysis_format(analysis: Dict[str, Any]) -> Dict[str, Any]:
         }
     normalized["node_assessments"] = node_assessments
 
-    # Convert matrix_classifications to action_matrix
-    matrix = analysis.get("matrix_classifications", {})
-    action_matrix = {}
-    for quadrant in ["MITIGATE", "AUTOMATE", "CONTINGENCY", "DELEGATE"]:
-        quadrant_lower = quadrant.lower()
-        action_matrix[quadrant_lower] = [
-            node.get("node_id") if isinstance(node, dict) else node
-            for node in matrix.get(quadrant, [])
-        ]
-    normalized["action_matrix"] = action_matrix
-    normalized["matrix_classifications"] = action_matrix
+    # Pass through matrix_classifications as is
+    normalized["matrix_classifications"] = analysis.get("matrix_classifications", {})
 
     # Convert all_chains to critical_chains
     critical_chains = []
@@ -167,7 +162,7 @@ def normalize_analysis_format(analysis: Dict[str, Any]) -> Dict[str, Any]:
         "maximum_risk": summary.get("critical_failure_likelihood", 0.0),
         "critical_chains_detected": len(critical_chains),
         "high_risk_nodes": summary.get("critical_dependency_count", 0),
-        "recommendations": _generate_recommendations(summary, len(critical_chains), action_matrix),
+        "recommendations": _generate_recommendations(summary, len(critical_chains)),
     }
 
     # Convert recommendation
@@ -182,24 +177,20 @@ def normalize_analysis_format(analysis: Dict[str, Any]) -> Dict[str, Any]:
     return normalized
 
 
-def _generate_recommendations(summary: Dict[str, Any], chain_count: int, action_matrix: Dict[str, Any]) -> List[str]:
+def _generate_recommendations(summary: Dict[str, Any], chain_count: int) -> List[str]:
     """Generate recommendation text from summary metrics."""
     recommendations = []
 
     bankability = summary.get("aggregate_project_score", 0.0)
     if bankability < 0.4:
-        recommendations.append("Project has significant risk - consider restructuring or declining")
+        recommendations.append("Project has significant structural risk - consider restructuring or declining")
     elif bankability < 0.7:
-        recommendations.append("Project has moderate risk - implement mitigation strategies")
+        recommendations.append("Project has moderate risk profile - implement tight influence controls")
     else:
-        recommendations.append("Project shows strong bankability - proceed with confidence")
-
-    automate_count = len(action_matrix.get("automate", []))
-    if automate_count > 0:
-        recommendations.append(f"Optimize and automate {automate_count} low-risk, high-influence operations")
+        recommendations.append("Project shows strong viability - high influence over critical paths")
 
     if chain_count == 0:
-        recommendations.append("No critical chains detected - project has good risk distribution")
+        recommendations.append("No critical paths detected - project has good structural distribution")
     else:
         recommendations.append(f"Monitor {chain_count} critical dependency chain(s)")
 
@@ -218,17 +209,29 @@ def create_network_graph(analysis: Dict[str, Any], output_dir: Path):
 
     # Color mapping for action matrix quadrants
     quadrant_colors = {
+        # Support full strings from RiskQuadrant enum
+        "Type A (High Influence / High Importance)": COLORS["type_a"],
+        "Type B (High Influence / Low Importance)": COLORS["type_b"],
+        "Type C (Low Influence / High Importance)": COLORS["type_c"],
+        "Type D (Low Influence / Low Importance)": COLORS["type_d"],
+        # Support short strings from legacy/test logic
+        "Type A": COLORS["type_a"],
+        "Type B": COLORS["type_b"],
+        "Type C": COLORS["type_c"],
+        "Type D": COLORS["type_d"],
+        # Legacy fallbacks
         "mitigate": COLORS["mitigate"],
         "automate": COLORS["automate"],
         "contingency": COLORS["contingency"],
         "delegate": COLORS["delegate"],
     }
 
-    # Build node-to-quadrant mapping from action matrix
+    # Build node-to-quadrant mapping from classifications
     node_quadrants = {}
-    for quadrant, nodes in analysis.get("action_matrix", {}).items():
-        for node_id in nodes:
-            node_quadrants[node_id] = quadrant
+    for quadrant, entries in analysis.get("matrix_classifications", {}).items():
+        for entry in entries:
+                node_id = entry.get("node_id") if isinstance(entry, dict) else entry
+                node_quadrants[node_id] = quadrant
 
     # Add nodes
     node_colors = []
@@ -309,16 +312,16 @@ def create_network_graph(analysis: Dict[str, Any], output_dir: Path):
 
     # Create legend
     legend_elements = [
-        mpatches.Patch(color=quadrant_colors["mitigate"], label="Mitigate (High Risk)"),
-        mpatches.Patch(color=quadrant_colors["automate"], label="Automate (Safe)"),
-        mpatches.Patch(color=quadrant_colors["contingency"], label="Contingency Plan"),
-        mpatches.Patch(color=quadrant_colors["delegate"], label="Delegate"),
+        mpatches.Patch(color=COLORS["type_a"], label="Type A"),
+        mpatches.Patch(color=COLORS["type_b"], label="Type B"),
+        mpatches.Patch(color=COLORS["type_c"], label="Type C"),
+        mpatches.Patch(color=COLORS["type_d"], label="Type D"),
     ]
     ax.legend(
         handles=legend_elements,
         loc='upper left',
         fontsize=10,
-        title='Action Matrix',
+        title='Risk Framework',
         title_fontsize=11
     )
 
@@ -338,12 +341,12 @@ def create_risk_matrix_2x2(analysis: Dict[str, Any], output_dir: Path):
 
     fig, ax = plt.subplots(figsize=(12, 10))
 
-    # Quadrant backgrounds (action matrix)
+    # Quadrant backgrounds
     quadrants = {
-        "Automate\n(Low Risk, High Influence)": {"x": 0.75, "y": 0.25, "color": "#2ecc71"},
-        "Mitigate\n(High Risk, High Influence)": {"x": 0.75, "y": 0.75, "color": "#e74c3c"},
-        "Delegate\n(Low Risk, Low Influence)": {"x": 0.25, "y": 0.25, "color": "#3498db"},
-        "Contingency\n(High Risk, Low Influence)": {"x": 0.25, "y": 0.75, "color": "#f39c12"},
+        "Type B\n(High Influence, Low Importance)": {"x": 0.75, "y": 0.25, "color": COLORS["type_b"]},
+        "Type A\n(High Influence, High Importance)": {"x": 0.75, "y": 0.75, "color": COLORS["type_a"]},
+        "Type D\n(Low Influence, Low Importance)": {"x": 0.25, "y": 0.25, "color": COLORS["type_d"]},
+        "Type C\n(Low Influence, High Importance)": {"x": 0.25, "y": 0.75, "color": COLORS["type_c"]},
     }
 
     # Draw quadrant backgrounds
@@ -594,10 +597,10 @@ def create_summary_dashboard(analysis: Dict[str, Any], output_dir: Path):
     }
 
     if action_counts:
-        colors_pie = [COLORS[k] for k in action_counts.keys()]
+        colors_pie = [COLORS[k.lower().replace(" ", "_")] for k in action_counts.keys()]
         ax3.pie(
             action_counts.values(),
-            labels=[k.title() for k in action_counts.keys()],
+            labels=[k for k in action_counts.keys()],
             autopct='%1.0f%%',
             colors=colors_pie,
             startangle=140,
@@ -672,20 +675,22 @@ def create_node_details_table(analysis: Dict[str, Any], output_dir: Path):
 
     # Prepare data
     data = []
-    action_matrix = analysis.get("action_matrix", {})
+    matrix_classifications = analysis.get("matrix_classifications", {})
 
     # Build reverse lookup for action
     node_to_action = {}
-    for action, nodes in action_matrix.items():
-        for node_id in nodes:
-            node_to_action[node_id] = action.title()
+    for quadrant, entries in matrix_classifications.items():
+        for entry in entries:
+            node_id = entry.get("node_id") if isinstance(entry, dict) else entry
+            node_to_action[node_id] = quadrant
 
     for node_id, assessment in analysis.get("node_assessments", {}).items():
+        risk = assessment.get("risk", 0.5) if "risk" in assessment else assessment.get("risk_level", 0.5)
         data.append({
             "Node": node_id.replace("node_", "").replace("_", " ").title(),
-            "Influence": assessment.get("influence", 0.5),
-            "Risk": assessment.get("risk", 0.5),
-            "Action": node_to_action.get(node_id, "Unknown"),
+            "Influence": assessment.get("influence", 0.5) if "influence" in assessment else assessment.get("influence_score", 0.5),
+            "Risk": risk,
+            "Classification": node_to_action.get(node_id, "Unknown"),
             "Critical": "Yes" if assessment.get("is_on_critical_path", False) else "No",
         })
 
@@ -818,14 +823,14 @@ def create_risk_influence_scatter(analysis: Dict[str, Any], output_dir: Path):
     ax.axvline(x=0.5, color='black', linestyle='--', linewidth=2, alpha=0.3)
 
     # Quadrant labels
-    ax.text(0.75, 0.95, 'Mitigate\n(High Risk, High Influence)', ha='center', va='top',
-            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['mitigate'], alpha=0.2))
-    ax.text(0.75, 0.05, 'Automate\n(Low Risk, High Influence)', ha='center', va='bottom',
-            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['automate'], alpha=0.2))
-    ax.text(0.25, 0.95, 'Contingency\n(High Risk, Low Influence)', ha='center', va='top',
-            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['contingency'], alpha=0.2))
-    ax.text(0.25, 0.05, 'Delegate\n(Low Risk, Low Influence)', ha='center', va='bottom',
-            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['delegate'], alpha=0.2))
+    ax.text(0.75, 0.95, 'Type A\n(High Risk, High Influence)', ha='center', va='top',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['type_a'], alpha=0.2))
+    ax.text(0.75, 0.05, 'Type B\n(Low Risk, High Influence)', ha='center', va='bottom',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['type_b'], alpha=0.2))
+    ax.text(0.25, 0.95, 'Type C\n(High Risk, Low Influence)', ha='center', va='top',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['type_c'], alpha=0.2))
+    ax.text(0.25, 0.05, 'Type D\n(Low Risk, Low Influence)', ha='center', va='bottom',
+            fontsize=11, fontweight='bold', bbox=dict(boxstyle='round', facecolor=COLORS['type_d'], alpha=0.2))
 
     ax.set_xlim(-0.05, 1.05)
     ax.set_ylim(-0.05, 1.05)

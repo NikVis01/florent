@@ -192,7 +192,7 @@ def propagate_risk(
 def detect_critical_chains(
     graph: Graph,
     propagated_risk: Dict[str, float],
-    threshold: float = 0.6
+    threshold: float = 0.1
 ) -> List[Dict[str, Any]]:
     """
     Detect critical dependency chains with high aggregate risk.
@@ -282,7 +282,7 @@ def run_analysis(
     2. Initialize AgentOrchestrator with AI evaluation
     3. Run exploration within budget constraints
     4. Propagate risk through dependency chains
-    5. Generate 2x2 strategic action matrix
+    5. Classify nodes in Influence vs Importance matrix
     6. Detect critical chains and pivotal nodes
     7. Return comprehensive analysis output
 
@@ -294,7 +294,7 @@ def run_analysis(
     Returns:
         Dictionary containing:
         - node_assessments: Map of node_id to assessment data
-        - action_matrix: 2x2 classification (mitigate/automate/contingency/delegate)
+        - matrix_classifications: Influence vs Importance mapping
         - critical_chains: List of high-risk dependency chains
         - summary: Overall metrics and recommendations
 
@@ -344,10 +344,10 @@ def run_analysis(
 
         logger.info(
             "matrix_generated",
-            mitigate=len(action_matrix["mitigate"]),
-            automate=len(action_matrix["automate"]),
-            contingency=len(action_matrix["contingency"]),
-            delegate=len(action_matrix["delegate"])
+            type_a=len(action_matrix["Type A"]),
+            type_b=len(action_matrix["Type B"]),
+            type_c=len(action_matrix["Type C"]),
+            type_d=len(action_matrix["Type D"])
         )
 
         # Step 6: Detect critical chains
@@ -383,7 +383,7 @@ def run_analysis(
             "average_risk": round(avg_risk, 3),
             "maximum_risk": round(max_risk, 3),
             "critical_chains_detected": len(critical_chains),
-            "high_risk_nodes": len(action_matrix["mitigate"]) + len(action_matrix["contingency"]),
+            "high_risk_nodes": len(action_matrix["Type A"]) + len(action_matrix["Type C"]),
             "recommendations": _generate_recommendations(action_matrix, critical_chains, bankability)
         }
 
@@ -404,8 +404,7 @@ def run_analysis(
 
         return {
             "node_assessments": node_assessments,
-            "action_matrix": action_matrix,
-            "matrix_classifications": action_matrix,
+            "matrix_classifications": action_matrix,  # This variable should be renamed or the function updated
             "critical_chains": critical_chains,
             "summary": summary,
             "recommendation": recommendation
@@ -438,19 +437,19 @@ def _generate_recommendations(
         recommendations.append("Project has significant risk - consider restructuring or declining")
 
     # Action matrix recommendations
-    if len(action_matrix["mitigate"]) > 0:
+    if len(action_matrix["Type A"]) > 0:
         recommendations.append(
-            f"Prioritize mitigation for {len(action_matrix['mitigate'])} high-risk, high-influence nodes"
+            f"Prioritize mitigation for {len(action_matrix['Type A'])} high-risk, high-influence nodes (Type A)"
         )
 
-    if len(action_matrix["contingency"]) > 0:
+    if len(action_matrix["Type C"]) > 0:
         recommendations.append(
-            f"Develop contingency plans for {len(action_matrix['contingency'])} high-risk, low-influence nodes"
+            f"Develop contingency plans for {len(action_matrix['Type C'])} high-risk, low-influence nodes (Type C)"
         )
 
-    if len(action_matrix["automate"]) > 0:
+    if len(action_matrix["Type B"]) > 0:
         recommendations.append(
-            f"Optimize and automate {len(action_matrix['automate'])} low-risk, high-influence operations"
+            f"Optimize and automate {len(action_matrix['Type B'])} low-risk, high-influence operations (Type B)"
         )
 
     # Critical chains

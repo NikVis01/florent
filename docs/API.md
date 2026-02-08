@@ -4,12 +4,16 @@
 
 Florent provides a REST API built with [Litestar](https://litestar.dev/) for performing AI-powered infrastructure project risk analysis. The API accepts firm and project data and returns comprehensive risk assessments including:
 
+- **Firm-contextual dependency graphs** with BGE-M3 cross-encoder weighted edges
 - **Node-level risk assessments** for each project operation
 - **Strategic action matrix** (2x2 classification: Mitigate, Automate, Contingency, Delegate)
 - **Critical dependency chains** that could derail the project
-- **Overall bankability score** and detailed recommendations
+- **Overall project viability score** and detailed recommendations
 
-The system uses OpenAI's GPT models through DSPy to evaluate operational risks and propagate them through the project dependency graph.
+The system uses:
+- **BGE-M3 cross-encoder** for firm-specific edge weighting and gap detection
+- **OpenAI GPT models** (via DSPy) for node evaluation and discovery
+- **Graph algorithms** for risk propagation and critical chain detection
 
 ## Base URL
 
@@ -32,20 +36,20 @@ python3 scripts/generate_openapi.py
 
 ## Test Coverage
 
-The API has **19 comprehensive REST API tests** covering:
-- Health check endpoint functionality
-- Analysis with file paths and JSON data
+The system has **238 comprehensive tests** covering:
+- REST API endpoints (health check, analysis)
+- Cross-encoder client (embeddings, similarity scoring)
+- Graph builder (firm-contextual weighting, gap detection, discovery)
+- Node evaluation and risk propagation
+- Matrix classification and critical chains
 - Request validation and error handling
-- Budget parameter handling (default, custom, edge cases)
-- Response structure verification
-- Logging and integration testing
-- Edge cases (zero, negative, and very large budgets)
+- Integration tests with cross-encoder enabled/disabled
 
 Run tests with:
 ```bash
-./test_api.sh
+./update.sh
 # or
-uv run pytest tests/test_api.py -v
+uv run pytest tests/ -v
 ```
 
 ## Endpoints

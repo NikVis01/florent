@@ -16,25 +16,25 @@ def classify_node(influence: float, risk: float) -> str:
         risk: Risk score (0.0 to 1.0)
 
     Returns:
-        Quadrant classification: "mitigate", "automate", "contingency", or "delegate"
+        Quadrant classification: "Type A", "Type B", "Type C", or "Type D"
 
     Quadrant Rules:
-        - Q1 Mitigate: High Risk (>0.7), High Influence (>0.7)
-        - Q2 Automate: Low Risk (≤0.7), High Influence (>0.7)
-        - Q3 Contingency: High Risk (>0.7), Low Influence (≤0.7)
-        - Q4 Delegate: Low Risk (≤0.7), Low Influence (≤0.7)
+        - Type A: High Risk (>0.7), High Influence (>0.7)
+        - Type B: Low Risk (≤0.7), High Influence (>0.7)
+        - Type C: High Risk (>0.7), Low Influence (≤0.7)
+        - Type D: Low Risk (≤0.7), Low Influence (≤0.7)
     """
     high_risk = risk > 0.7
     high_influence = influence > 0.7
 
     if high_risk and high_influence:
-        return "mitigate"
+        return "Type A"
     elif not high_risk and high_influence:
-        return "automate"
+        return "Type B"
     elif high_risk and not high_influence:
-        return "contingency"
+        return "Type C"
     else:  # not high_risk and not high_influence
-        return "delegate"
+        return "Type D"
 
 
 def generate_matrix(node_assessments: Dict) -> dict:
@@ -52,17 +52,17 @@ def generate_matrix(node_assessments: Dict) -> dict:
     Returns:
         Dictionary with quadrants as keys and lists of node_ids as values.
         Example: {
-            "mitigate": ["node1"],
-            "automate": ["node2"],
-            "contingency": [],
-            "delegate": ["node3"]
+            "Type A": ["node1"],
+            "Type B": ["node2"],
+            "Type C": [],
+            "Type D": ["node3"]
         }
     """
     matrix = {
-        "mitigate": [],
-        "automate": [],
-        "contingency": [],
-        "delegate": []
+        "Type A": [],
+        "Type B": [],
+        "Type C": [],
+        "Type D": []
     }
 
     for node_id, assessment in node_assessments.items():
