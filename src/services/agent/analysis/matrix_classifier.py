@@ -8,10 +8,10 @@ from pydantic import BaseModel
 
 class RiskQuadrant(str, Enum):
     """Quadrants derived from Influence (X) and Importance (Y)."""
-    TYPE_A = "Type A (High Influence / High Importance)"
-    TYPE_B = "Type B (High Influence / Low Importance)"
-    TYPE_C = "Type C (Low Influence / High Importance)"
-    TYPE_D = "Type D (Low Influence / Low Importance)"
+    TYPE_A = "TYPE_A"  # High Influence / High Importance
+    TYPE_B = "TYPE_B"  # High Influence / Low Importance
+    TYPE_C = "TYPE_C"  # Low Influence / High Importance
+    TYPE_D = "TYPE_D"  # Low Influence / Low Importance
 
 
 class NodeClassification(BaseModel):

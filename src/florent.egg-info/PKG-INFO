@@ -11,4 +11,5 @@ Requires-Dist: dotenv>=0.9.9
 Requires-Dist: litestar>=2.0.0
 Requires-Dist: rich>=14.3.2
 Requires-Dist: uvicorn>=0.40.0
+Requires-Dist: aiofiles>=24.1.0
 Dynamic: license-file

@@ -1,8 +1,17 @@
 # MATLAB->Python Connection Analysis: Data Structures & Request Formats
 
 **Generated:** 2026-02-08
+**Updated:** 2026-02-08 (Python fixes completed)
 **Project:** Florent Risk Assessment System
 **Scope:** Analysis of data flow between MATLAB client and Python API server
+
+---
+
+## 🎉 UPDATE: Python/API Fixes Completed
+
+**All Python-side and API-side issues have been fixed!** See `PYTHON_API_FIXES_SUMMARY.md` for details.
+
+**Remaining work:** MATLAB-side updates only (see Section 15 below)
 
 ---
 
@@ -10,7 +19,7 @@
 
 This document provides a comprehensive analysis of the MATLAB->Python connection in the Florent system, identifying potential misunderstandings and mismatches in data structures, request formats, and response parsing. The analysis covers the full data flow from MATLAB request construction through Python API processing and back to MATLAB response parsing.
 
-### Key Findings:
+### Key Findings (UPDATED):
 
 1. **Field Naming Inconsistencies** - Mix of snake_case (Python) and camelCase (MATLAB)
 2. **JSON Serialization Issues** - MATLAB struct to JSON conversion edge cases
@@ -1238,3 +1247,364 @@ After implementing recommendations, measure:
 **Document Version:** 1.0
 **Last Updated:** 2026-02-08
 **Maintainer:** Claude Code Analysis Agent
+
+---
+
+## 15. REMAINING WORK - MATLAB SIDE ONLY
+
+### ✅ Python/API Side: COMPLETE
+All Python and API issues have been fixed. See `PYTHON_API_FIXES_SUMMARY.md`.
+
+### ⏳ MATLAB Side: TODO
+
+#### High Priority - Breaking Changes
+
+##### 1. Update Enum String Matching
+**Files:** 
+- `MATLAB/Functions/parseAnalysisResponse.m` (lines 391-421)
+- `MATLAB/Functions/validateAnalysisResponse.m` (lines 123-138)
+
+**Change Required:**
+```matlab
+% OLD (broken):
+if contains(quadrantKey, 'TYPE_A') || contains(quadrantKey, 'Type A')
+    nodeToQuadrant(nodeId) = 'Q1';
+
+% NEW (correct):
+if strcmp(quadrantKey, 'TYPE_A')
+    nodeToQuadrant(nodeId) = 'Q1';
+elseif strcmp(quadrantKey, 'TYPE_B')
+    nodeToQuadrant(nodeId) = 'Q2';
+elseif strcmp(quadrantKey, 'TYPE_C')
+    nodeToQuadrant(nodeId) = 'Q3';
+elseif strcmp(quadrantKey, 'TYPE_D')
+    nodeToQuadrant(nodeId) = 'Q4';
+end
+```
+
+**Impact:** Classification parsing will fail without this fix.
+
+---
+
+##### 2. HTTP Status Code Handling
+**File:** `MATLAB/Functions/FlorentAPIClientWrapper.m`
+
+**Change Required:**
+```matlab
+% Add status code checking to callAnalyzeEndpoint()
+response = webwrite(endpoint, request, options);
+
+% Check HTTP status code
+if response.StatusCode ~= 200
+    error('API error (HTTP %d): %s', response.StatusCode, response.StatusLine);
+end
+
+% For retries - check status code not string
+if response.StatusCode >= 500 || response.StatusCode == 408
+    % Server error or timeout - retry
+    pause(obj.RetryDelay);
+    continue;
+elseif response.StatusCode >= 400 && response.StatusCode < 500
+    % Client error - don't retry
+    break;
+end
+```
+
+**Impact:** Better error handling and retry logic.
+
+---
+
+##### 3. Error Response Parsing
+**Files:**
+- `MATLAB/Functions/FlorentAPIClientWrapper.m`
+- `MATLAB/Functions/validateAnalysisResponse.m`
+
+**Change Required:**
+Litestar returns different error format:
+```matlab
+% OLD format:
+% {"status": "error", "message": "..."}
+
+% NEW format (Litestar HTTPException):
+% {"status_code": 404, "detail": "...", "extra": {}}
+
+% Update parsing:
+if isfield(response, 'status_code') && response.status_code ~= 200
+    errorMsg = response.detail;
+    error('API error: %s', errorMsg);
+end
+```
+
+**Impact:** Error messages won't display correctly without this.
+
+---
+
+#### Medium Priority - Code Cleanup
+
+##### 4. Remove Deprecated parseAnalysisResponse.m
+**File:** `MATLAB/Functions/parseAnalysisResponse.m`
+
+**Action:** Delete entire file or mark as truly deprecated.
+
+**Reason:** 
+- Marked DEPRECATED since enhanced API
+- Still called from `FlorentAPIClientWrapper.m:147` in legacy mode
+- Loses enhanced schema data
+- Adds unnecessary complexity
+
+**Fix:**
+```matlab
+% In FlorentAPIClientWrapper.m, remove:
+if useOpenAPIFormat
+    % ... OpenAPI format
+else
+    data = parseAnalysisResponse(response, projectId, firmId);  % DELETE THIS
+end
+
+% Always use OpenAPI format:
+data = response.analysis;
+```
+
+---
+
+##### 5. Remove Fallback Field Names
+**Files:**
+- `MATLAB/Functions/openapiHelpers.m` (multiple functions)
+- `MATLAB/Functions/validateAnalysisResponse.m`
+- `MATLAB/Functions/parseAnalysisResponse.m` (if not deleted)
+
+**Changes:**
+```matlab
+% OLD (unnecessary fallbacks):
+if isfield(assessment, 'influence_score')
+    data.riskScores.influence(i) = assessment.influence_score;
+elseif isfield(assessment, 'influence')
+    data.riskScores.influence(i) = assessment.influence;  % DELETE
+end
+
+% NEW (Python only sends new names):
+data.riskScores.influence(i) = assessment.influence_score;
+```
+
+**Fields to clean up:**
+- `influence_score` / `influence` → use only `influence_score`
+- `risk_level` / `risk` → use only `risk_level`
+- `importance_score` / `importance` → use only `importance_score`
+- `is_on_critical_path` / `isOnCriticalPath` → use only `is_on_critical_path`
+- `node_ids` / `nodes` → use only `node_ids`
+- `cumulative_risk` / `aggregate_risk` → use only `cumulative_risk`
+- `aggregate_project_score` / `overall_bankability` → use only `aggregate_project_score`
+
+**Impact:** Simpler code, removes dead branches.
+
+---
+
+##### 6. Fix Default Fallback Values
+**File:** `MATLAB/Functions/openapiHelpers.m`
+
+**Change Required:**
+```matlab
+% OLD (masks missing data):
+if isfield(analysis, 'node_assessments') && ...
+   isfield(analysis.node_assessments, nodeId)
+    influence = assessment.influence_score;
+else
+    influence = 0.5; % DEFAULT - BAD!
+end
+
+% NEW (fail explicitly):
+if ~isfield(analysis, 'node_assessments') || ...
+   ~isfield(analysis.node_assessments, nodeId)
+    error('Node not found in analysis: %s', nodeId);
+end
+influence = assessment.influence_score;
+```
+
+**Impact:** Errors on missing data instead of silently using 0.5.
+
+---
+
+##### 7. Optimize getMatrixType() Loop
+**File:** `MATLAB/Functions/openapiHelpers.m` (lines 228-278)
+
+**Change Required:**
+Build reverse map once instead of searching every time:
+
+```matlab
+% Add to openapiHelpers as new function:
+function nodeQuadrantMap = buildMatrixMap(analysis)
+    % Build reverse map: node_id -> quadrant
+    persistent cachedMap;
+    persistent cachedAnalysis;
+    
+    % Cache by analysis object
+    if isequal(analysis, cachedAnalysis)
+        nodeQuadrantMap = cachedMap;
+        return;
+    end
+    
+    nodeQuadrantMap = containers.Map();
+    if ~isfield(analysis, 'matrix_classifications')
+        return;
+    end
+    
+    quadrantKeys = fieldnames(analysis.matrix_classifications);
+    for q = 1:length(quadrantKeys)
+        quadrantKey = quadrantKeys{q};
+        nodeList = analysis.matrix_classifications.(quadrantKey);
+        
+        for n = 1:length(nodeList)
+            nodeClass = nodeList(n);
+            if isfield(nodeClass, 'node_id')
+                nodeQuadrantMap(nodeClass.node_id) = quadrantKey;
+            end
+        end
+    end
+    
+    cachedMap = nodeQuadrantMap;
+    cachedAnalysis = analysis;
+end
+
+% Update getMatrixType():
+function matrixType = getMatrixType(analysis, nodeId)
+    map = buildMatrixMap(analysis);
+    if isKey(map, nodeId)
+        matrixType = map(nodeId);
+    else
+        matrixType = '';
+    end
+end
+```
+
+**Impact:** O(1) lookup instead of O(n*m) search.
+
+---
+
+#### Low Priority - Improvements
+
+##### 8. Remove Cell Array Handling for Struct Arrays
+**File:** `MATLAB/Functions/parseAnalysisResponse.m`
+
+**Issue:** Code handles both cell arrays and struct arrays, but Python always sends struct arrays.
+
+**Fix:** Remove cell array branches:
+```matlab
+% DELETE:
+if iscell(chains)
+    for chainIdx = 1:length(chains)
+        chain = chains{chainIdx};
+        ...
+    end
+elseif isstruct(chains)  % KEEP THIS
+    ...
+end
+```
+
+---
+
+##### 9. Update Test Files
+**Files:**
+- `MATLAB/Scripts/testFlorentAPIClient.m`
+- All other test scripts
+
+**Changes:**
+- Update mock responses to use TYPE_A format
+- Update error checking to use HTTP status codes
+- Remove legacy field names from mocks
+
+---
+
+### Summary: MATLAB Work Remaining
+
+| Priority | Issue | File(s) | Effort |
+|----------|-------|---------|--------|
+| **HIGH** | Enum string matching | parseAnalysisResponse.m, validateAnalysisResponse.m | 15 min |
+| **HIGH** | HTTP status codes | FlorentAPIClientWrapper.m | 30 min |
+| **HIGH** | Error response format | FlorentAPIClientWrapper.m, validateAnalysisResponse.m | 15 min |
+| **MEDIUM** | Delete parseAnalysisResponse.m | parseAnalysisResponse.m, FlorentAPIClientWrapper.m | 10 min |
+| **MEDIUM** | Remove fallback field names | openapiHelpers.m, validateAnalysisResponse.m | 30 min |
+| **MEDIUM** | Fix default fallbacks | openapiHelpers.m | 20 min |
+| **MEDIUM** | Optimize getMatrixType | openapiHelpers.m | 30 min |
+| **LOW** | Remove cell array handling | parseAnalysisResponse.m | 10 min |
+| **LOW** | Update tests | All test scripts | 30 min |
+
+**Total Estimated Effort:** ~3 hours
+
+---
+
+### Testing After MATLAB Fixes
+
+**1. Basic Request:**
+```matlab
+client = FlorentAPIClientWrapper('http://localhost:8000');
+data = client.analyzeProject('proj_001', 'firm_001', 100);
+```
+
+**Expected:**
+- No errors
+- `data.analysis.matrix_classifications` has TYPE_A keys
+- All fields use new names (influence_score, not influence)
+
+**2. File Not Found:**
+```matlab
+try
+    data = client.analyzeProject('nonexistent', 'firm_001', 100);
+    error('Should have thrown error');
+catch ME
+    assert(contains(ME.message, 'HTTP 404') || contains(ME.message, 'File not found'));
+end
+```
+
+**3. Invalid Budget:**
+```matlab
+try
+    data = client.analyzeProject('proj_001', 'firm_001', -100);
+    error('Should have thrown error');
+catch ME
+    assert(contains(ME.message, 'HTTP 400') || contains(ME.message, 'budget must be positive'));
+end
+```
+
+**4. Matrix Classification:**
+```matlab
+data = client.analyzeProject('proj_001', 'firm_001', 100);
+quadrant = openapiHelpers('getMatrixType', data.analysis, 'node_op_0');
+assert(ismember(quadrant, {'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D'}));
+```
+
+---
+
+## 16. Final Status
+
+### ✅ Python/API: COMPLETE
+- Enum serialization fixed (TYPE_A format)
+- HTTP status codes implemented
+- Async file I/O with aiofiles
+- Request validation with Pydantic
+- Path resolution with multiple strategies
+- Specific exception handling
+- Better logging in enhanced sections
+
+### ⏳ MATLAB: TODO (~3 hours work)
+- Update enum string matching (HIGH)
+- Add HTTP status code handling (HIGH)
+- Update error response parsing (HIGH)
+- Remove deprecated code (MEDIUM)
+- Clean up fallback field names (MEDIUM)
+- Fix default values (MEDIUM)
+- Optimize performance (MEDIUM)
+- Update tests (LOW)
+
+### 🎯 Next Steps:
+1. Install Python dependencies: `uv sync`
+2. Restart Python API server
+3. Apply MATLAB fixes (Section 15)
+4. Run integration tests
+5. Update documentation
+
+---
+
+**Python Status:** ✅ DONE
+**MATLAB Status:** ⏳ PENDING
+**Overall Progress:** 60% complete (Python done, MATLAB remaining)
+

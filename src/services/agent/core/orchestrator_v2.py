@@ -641,8 +641,9 @@ Description: {node.type.description}"""
                     critical_path_nodes=critical_path_nodes,
                     discovered_nodes=discovered_nodes
                 )
+                logger.debug("graph_topology_built", nodes=len(self.graph.nodes))
             except Exception as e:
-                logger.warning(f"Failed to build graph topology: {e}")
+                logger.warning("graph_topology_build_failed", error=str(e), exc_info=True)
                 enhanced['graph_topology'] = None
 
             # 2. Risk Distributions
@@ -651,8 +652,9 @@ Description: {node.type.description}"""
                     node_assessments=self.node_assessments,
                     propagated_risks=None  # TODO: track propagated risks
                 )
+                logger.debug("risk_distributions_built", nodes=len(self.node_assessments))
             except Exception as e:
-                logger.warning(f"Failed to build risk distributions: {e}")
+                logger.warning("risk_distributions_build_failed", error=str(e), exc_info=True)
                 enhanced['risk_distributions'] = None
 
             # 3. Propagation Trace
@@ -661,21 +663,25 @@ Description: {node.type.description}"""
                     node_assessments=self.node_assessments,
                     propagated_risks={}  # TODO: track propagated risks
                 )
+                logger.debug("propagation_trace_built")
             except Exception as e:
-                logger.warning(f"Failed to build propagation trace: {e}")
+                logger.warning("propagation_trace_build_failed", error=str(e), exc_info=True)
                 enhanced['propagation_trace'] = None
 
             # 4. Discovery Metadata (placeholder - track during graph building)
             enhanced['discovery_metadata'] = None
+            logger.debug("discovery_metadata_skipped", reason="not_yet_implemented")
 
             # 5. Evaluation Metadata (placeholder - track during evaluation)
             enhanced['evaluation_metadata'] = None
+            logger.debug("evaluation_metadata_skipped", reason="not_yet_implemented")
 
             # 6. Configuration Snapshot
             try:
                 enhanced['configuration_snapshot'] = builder.build_configuration_snapshot()
+                logger.debug("configuration_snapshot_built")
             except Exception as e:
-                logger.warning(f"Failed to build config snapshot: {e}")
+                logger.warning("configuration_snapshot_build_failed", error=str(e), exc_info=True)
                 enhanced['configuration_snapshot'] = None
 
             # 7. Graph Statistics
@@ -683,8 +689,9 @@ Description: {node.type.description}"""
                 enhanced['graph_statistics'] = builder.build_graph_statistics(
                     critical_path_nodes=critical_path_nodes
                 )
+                logger.debug("graph_statistics_built")
             except Exception as e:
-                logger.warning(f"Failed to build graph statistics: {e}")
+                logger.warning("graph_statistics_build_failed", error=str(e), exc_info=True)
                 enhanced['graph_statistics'] = None
 
             # 8. Monte Carlo Parameters
@@ -693,14 +700,23 @@ Description: {node.type.description}"""
                     enhanced['monte_carlo_parameters'] = builder.build_monte_carlo_parameters(
                         risk_distributions=enhanced['risk_distributions']
                     )
+                    logger.debug("monte_carlo_parameters_built")
                 else:
                     enhanced['monte_carlo_parameters'] = None
+                    logger.debug("monte_carlo_parameters_skipped", reason="no_risk_distributions")
             except Exception as e:
-                logger.warning(f"Failed to build Monte Carlo parameters: {e}")
+                logger.warning("monte_carlo_parameters_build_failed", error=str(e), exc_info=True)
                 enhanced['monte_carlo_parameters'] = None
 
-            logger.info("enhanced_sections_built",
-                       sections_populated=sum(1 for v in enhanced.values() if v is not None))
+            # Summary
+            sections_populated = sum(1 for v in enhanced.values() if v is not None)
+            sections_total = len(enhanced)
+            logger.info(
+                "enhanced_sections_built",
+                populated=sections_populated,
+                total=sections_total,
+                success_rate=f"{sections_populated}/{sections_total}"
+            )
 
             return enhanced
 

@@ -5,3 +5,4 @@ dotenv>=0.9.9
 litestar>=2.0.0
 rich>=14.3.2
 uvicorn>=0.40.0
+aiofiles>=24.1.0

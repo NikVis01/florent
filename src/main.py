@@ -1,8 +1,17 @@
 import json
 import os
+from pathlib import Path
 from typing import Any, Dict, Optional
+
+import aiofiles
 from litestar import Litestar, post, get
-from pydantic import BaseModel
+from litestar.exceptions import HTTPException
+from litestar.status_codes import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
+from pydantic import BaseModel, field_validator, ValidationError as PydanticValidationError
 
 from src.services.clients.ai_client import AIClient
 from src.models.entities import Firm, Project, ProjectEntry, ProjectExit
@@ -16,90 +25,205 @@ from src.services.logging.logger import get_logger
 ai_client = AIClient()
 logger = get_logger(__name__)
 
+
 class AnalysisRequest(BaseModel):
+    """Analysis request with validation."""
     firm_data: Optional[Dict[str, Any]] = None
     project_data: Optional[Dict[str, Any]] = None
     firm_path: Optional[str] = None
     project_path: Optional[str] = None
     budget: Optional[int] = 100
 
-def load_data(data: Optional[Dict[str, Any]], path: Optional[str]) -> Dict[str, Any]:
+    @field_validator('budget')
+    @classmethod
+    def validate_budget(cls, v):
+        """Validate budget is positive."""
+        if v is not None and v <= 0:
+            raise ValueError('budget must be positive')
+        return v
+
+    def model_post_init(self, __context):
+        """Validate that at least one firm source and one project source is provided."""
+        if not self.firm_data and not self.firm_path:
+            raise ValueError('Must provide either firm_data or firm_path')
+        if not self.project_data and not self.project_path:
+            raise ValueError('Must provide either project_data or project_path')
+
+
+async def load_data_async(data: Optional[Dict[str, Any]], path: Optional[str]) -> Dict[str, Any]:
+    """
+    Load data from inline dict or file path (async).
+
+    Raises:
+        HTTPException: With appropriate status code and message
+    """
+    # If inline data provided, use it
     if data:
         return data
-    if path:
-        # Handle path translation: if path doesn't exist, try converting host path to container path
-        file_path = path
-        
-        # Check if path exists as-is first
-        if not os.path.exists(file_path):
-            # Try to convert host absolute path to container path
-            # Host: /home/user/.../florent/src/data/...
-            # Container: /app/src/data/...
-            if 'src/data' in path:
-                # Extract the part after 'src/data'
-                parts = path.split('src/data', 1)
-                if len(parts) > 1:
-                    # Container path is /app/src/data + rest of path
-                    container_path = f'/app/src/data{parts[1]}'
-                    if os.path.exists(container_path):
-                        file_path = container_path
-                        logger.info(f"Translated host path {path} to container path {file_path}")
-        
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File not found: {path}")
-        
-        with open(file_path, "r") as f:
-            return json.load(f)
-    raise ValueError("Missing data or path")
+
+    # Must have path at this point (validation ensures one or the other)
+    if not path:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Must provide either data or path"
+        )
+
+    # Resolve path - try multiple strategies
+    file_path = await resolve_path(path)
+
+    # Load file asynchronously
+    try:
+        async with aiofiles.open(file_path, "r") as f:
+            content = await f.read()
+            return json.loads(content)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"File not found: {path} (resolved to: {file_path})"
+        )
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid JSON in file {path}: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error reading file {path}: {str(e)}"
+        )
+
+
+async def resolve_path(path: str) -> str:
+    """
+    Resolve file path with multiple fallback strategies.
+
+    Tries:
+    1. Path as-is (relative or absolute)
+    2. Container path translation (/app/src/data/...)
+    3. Project root relative path
+
+    Returns:
+        Resolved file path
+
+    Raises:
+        HTTPException: If file not found after all strategies
+    """
+    # Strategy 1: Try path as-is
+    if os.path.exists(path):
+        logger.info(f"Path resolved as-is: {path}")
+        return path
+
+    # Strategy 2: Container path translation
+    # Host: /home/user/.../florent/src/data/...
+    # Container: /app/src/data/...
+    if 'src/data' in path:
+        parts = path.split('src/data', 1)
+        if len(parts) > 1:
+            container_path = f'/app/src/data{parts[1]}'
+            if os.path.exists(container_path):
+                logger.info(f"Path resolved via container translation: {path} → {container_path}")
+                return container_path
+
+    # Strategy 3: Try relative to project root
+    # Assumes API runs from project root or container /app
+    for base in [Path.cwd(), Path('/app')]:
+        candidate = base / path
+        if candidate.exists():
+            logger.info(f"Path resolved relative to {base}: {candidate}")
+            return str(candidate)
+
+    # All strategies failed
+    raise HTTPException(
+        status_code=HTTP_404_NOT_FOUND,
+        detail=f"File not found: {path} (tried: as-is, container translation, project-relative)"
+    )
+
 
 def parse_firm(firm_data: Dict[str, Any]) -> Firm:
-    """Parse firm data into Firm entity."""
-    countries = [Country(**c) for c in firm_data['countries_active']]
-    sectors = [Sectors(**s) for s in firm_data['sectors']]
-    services = [OperationType(**s) for s in firm_data['services']]
-    focuses = [StrategicFocus(**f) for f in firm_data['strategic_focuses']]
+    """
+    Parse firm data into Firm entity.
 
-    # Handle both old and new field names
-    timeline_key = 'preferred_project_timeline' if 'preferred_project_timeline' in firm_data else 'prefered_project_timeline'
+    Raises:
+        HTTPException: If validation fails
+    """
+    try:
+        countries = [Country(**c) for c in firm_data['countries_active']]
+        sectors = [Sectors(**s) for s in firm_data['sectors']]
+        services = [OperationType(**s) for s in firm_data['services']]
+        focuses = [StrategicFocus(**f) for f in firm_data['strategic_focuses']]
 
-    return Firm(
-        id=firm_data['id'],
-        name=firm_data['name'],
-        description=firm_data['description'],
-        countries_active=countries,
-        sectors=sectors,
-        services=services,
-        strategic_focuses=focuses,
-        prefered_project_timeline=firm_data[timeline_key]
-    )
+        # Handle both old and new field names
+        timeline_key = 'preferred_project_timeline' if 'preferred_project_timeline' in firm_data else 'prefered_project_timeline'
+
+        return Firm(
+            id=firm_data['id'],
+            name=firm_data['name'],
+            description=firm_data['description'],
+            countries_active=countries,
+            sectors=sectors,
+            services=services,
+            strategic_focuses=focuses,
+            prefered_project_timeline=firm_data[timeline_key]
+        )
+    except KeyError as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid firm data: missing field {str(e)}"
+        )
+    except PydanticValidationError as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid firm data: {str(e)}"
+        )
+
 
 def parse_project(project_data: Dict[str, Any]) -> Project:
-    """Parse project data into Project entity."""
-    country = Country(**project_data['country'])
-    ops = [OperationType(**op) for op in project_data['ops_requirements']]
-    entry = ProjectEntry(**project_data['entry_criteria']) if project_data.get('entry_criteria') else None
-    exit_criteria = ProjectExit(**project_data['success_criteria']) if project_data.get('success_criteria') else None
+    """
+    Parse project data into Project entity.
 
-    return Project(
-        id=project_data['id'],
-        name=project_data['name'],
-        description=project_data['description'],
-        country=country,
-        sector=project_data['sector'],
-        service_requirements=project_data['service_requirements'],
-        timeline=project_data['timeline'],
-        ops_requirements=ops,
-        entry_criteria=entry,
-        success_criteria=exit_criteria
-    )
+    Raises:
+        HTTPException: If validation fails
+    """
+    try:
+        country = Country(**project_data['country'])
+        ops = [OperationType(**op) for op in project_data['ops_requirements']]
+        entry = ProjectEntry(**project_data['entry_criteria']) if project_data.get('entry_criteria') else None
+        exit_criteria = ProjectExit(**project_data['success_criteria']) if project_data.get('success_criteria') else None
+
+        return Project(
+            id=project_data['id'],
+            name=project_data['name'],
+            description=project_data['description'],
+            country=country,
+            sector=project_data['sector'],
+            service_requirements=project_data['service_requirements'],
+            timeline=project_data['timeline'],
+            ops_requirements=ops,
+            entry_criteria=entry,
+            success_criteria=exit_criteria
+        )
+    except KeyError as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid project data: missing field {str(e)}"
+        )
+    except PydanticValidationError as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid project data: {str(e)}"
+        )
+
 
 def build_infrastructure_graph(project: Project) -> Graph:
     """Build initial graph from project requirements, ensuring no cycles and robust metadata handling."""
     if not project.ops_requirements:
-        raise ValueError("Project has no ops_requirements")
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Project has no ops_requirements"
+        )
 
     node_map = {}
-    
+
     # 1. Collect all nodes
     # Entry
     if project.entry_criteria:
@@ -110,7 +234,7 @@ def build_infrastructure_graph(project: Project) -> Graph:
             type=project.ops_requirements[0],
             embedding=[0.1, 0.1, 0.1]
         )
-    
+
     # Ops (avoid duplicating entry/exit ids)
     for i, op in enumerate(project.ops_requirements):
         op_id = f"op_{i}"
@@ -121,7 +245,7 @@ def build_infrastructure_graph(project: Project) -> Graph:
                 type=op,
                 embedding=[0.2, 0.2, 0.2]
             )
-            
+
     # Exit
     if project.success_criteria:
         exit_id = project.success_criteria.exit_node_id
@@ -148,17 +272,24 @@ def build_infrastructure_graph(project: Project) -> Graph:
 
     return Graph(nodes=nodes_ordered, edges=edges)
 
+
 @post("/analyze")
 async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
     """
     Main endpoint for risk analysis using Orchestrator V2.
+
+    Returns:
+        200: Successful analysis with full results
+        400: Invalid request data
+        404: Data files not found
+        500: Internal server error
     """
     try:
         logger.info("analysis_request_received", budget=data.budget)
 
-        # Load data
-        firm_data = load_data(data.firm_data, data.firm_path)
-        project_data = load_data(data.project_data, data.project_path)
+        # Load data (async with proper error handling)
+        firm_data = await load_data_async(data.firm_data, data.firm_path)
+        project_data = await load_data_async(data.project_data, data.project_path)
 
         # Parse into entities
         firm = parse_firm(firm_data)
@@ -181,18 +312,38 @@ async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
         )
 
         # Return full Pydantic model dump
+        # use_enum_values=False ensures enums serialize as names (TYPE_A) not values
         return {
             "status": "success",
             "message": f"Comprehensive analysis complete for {project.name}",
-            "analysis": analysis_result.model_dump()
+            "analysis": analysis_result.model_dump(mode='json')
         }
 
+    except HTTPException:
+        # Re-raise HTTPExceptions with proper status codes
+        raise
+
+    except PydanticValidationError as e:
+        # Request validation failed
+        logger.error("request_validation_failed", error=str(e))
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Request validation failed: {str(e)}"
+        )
+
     except Exception as e:
+        # Catch-all for unexpected errors
         logger.error("analysis_failed", error=str(e), exc_info=True)
-        return {"status": "error", "message": str(e)}
+        raise HTTPException(
+            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
+
 
 @get("/")
 async def health_check() -> str:
+    """Health check endpoint."""
     return "Project Florent: OpenAI-Powered Risk Analysis Server is RUNNING."
+
 
 app = Litestar(route_handlers=[health_check, analyze_project])
