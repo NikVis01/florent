@@ -4,6 +4,8 @@ pyproject.toml
 src/config.py
 src/main.py
 src/settings.py
+src/config/__init__.py
+src/config/schemas.py
 src/florent.egg-info/PKG-INFO
 src/florent.egg-info/SOURCES.txt
 src/florent.egg-info/dependency_links.txt
@@ -13,6 +15,9 @@ src/models/analysis.py
 src/models/base.py
 src/models/entities.py
 src/models/graph.py
+src/models/orchestration.py
+src/models/scoring.py
+src/services/graph_builder.py
 src/services/pipeline.py
 src/services/agent/analysis/__init__.py
 src/services/agent/analysis/critical_chain.py
@@ -23,9 +28,9 @@ src/services/agent/core/traversal.py
 src/services/agent/models/signatures.py
 src/services/agent/ops/tensor_ops_cpp.py
 src/services/analysis/chains.py
-src/services/analysis/matrix.py
 src/services/analysis/propagation.py
 src/services/clients/ai_client.py
+src/services/clients/cross_encoder_client.py
 src/services/country/geo.py
 src/services/logging/__init__.py
 src/services/logging/context.py
@@ -36,6 +41,8 @@ src/services/math/risk.py
 tests/test_ai_client.py
 tests/test_base.py
 tests/test_chains.py
+tests/test_config_schemas.py
+tests/test_cross_encoder.py
 tests/test_e2e_workflow.py
 tests/test_entities.py
 tests/test_geo.py

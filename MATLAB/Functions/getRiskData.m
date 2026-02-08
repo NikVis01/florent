@@ -77,14 +77,32 @@ function data = createMockDataStructure()
     data.riskScores.nodeIds = data.graph.nodeIds;
     data.riskScores.influence = [0.8, 0.6, 0.4, 0.7, 0.5];
     data.riskScores.risk = [0.3, 0.5, 0.7, 0.6, 0.2];
+    data.riskScores.importance = [0.9, 0.7, 0.8, 0.85, 0.6]; % Mock importance scores
     data.riskScores.localFailureProb = [0.1, 0.2, 0.3, 0.25, 0.05];
     data.riskScores.cascadingRisk = [0.1, 0.2, 0.5, 0.4, 0.2];
+    data.riskScores.isOnCriticalPath = [true, true, false, true, false]; % Mock critical path flags
     
     % Default parameters
     data.parameters = getDefaultParameters();
     
-    % Classifications
-    data.classifications = classifyAllNodes(data.riskScores);
+    % Classifications - simple classification based on thresholds
+    nNodes = length(data.riskScores.nodeIds);
+    data.classifications = cell(nNodes, 1);
+    riskThreshold = median(data.riskScores.risk);
+    influenceThreshold = median(data.riskScores.influence);
+    for i = 1:nNodes
+        risk = data.riskScores.risk(i);
+        influence = data.riskScores.influence(i);
+        if risk >= riskThreshold && influence >= influenceThreshold
+            data.classifications{i} = 'Q1'; % High Risk, High Influence - Mitigate
+        elseif risk < riskThreshold && influence >= influenceThreshold
+            data.classifications{i} = 'Q2'; % Low Risk, High Influence - Automate
+        elseif risk >= riskThreshold && influence < influenceThreshold
+            data.classifications{i} = 'Q3'; % High Risk, Low Influence - Contingency
+        else
+            data.classifications{i} = 'Q4'; % Low Risk, Low Influence - Delegate
+        end
+    end
 end
 
 function params = getDefaultParameters()

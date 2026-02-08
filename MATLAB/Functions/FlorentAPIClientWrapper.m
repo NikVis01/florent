@@ -89,13 +89,15 @@ classdef FlorentAPIClientWrapper < handle
             end
         end
         
-        function data = analyzeProject(obj, projectId, firmId, budget)
+        function data = analyzeProject(obj, projectId, firmId, budget, firmData, projectData)
             % ANALYZEPROJECT Run analysis using project and firm IDs
             %
             % Arguments:
-            %   projectId - Project identifier (e.g., 'proj_001')
-            %   firmId    - Firm identifier (e.g., 'firm_001')
-            %   budget    - Analysis budget (default: 100)
+            %   projectId  - Project identifier (e.g., 'proj_001')
+            %   firmId     - Firm identifier (e.g., 'firm_001')
+            %   budget     - Analysis budget (default: 100)
+            %   firmData   - Optional firm data structure (if provided, used instead of file path)
+            %   projectData - Optional project data structure (if provided, used instead of file path)
             %
             % Returns:
             %   data - Transformed analysis data structure
@@ -104,8 +106,14 @@ classdef FlorentAPIClientWrapper < handle
                 budget = 100;
             end
             
-            % Build request
-            request = buildAnalysisRequest(projectId, firmId, budget);
+            % If inline data is provided, use analyzeProjectWithData instead
+            if nargin >= 5 && ~isempty(firmData) && nargin >= 6 && ~isempty(projectData)
+                data = obj.analyzeProjectWithData(firmData, projectData, budget);
+                return;
+            end
+            
+            % Build request (will use backend lookup if no inline data provided)
+            request = buildAnalysisRequest(projectId, firmId, budget, firmData, projectData);
             
             % Call API
             response = obj.callAnalyzeEndpoint(request);
