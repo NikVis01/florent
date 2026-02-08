@@ -75,21 +75,22 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
     % Classify quadrants
     quadrants = classifyQuadrant(risk, influence);
     
-    % Define quadrant colors
+    % Define colorblind-friendly quadrant colors (from ColorBrewer)
     colors = containers.Map();
-    colors('Q1') = [0.8, 0.2, 0.2]; % Red - High Risk, High Influence
-    colors('Q2') = [0.2, 0.8, 0.2]; % Green - Low Risk, High Influence
-    colors('Q3') = [0.9, 0.6, 0.1]; % Orange - High Risk, Low Influence
-    colors('Q4') = [0.5, 0.5, 0.5]; % Gray - Low Risk, Low Influence
+    colors('Q1') = [228, 26, 28] / 255;    % Red (High Risk, High Influence)
+    colors('Q2') = [77, 175, 74] / 255;    % Green (Low Risk, High Influence)
+    colors('Q3') = [255, 127, 0] / 255;    % Orange (High Risk, Low Influence)
+    colors('Q4') = [166, 166, 166] / 255;  % Gray (Low Risk, Low Influence)
     
     % Create figure or use provided axes (CHECK FIRST!)
     if nargin < 4 || isempty(axesHandle)
-        fig = figure('Position', [100, 100, 1200, 900]);
+        fig = figure('Position', [100, 100, 1200, 900], 'Color', 'w', 'Renderer', 'opengl');
         ax = axes('Parent', fig);
     else
         ax = axesHandle;
         fig = ax.Parent;
     end
+    set(ax, 'FontSize', 11, 'LineWidth', 1);
     
     % Plot nodes by quadrant
     hold(ax, 'on');
@@ -103,16 +104,18 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
         end
     end
     
-    % Labels and formatting
-    xlabel(ax, 'Influence Score', 'FontSize', 12, 'FontWeight', 'bold');
-    ylabel(ax, 'Risk Score', 'FontSize', 12, 'FontWeight', 'bold');
-    zlabel(ax, 'Centrality', 'FontSize', 12, 'FontWeight', 'bold');
-    title(ax, '3D Risk Landscape: Influence vs Risk vs Centrality', ...
+    % Labels and formatting with improved clarity
+    xlabel(ax, 'Influence Score', 'FontSize', 13, 'FontWeight', 'bold');
+    ylabel(ax, 'Risk Score', 'FontSize', 13, 'FontWeight', 'bold');
+    zlabel(ax, 'Network Centrality', 'FontSize', 13, 'FontWeight', 'bold');
+    title(ax, '3D Risk Landscape: Multi-dimensional Node Assessment', ...
         'FontSize', 14, 'FontWeight', 'bold');
-    
-    legend(ax, 'Location', 'best', 'FontSize', 10);
+
+    legend(ax, 'Location', 'northeastoutside', 'FontSize', 10, 'Box', 'off');
     grid(ax, 'on');
+    box(ax, 'on');
     view(ax, 45, 30); % Set viewing angle
+    rotate3d(ax, 'on'); % Enable interactive rotation
     
     % Add quadrant boundaries (projected onto planes)
     riskThreshold = median(risk);
@@ -134,13 +137,35 @@ function fig = plot3DRiskLandscape(stabilityData, data, saveFig, axesHandle)
     hold(ax, 'off');
     
     % Save figure (only if not using provided axes)
-    if saveFig && isempty(axesHandle)
+    if saveFig && (nargin < 4 || isempty(axesHandle))
         figDir = fullfile(pwd, 'MATLAB', 'Figures');
         if ~exist(figDir, 'dir')
             mkdir(figDir);
         end
+
+        % Save as .fig for MATLAB
         savefig(fig, fullfile(figDir, '3d_risk_landscape.fig'));
-        fprintf('Figure saved to: 3d_risk_landscape.fig\n');
+
+        % Export as high-resolution PDF (vector graphics)
+        try
+            exportgraphics(fig, fullfile(figDir, '3d_risk_landscape.pdf'), ...
+                'ContentType', 'vector', 'BackgroundColor', 'white', 'Resolution', 300);
+        catch
+            warning('PDF export failed. Only .fig saved.');
+        end
+
+        % Export as high-resolution PNG
+        try
+            exportgraphics(fig, fullfile(figDir, '3d_risk_landscape.png'), ...
+                'Resolution', 300, 'BackgroundColor', 'white');
+        catch
+            warning('PNG export failed.');
+        end
+
+        fprintf('Figures saved to: %s\n', figDir);
+        fprintf('  - 3d_risk_landscape.fig (MATLAB)\n');
+        fprintf('  - 3d_risk_landscape.pdf (vector, publication-quality)\n');
+        fprintf('  - 3d_risk_landscape.png (raster, 300 DPI)\n');
     end
     
     % Return figure handle (or empty if using provided axes)

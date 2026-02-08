@@ -57,81 +57,115 @@ function fig = plotParallelCoordinates(stabilityData, data, saveFig)
         dataMatrixNorm(:, i) = (col - min(col)) / (max(col) - min(col) + eps);
     end
     
-    % Create figure
-    fig = figure('Position', [100, 100, 1400, 700]);
-    axes('Parent', fig);
-    hold on;
+    % Create figure with publication-quality settings
+    fig = figure('Position', [100, 100, 1400, 700], 'Color', 'w', 'Renderer', 'painters');
+    ax = axes('Parent', fig);
+    hold(ax, 'on');
     
     % Axis labels
     axisLabels = {'Local Risk', 'Cascading Risk', 'Influence', 'Centrality'};
     
-    % Define quadrant colors
+    % Define colorblind-friendly quadrant colors (from ColorBrewer)
     colors = containers.Map();
-    colors('Q1') = [0.8, 0.2, 0.2]; % Red
-    colors('Q2') = [0.2, 0.8, 0.2]; % Green
-    colors('Q3') = [0.9, 0.6, 0.1]; % Orange - "Cooked Zone"
-    colors('Q4') = [0.5, 0.5, 0.5]; % Gray
-    
+    colors('Q1') = [228, 26, 28] / 255;    % Red (High Risk, High Influence)
+    colors('Q2') = [77, 175, 74] / 255;    % Green (Low Risk, High Influence)
+    colors('Q3') = [255, 127, 0] / 255;    % Orange (High Risk, Low Influence - "Cooked Zone")
+    colors('Q4') = [166, 166, 166] / 255;  % Gray (Low Risk, Low Influence)
+
     % Plot lines for each node
     xPositions = 1:nAxes;
-    
+
     % Highlight Q3 (Cooked Zone) with thicker lines
     for i = 1:nNodes
         quad = quadrants{i};
-        lineWidth = 2.5;
-        lineAlpha = 0.7;
-        
+        lineWidth = 1.5;
+        lineAlpha = 0.4;
+
         if strcmp(quad, 'Q3')
-            lineWidth = 3.5; % Thicker for Cooked Zone
-            lineAlpha = 1.0;
+            lineWidth = 2.5; % Thicker for Cooked Zone
+            lineAlpha = 0.8;
+        elseif strcmp(quad, 'Q1')
+            lineWidth = 2.0; % Also emphasize high risk
+            lineAlpha = 0.6;
         end
-        
-        plot(xPositions, dataMatrixNorm(i, :), '-', ...
+
+        plot(ax, xPositions, dataMatrixNorm(i, :), '-', ...
             'Color', [colors(quad), lineAlpha], ...
             'LineWidth', lineWidth, ...
             'DisplayName', quad);
     end
-    
+
     % Set axis properties
-    set(gca, 'XTick', xPositions);
-    set(gca, 'XTickLabel', axisLabels);
-    set(gca, 'XLim', [0.5, nAxes + 0.5]);
-    set(gca, 'YLim', [-0.1, 1.1]);
-    set(gca, 'YTick', 0:0.2:1);
-    set(gca, 'YTickLabel', {'0', '0.2', '0.4', '0.6', '0.8', '1.0'});
-    
-    ylabel('Normalized Value', 'FontSize', 12, 'FontWeight', 'bold');
-    title('Parallel Coordinates Plot: Risk Dimensions', ...
+    set(ax, 'XTick', xPositions);
+    set(ax, 'XTickLabel', axisLabels);
+    set(ax, 'XLim', [0.5, nAxes + 0.5]);
+    set(ax, 'YLim', [-0.05, 1.05]);
+    set(ax, 'YTick', 0:0.25:1);
+    set(ax, 'YTickLabel', {'0.00', '0.25', '0.50', '0.75', '1.00'});
+    set(ax, 'FontSize', 11);
+    set(ax, 'LineWidth', 1);
+
+    ylabel(ax, 'Normalized Value', 'FontSize', 12, 'FontWeight', 'bold');
+    title(ax, 'Parallel Coordinates: Risk Dimensions Across Nodes', ...
         'FontSize', 14, 'FontWeight', 'bold');
+
+    grid(ax, 'on');
+    box(ax, 'on');
     
-    grid on;
-    
-    % Add legend (simplified - only show quadrants)
+    % Add legend (show only present quadrants)
     legendEntries = {};
+    legendHandles = [];
     for q = {'Q1', 'Q2', 'Q3', 'Q4'}
         quadrant = q{1};
         if any(strcmp(quadrants, quadrant))
-            legendEntries{end+1} = sprintf('%s - %s', quadrant, getActionFromQuadrant(quadrant));
+            % Create dummy line for legend
+            h = plot(ax, NaN, NaN, '-', 'Color', colors(quadrant), 'LineWidth', 2);
+            legendHandles(end+1) = h;
+            legendEntries{end+1} = sprintf('%s: %s', quadrant, getActionFromQuadrant(quadrant));
         end
     end
-    legend(legendEntries, 'Location', 'best', 'FontSize', 10);
-    
-    % Add text annotation for Cooked Zone
-    text(nAxes/2, 0.95, 'Q3 (Cooked Zone) highlighted in orange', ...
-        'HorizontalAlignment', 'center', 'FontSize', 11, ...
+    legend(ax, legendHandles, legendEntries, 'Location', 'best', 'FontSize', 10, 'Box', 'off');
+
+    % Add annotation for Cooked Zone with quadrant counts
+    q3Count = sum(strcmp(quadrants, 'Q3'));
+    text(ax, 0.5, 1.02, sprintf('Q3 (Cooked Zone) highlighted: %d nodes (%.1f%%)', ...
+        q3Count, 100*q3Count/nNodes), ...
+        'Units', 'normalized', 'HorizontalAlignment', 'center', 'FontSize', 10, ...
         'FontWeight', 'bold', 'Color', colors('Q3'), ...
-        'BackgroundColor', 'white');
+        'BackgroundColor', [1 1 1 0.9], 'EdgeColor', colors('Q3'), 'LineWidth', 1.5);
+
+    hold(ax, 'off');
     
-    hold off;
-    
-    % Save figure
+    % Save figure with publication-quality settings
     if saveFig
         figDir = fullfile(pwd, 'MATLAB', 'Figures');
         if ~exist(figDir, 'dir')
             mkdir(figDir);
         end
+
+        % Save as .fig for MATLAB
         savefig(fig, fullfile(figDir, 'parallel_coordinates.fig'));
-        fprintf('Figure saved to: parallel_coordinates.fig\n');
+
+        % Export as high-resolution PDF (vector graphics)
+        try
+            exportgraphics(fig, fullfile(figDir, 'parallel_coordinates.pdf'), ...
+                'ContentType', 'vector', 'BackgroundColor', 'white', 'Resolution', 300);
+        catch
+            warning('PDF export failed. Only .fig saved.');
+        end
+
+        % Export as high-resolution PNG
+        try
+            exportgraphics(fig, fullfile(figDir, 'parallel_coordinates.png'), ...
+                'Resolution', 300, 'BackgroundColor', 'white');
+        catch
+            warning('PNG export failed.');
+        end
+
+        fprintf('Figures saved to: %s\n', figDir);
+        fprintf('  - parallel_coordinates.fig (MATLAB)\n');
+        fprintf('  - parallel_coordinates.pdf (vector, publication-quality)\n');
+        fprintf('  - parallel_coordinates.png (raster, 300 DPI)\n');
     end
 end
 

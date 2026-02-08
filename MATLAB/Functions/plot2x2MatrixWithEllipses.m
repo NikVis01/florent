@@ -107,20 +107,21 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig, axesHandl
     
     % Create figure or use provided axes
     if isempty(axesHandle)
-        fig = figure('Position', [100, 100, 1200, 900]);
+        fig = figure('Position', [100, 100, 1200, 900], 'Color', 'w', 'Renderer', 'painters');
         ax = axes('Parent', fig);
     else
         ax = axesHandle;
         fig = ax.Parent;
     end
+    set(ax, 'FontSize', 11, 'LineWidth', 1);
     hold(ax, 'on');
     
-    % Define quadrant colors
+    % Define colorblind-friendly quadrant colors (from ColorBrewer)
     colors = containers.Map();
-    colors('Q1') = [0.8, 0.2, 0.2]; % Red
-    colors('Q2') = [0.2, 0.8, 0.2]; % Green
-    colors('Q3') = [0.9, 0.6, 0.1]; % Orange
-    colors('Q4') = [0.5, 0.5, 0.5]; % Gray
+    colors('Q1') = [228, 26, 28] / 255;    % Red (High Risk, High Influence)
+    colors('Q2') = [77, 175, 74] / 255;    % Green (Low Risk, High Influence)
+    colors('Q3') = [255, 127, 0] / 255;    % Orange (High Risk, Low Influence)
+    colors('Q4') = [166, 166, 166] / 255;  % Gray (Low Risk, Low Influence)
     
     nNodes = length(risk);
     
@@ -176,25 +177,50 @@ function fig = plot2x2MatrixWithEllipses(stabilityData, data, saveFig, axesHandl
         end
     end
     
-    % Labels and formatting
-    xlabel(ax, 'Influence Score', 'FontSize', 12, 'FontWeight', 'bold');
-    ylabel(ax, 'Risk Score', 'FontSize', 12, 'FontWeight', 'bold');
-    title(ax, '2x2 Risk-Influence Matrix with Confidence Ellipses', ...
+    % Labels and formatting with improved clarity
+    xlabel(ax, 'Influence Score', 'FontSize', 13, 'FontWeight', 'bold');
+    ylabel(ax, 'Risk Score', 'FontSize', 13, 'FontWeight', 'bold');
+    title(ax, '2x2 Risk-Influence Matrix with 95% Confidence Regions', ...
         'FontSize', 14, 'FontWeight', 'bold');
-    
-    legend(ax, 'Location', 'best', 'FontSize', 10);
+
+    legend(ax, 'Location', 'best', 'FontSize', 10, 'Box', 'off');
     grid(ax, 'on');
-    axis(ax, 'equal');
+    box(ax, 'on');
+    axis(ax, 'square'); % Better than 'equal' for 2x2 matrix
+    xlim(ax, [0, 1]);
+    ylim(ax, [0, 1]);
     hold(ax, 'off');
     
-    % Save figure
-    if saveFig
+    % Save figure with publication-quality settings
+    if saveFig && isempty(axesHandle)
         figDir = fullfile(pwd, 'MATLAB', 'Figures');
         if ~exist(figDir, 'dir')
             mkdir(figDir);
         end
+
+        % Save as .fig for MATLAB
         savefig(fig, fullfile(figDir, '2x2_matrix_confidence.fig'));
-        fprintf('Figure saved to: 2x2_matrix_confidence.fig\n');
+
+        % Export as high-resolution PDF (vector graphics)
+        try
+            exportgraphics(fig, fullfile(figDir, '2x2_matrix_confidence.pdf'), ...
+                'ContentType', 'vector', 'BackgroundColor', 'white', 'Resolution', 300);
+        catch
+            warning('PDF export failed. Only .fig saved.');
+        end
+
+        % Export as high-resolution PNG
+        try
+            exportgraphics(fig, fullfile(figDir, '2x2_matrix_confidence.png'), ...
+                'Resolution', 300, 'BackgroundColor', 'white');
+        catch
+            warning('PNG export failed.');
+        end
+
+        fprintf('Figures saved to: %s\n', figDir);
+        fprintf('  - 2x2_matrix_confidence.fig (MATLAB)\n');
+        fprintf('  - 2x2_matrix_confidence.pdf (vector, publication-quality)\n');
+        fprintf('  - 2x2_matrix_confidence.png (raster, 300 DPI)\n');
     end
 end
 

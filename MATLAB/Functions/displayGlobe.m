@@ -64,24 +64,25 @@ function fig = displayGlobe(data, stabilityData, config, axesHandle)
     end
     quadrants = classifyQuadrant(risk, influence);
     
-    % Define quadrant colors
+    % Define colorblind-friendly quadrant colors (from ColorBrewer)
     colors = containers.Map();
-    colors('Q1') = [0.8, 0.2, 0.2]; % Red
-    colors('Q2') = [0.2, 0.8, 0.2]; % Green
-    colors('Q3') = [0.9, 0.6, 0.1]; % Orange
-    colors('Q4') = [0.5, 0.5, 0.5]; % Gray
+    colors('Q1') = [228, 26, 28] / 255;    % Red (High Risk, High Influence)
+    colors('Q2') = [77, 175, 74] / 255;    % Green (Low Risk, High Influence)
+    colors('Q3') = [255, 127, 0] / 255;    % Orange (High Risk, Low Influence)
+    colors('Q4') = [166, 166, 166] / 255;  % Gray (Low Risk, Low Influence)
     
     % Create figure or use provided axes
     if isempty(axesHandle)
         fig = figure('Position', [100, 100, config.visualization.figureSize], ...
-            'Name', 'Florent Globe Risk Map');
+            'Name', 'Florent Globe Risk Map', 'Color', 'w', 'Renderer', 'opengl');
         ax = axes('Parent', fig);
     else
         ax = axesHandle;
         fig = ax.Parent;
     end
-    
+
     % Create 3D axes for globe
+    set(ax, 'FontSize', 11);
     hold(ax, 'on');
     
     % Generate node positions on sphere
@@ -159,19 +160,20 @@ function fig = displayGlobe(data, stabilityData, config, axesHandle)
     surf(ax, x, y, z, 'FaceAlpha', 0.1, 'EdgeColor', 'none', ...
         'FaceColor', [0.7, 0.7, 0.9]);
     
-    % Labels and formatting
-    xlabel(ax, 'X', 'FontSize', config.visualization.fontSize);
-    ylabel(ax, 'Y', 'FontSize', config.visualization.fontSize);
-    zlabel(ax, 'Z', 'FontSize', config.visualization.fontSize);
-    title(ax, 'Globe Risk Map: Node Size = Risk, Color = Quadrant', ...
+    % Labels and formatting with proper geographic context
+    xlabel(ax, 'Longitude (scaled)', 'FontSize', config.visualization.fontSize, 'FontWeight', 'bold');
+    ylabel(ax, 'Latitude (scaled)', 'FontSize', config.visualization.fontSize, 'FontWeight', 'bold');
+    zlabel(ax, 'Elevation (scaled)', 'FontSize', config.visualization.fontSize, 'FontWeight', 'bold');
+    title(ax, sprintf('Geographic Risk Distribution: Node Size ∝ Risk Level'), ...
         'FontSize', config.visualization.titleFontSize, 'FontWeight', 'bold');
-    
-    legend(ax, 'Location', 'best', 'FontSize', 10);
+
+    legend(ax, 'Location', 'northeastoutside', 'FontSize', 10, 'Box', 'off');
     grid(ax, 'on');
-    axis(ax, 'equal');
+    box(ax, 'on');
+    axis(ax, 'equal', 'vis3d');
     view(ax, 45, 30); % Set viewing angle
     rotate3d(ax, 'on'); % Enable rotation
-    
+
     hold(ax, 'off');
     
     % Save figure if configured (only if not using provided axes)
@@ -180,19 +182,37 @@ function fig = displayGlobe(data, stabilityData, config, axesHandle)
         if ~exist(figDir, 'dir')
             mkdir(figDir);
         end
-        
+
+        % Save as .fig for MATLAB
         if any(strcmp(config.visualization.saveFormats, 'fig'))
             savefig(fig, fullfile(figDir, 'globe_risk_map.fig'));
         end
-        
+
+        % Export as high-resolution PDF (vector graphics)
         if config.report.exportPDF
             try
                 exportgraphics(fig, fullfile(figDir, 'globe_risk_map.pdf'), ...
-                    'ContentType', 'vector', 'Resolution', config.visualization.dpi);
+                    'ContentType', 'vector', 'BackgroundColor', 'white', ...
+                    'Resolution', config.visualization.dpi);
             catch
                 warning('PDF export failed for globe visualization');
             end
         end
+
+        % Export as high-resolution PNG
+        try
+            exportgraphics(fig, fullfile(figDir, 'globe_risk_map.png'), ...
+                'Resolution', 300, 'BackgroundColor', 'white');
+        catch
+            warning('PNG export failed for globe visualization');
+        end
+
+        fprintf('Globe visualization saved to: %s\n', figDir);
+        fprintf('  - globe_risk_map.fig (MATLAB)\n');
+        if config.report.exportPDF
+            fprintf('  - globe_risk_map.pdf (vector, publication-quality)\n');
+        end
+        fprintf('  - globe_risk_map.png (raster, 300 DPI)\n');
     end
     
     fprintf('Globe visualization created\n');

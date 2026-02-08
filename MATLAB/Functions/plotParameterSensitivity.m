@@ -156,12 +156,34 @@ function fig = plotParameterSensitivity(mcResults, saveFig, figDir)
         'LineWidth', 1, ...
         'Margin', 5);
     
-    % Save figure
+    % Save figure with publication-quality settings
     if saveFig
         if ~exist(figDir, 'dir')
             mkdir(figDir);
         end
+
+        % Save as .fig for MATLAB
         savefig(fig, fullfile(figDir, 'parameter_sensitivity_heatmap.fig'));
-        fprintf('Figure saved to: %s\n', fullfile(figDir, 'parameter_sensitivity_heatmap.fig'));
+
+        % Export as high-resolution PDF (vector graphics)
+        try
+            exportgraphics(fig, fullfile(figDir, 'parameter_sensitivity_heatmap.pdf'), ...
+                'ContentType', 'vector', 'BackgroundColor', 'white', 'Resolution', 300);
+        catch
+            warning('PDF export failed. Only .fig saved.');
+        end
+
+        % Export as high-resolution PNG
+        try
+            exportgraphics(fig, fullfile(figDir, 'parameter_sensitivity_heatmap.png'), ...
+                'Resolution', 300, 'BackgroundColor', 'white');
+        catch
+            warning('PNG export failed.');
+        end
+
+        fprintf('Figures saved to: %s\n', figDir);
+        fprintf('  - parameter_sensitivity_heatmap.fig (MATLAB)\n');
+        fprintf('  - parameter_sensitivity_heatmap.pdf (vector, publication-quality)\n');
+        fprintf('  - parameter_sensitivity_heatmap.png (raster, 300 DPI)\n');
     end
 end

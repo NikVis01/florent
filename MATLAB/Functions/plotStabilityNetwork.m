@@ -71,21 +71,22 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     nNodes = size(adj, 1);
     quadrants = classifyQuadrant(risk, influence);
     
-    % Define quadrant colors
+    % Define colorblind-friendly quadrant colors (from ColorBrewer)
     colors = containers.Map();
-    colors('Q1') = [0.8, 0.2, 0.2]; % Red
-    colors('Q2') = [0.2, 0.8, 0.2]; % Green
-    colors('Q3') = [0.9, 0.6, 0.1]; % Orange
-    colors('Q4') = [0.5, 0.5, 0.5]; % Gray
-    
+    colors('Q1') = [228, 26, 28] / 255;    % Red (High Risk, High Influence)
+    colors('Q2') = [77, 175, 74] / 255;    % Green (Low Risk, High Influence)
+    colors('Q3') = [255, 127, 0] / 255;    % Orange (High Risk, Low Influence)
+    colors('Q4') = [166, 166, 166] / 255;  % Gray (Low Risk, Low Influence)
+
     % Create figure or use provided axes (CHECK FIRST!)
     if nargin < 4 || isempty(axesHandle)
-        fig = figure('Position', [100, 100, 1400, 1000]);
+        fig = figure('Position', [100, 100, 1400, 1000], 'Color', 'w', 'Renderer', 'opengl');
         ax = axes('Parent', fig);
     else
         ax = axesHandle;
         fig = ax.Parent;
     end
+    set(ax, 'FontSize', 11);
     
     % Create graph object
     G = digraph(adj, nodeIds);
@@ -131,37 +132,62 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
             'LineWidth', 3);
     end
     
-    % Title
-    title(ax, 'Stability Network: Node Size = Stability, Color = Quadrant', ...
+    % Title with improved clarity
+    title(ax, 'Dependency Network: Node Size ∝ Stability, Color = Risk Quadrant', ...
         'FontSize', 14, 'FontWeight', 'bold');
-    
-    % Add colorbar for stability (if needed)
-    colormap('default');
-    
-    % Add legend
+
+    % Add legend with quadrant information
     legendEntries = {};
+    legendHandles = [];
     for q = {'Q1', 'Q2', 'Q3', 'Q4'}
         quadrant = q{1};
         if any(strcmp(quadrants, quadrant))
-            legendEntries{end+1} = sprintf('%s - %s', quadrant, getActionFromQuadrant(quadrant));
+            % Create dummy scatter for legend
+            h = scatter(ax, NaN, NaN, 100, colors(quadrant), 'filled');
+            legendHandles(end+1) = h;
+            legendEntries{end+1} = sprintf('%s: %s', quadrant, getActionFromQuadrant(quadrant));
         end
     end
-    legend(legendEntries, 'Location', 'best', 'FontSize', 10);
-    
-    % Add text annotation
-    text(0.02, 0.98, sprintf('Unstable nodes (red border): %d', length(unstableIdx)), ...
-        'Units', 'normalized', 'FontSize', 11, 'FontWeight', 'bold', ...
-        'BackgroundColor', 'white', 'EdgeColor', 'red', ...
-        'VerticalAlignment', 'top');
-    
+    legend(ax, legendHandles, legendEntries, 'Location', 'northeastoutside', ...
+        'FontSize', 10, 'Box', 'off');
+
+    % Add text annotation with statistics
+    text(ax, 0.02, 0.98, sprintf('Unstable Nodes (red border): %d (%.1f%%)\nMean Stability: %.3f', ...
+        length(unstableIdx), 100*length(unstableIdx)/nNodes, mean(stability)), ...
+        'Units', 'normalized', 'FontSize', 10, 'FontWeight', 'bold', ...
+        'BackgroundColor', [1 1 1 0.9], 'EdgeColor', [0.5 0.5 0.5], ...
+        'VerticalAlignment', 'top', 'LineWidth', 1);
+
     % Save figure (only if not using provided axes)
-    if saveFig && isempty(axesHandle)
+    if saveFig && (nargin < 4 || isempty(axesHandle))
         figDir = fullfile(pwd, 'MATLAB', 'Figures');
         if ~exist(figDir, 'dir')
             mkdir(figDir);
         end
+
+        % Save as .fig for MATLAB
         savefig(fig, fullfile(figDir, 'stability_network.fig'));
-        fprintf('Figure saved to: stability_network.fig\n');
+
+        % Export as high-resolution PDF (vector graphics)
+        try
+            exportgraphics(fig, fullfile(figDir, 'stability_network.pdf'), ...
+                'ContentType', 'vector', 'BackgroundColor', 'white', 'Resolution', 300);
+        catch
+            warning('PDF export failed. Only .fig saved.');
+        end
+
+        % Export as high-resolution PNG
+        try
+            exportgraphics(fig, fullfile(figDir, 'stability_network.png'), ...
+                'Resolution', 300, 'BackgroundColor', 'white');
+        catch
+            warning('PNG export failed.');
+        end
+
+        fprintf('Figures saved to: %s\n', figDir);
+        fprintf('  - stability_network.fig (MATLAB)\n');
+        fprintf('  - stability_network.pdf (vector, publication-quality)\n');
+        fprintf('  - stability_network.png (raster, 300 DPI)\n');
     end
     
     fprintf('Stability network visualization created\n');
