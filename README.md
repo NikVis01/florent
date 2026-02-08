@@ -55,6 +55,8 @@ The system processes data through the following pipeline:
 5.  **Risk Clustering & Evaluation**:
     *   Using K-Means Clustering on the resulting node vectors to identify systemically risky sectors.
     *   The system identifies "Critical Chains"—sequences of tasks that, if failed, block the entire project.
+
+![Risk Distribution](resources/img_0.png)
 6.  **Matrix Output**: Mapping findings to the 2x2 Action Matrix to determine Strategic Actions (Mitigate, Automate, Contingency, Delegate).
 
 ### Dependency & Inference Deployment
@@ -296,6 +298,8 @@ florent/
 ## Testing
 
 **264 tests, 100% passing** (updated test coverage with enhanced schemas)
+
+![Influence Spread](resources/img_1.png)
 
 ```bash
 # Run all tests
