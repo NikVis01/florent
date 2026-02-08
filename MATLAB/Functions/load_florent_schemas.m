@@ -42,20 +42,25 @@ function schemas = load_florent_schemas()
     %   - JSON arrays of objects with same fields become structure arrays
     %   - JSON arrays of mixed types (like oneOf/anyOf) become cell arrays
     %   - Use {} to access cell array elements, () for structure arrays
-    %   - Paths are resolved relative to this script's location
+    %   - Paths are resolved relative to project root
 
-    % Get directory of this script (robust path resolution)
-    % mfilename('fullpath') returns absolute path, so we can reliably navigate
+    % Get project root directory (robust path resolution)
+    % From MATLAB/Functions/load_florent_schemas.m:
+    %   mfilename('fullpath') = .../MATLAB/Functions/load_florent_schemas.m
+    %   fileparts(...) = .../MATLAB/Functions
+    %   fileparts(fileparts(...)) = .../MATLAB
+    %   fileparts(fileparts(fileparts(...))) = .../ (project root)
     script_path = mfilename('fullpath');
-    script_dir = fileparts(script_path);
+    matlab_dir = fileparts(fileparts(script_path));  % MATLAB directory
+    project_root = fileparts(matlab_dir);            % Project root
     
-    % Navigate to base directory (one level up from matlab/)
-    % Since script_dir is absolute, base_dir will be absolute too
-    base_dir = fullfile(script_dir, '..');
+    % Navigate to openapi_export base directory
+    base_dir = fullfile(project_root, 'docs', 'openapi_export');
     
     % Validate base directory exists
     if ~isfolder(base_dir)
-        error('Base directory not found: %s\nScript location: %s', base_dir, script_dir);
+        error('OpenAPI export directory not found: %s\nProject root: %s\nScript location: %s', ...
+            base_dir, project_root, script_path);
     end
 
     % Initialize output structure
@@ -369,3 +374,4 @@ function example_json = create_analysis_request(firm_path, project_path, budget)
 
     example_json = jsonencode(request);
 end
+
