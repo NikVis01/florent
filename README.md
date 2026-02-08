@@ -52,9 +52,9 @@ The system processes data through the following pipeline:
 4.  **Graph Traversal & Propagation**: 
     *   Navigating the DAG to find all paths/chains from the primary project entry point.
     *   The **Propagator Agent** applies the mathematical formulas from `risk.py` to calculate the Cascading Risk Score ($R_{total}$) across every downstream dependency.
-5.  **Risk Clustering & Evaluation**:
-    *   Using K-Means Clustering on the resulting node vectors to identify systemically risky sectors.
-    *   The system identifies "Critical Chains"—sequences of tasks that, if failed, block the entire project.
+5.  **Risk Evaluation & Network Analysis**:
+    *   Performing graph-theoretic analysis to identify "Critical Chains"—sequences of tasks that, if failed, block the entire project.
+    *   Calculating centrality and clustering coefficients to identify high-influence nodes and potential systemic risks.
 
 ![Risk Distribution](resources/img_0.png)
 6.  **Matrix Output**: Mapping findings to the 2x2 Action Matrix to determine Strategic Actions (Mitigate, Automate, Contingency, Delegate).
@@ -116,7 +116,7 @@ This makes it a "Decision Support Engine" rather than a simple data visualizer, 
 *   **Topology (graph.py)**: The DAG structure where nodes hold embeddings of the entities.
 *   **Inference Layer (agents.py)**: DSPy agents performing the cross-attention weighting and traversal.
 
-**Note on Clustering**: We use traditional K-Means Clustering on the resulting node vectors to group "Risk Clusters," allowing the agent to flag entire sectors of a project as "Systemically Risky" rather than just looking at isolated nodes.
+**Note on Network Analysis**: We use graph-theoretic metrics like centralities and clustering coefficients to evaluate the dependency structure, allowing the system to identify high-influence nodes and potential systemic risks across different sectors.
 
 ## What It Does
 
