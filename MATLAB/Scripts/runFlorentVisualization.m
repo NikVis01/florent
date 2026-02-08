@@ -35,7 +35,8 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
     
     fprintf('\n');
     fprintf('========================================\n');
-    fprintf('  FLORENT RISK ANALYSIS\n');
+    fprintf('  FLORENT: INFRASTRUCTURE RISK ANALYSIS\n');
+    fprintf('  Dependency Mapping & Risk Propagation\n');
     fprintf('========================================\n');
     
     % Optional parameters with defaults
@@ -123,20 +124,19 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
         stabilityData.scoreVariance.risk = zeros(length(nodeIds), 1);
     end
     
-    % Create visualizations in ONE figure window
+    % Create visualizations in figure windows
     fprintf('Creating visualizations...\n');
     
-    % Create single figure window with all axes
-    fprintf('  - Creating single figure window\n');
-    fig = figure('Name', 'Florent Risk Analysis', ...
+    % Create first figure window with main visualizations
+    fprintf('  - Creating main figure window\n');
+    fig1 = figure('Name', 'Florent Risk Analysis - Main', ...
         'Position', [100 100 1600 1200], ...
         'Renderer', 'opengl');
     
-    % Create axes for each visualization
-    ax1 = axes('Parent', fig, 'Position', [0.05 0.55 0.45 0.40]);
-    ax2 = axes('Parent', fig, 'Position', [0.50 0.55 0.45 0.40]);
-    ax3 = axes('Parent', fig, 'Position', [0.05 0.05 0.45 0.40]);
-    ax4 = axes('Parent', fig, 'Position', [0.50 0.05 0.45 0.40]);
+    % Create axes for each visualization (3 visualizations, no globe)
+    ax1 = axes('Parent', fig1, 'Position', [0.05 0.55 0.45 0.40]);
+    ax2 = axes('Parent', fig1, 'Position', [0.50 0.55 0.45 0.40]);
+    ax3 = axes('Parent', fig1, 'Position', [0.275 0.05 0.45 0.40]);  % Centered bottom
     
     % Plot directly into these axes (no figure creation in plotting functions)
     % Note: Functions check parameters to detect OpenAPI format (node_assessments field)
@@ -156,29 +156,52 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
         warning('3D Landscape failed: %s', ME.message);
     end
     
-    fprintf('    - Globe\n');
-    try
-        % displayGlobe(data, stabilityData, ...) - uses first param for project info,
-        % checks second param for analysis structure (node_assessments)
-        % Pass analysis as first param for project info, and analysis as second for node data
-        displayGlobe(analysis, analysis, config, ax3);
-    catch ME
-        warning('Globe failed: %s', ME.message);
-    end
-    
     fprintf('    - Stability Network\n');
     try
         % plotStabilityNetwork(data, stabilityData, ...) - checks first param for analysis
-        plotStabilityNetwork(analysis, stabilityData, false, ax4);
+        plotStabilityNetwork(analysis, stabilityData, false, ax3);
     catch ME
         warning('Network failed: %s', ME.message);
+    end
+    
+    % Create second figure window with MC analysis plots
+    fprintf('  - Creating Monte Carlo analysis figure window\n');
+    
+    % Check if MC results are available
+    if isfield(stabilityData, 'allResults') && ~isempty(stabilityData.allResults)
+        fprintf('    - MC Convergence\n');
+        try
+            plotMCConvergence(stabilityData.allResults, false);
+        catch ME
+            warning('MC Convergence failed: %s', ME.message);
+        end
+        
+        fprintf('    - Parallel Coordinates\n');
+        try
+            plotParallelCoordinates(stabilityData, analysis, false);
+        catch ME
+            warning('Parallel Coordinates failed: %s', ME.message);
+        end
+        
+        fprintf('    - Risk Distributions\n');
+        try
+            plotRiskDistributions(stabilityData, stabilityData.allResults, false);
+        catch ME
+            warning('Risk Distributions failed: %s', ME.message);
+        end
+    else
+        warning('MC results not available. Skipping MC analysis plots.');
+        warning('Run analysis with Monte Carlo simulations enabled to see these plots.');
     end
     
     fprintf('\n========================================\n');
     fprintf('  VISUALIZATIONS COMPLETE\n');
     fprintf('========================================\n');
-    fprintf('All visualizations displayed in one figure window\n');
-    fprintf('Close figure when done\n');
+    fprintf('Main visualizations displayed in first figure window\n');
+    if isfield(stabilityData, 'allResults') && ~isempty(stabilityData.allResults)
+        fprintf('MC analysis plots displayed in separate figure windows\n');
+    end
+    fprintf('Close figures when done\n');
     fprintf('========================================\n\n');
     
     % Display summary
@@ -214,14 +237,11 @@ function runFlorentVisualization(projectId, firmId, mode, nIterations)
         end
     end
     
-    % Get recommendation if available
+    % Get risk assessment confidence if available
     if isfield(analysis, 'recommendation')
         rec = analysis.recommendation;
-        if isfield(rec, 'should_bid')
-            fprintf('Recommendation: %s\n', char(string(rec.should_bid).replace("1", "BID").replace("0", "DO NOT BID")));
-        end
         if isfield(rec, 'confidence')
-            fprintf('Confidence: %.3f\n', rec.confidence);
+            fprintf('Assessment Confidence: %.3f\n', rec.confidence);
         end
     end
     

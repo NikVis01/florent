@@ -52,7 +52,8 @@ function results = runFlorentAnalysis(projectId, firmId, mode, customConfig)
     
     fprintf('\n');
     fprintf('========================================\n');
-    fprintf('  FLORENT RISK ANALYSIS PIPELINE\n');
+    fprintf('  FLORENT: INFRASTRUCTURE RISK ANALYSIS\n');
+    fprintf('  Dependency Mapping & Risk Propagation\n');
     fprintf('========================================\n');
     fprintf('Project: %s\n', projectId);
     fprintf('Firm: %s\n', firmId);
@@ -213,22 +214,13 @@ function displaySummary(results)
         end
     end
     
-    % Get recommendation from enhanced API structure
+    % Get risk assessment details from enhanced API structure
     if isfield(analysis, 'recommendation')
         rec = analysis.recommendation;
-        fprintf('\n--- Recommendation ---\n');
+        fprintf('\n--- Risk Assessment ---\n');
         
-        if isfield(rec, 'should_bid')
-            shouldBid = rec.should_bid;
-            if islogical(shouldBid)
-                bidText = char(string(shouldBid).replace("1", "BID").replace("0", "DO NOT BID"));
-            else
-                bidText = shouldBid;
-            end
-            fprintf('Should Bid: %s\n', bidText);
-        end
         if isfield(rec, 'confidence')
-            fprintf('Confidence: %.3f\n', rec.confidence);
+            fprintf('Assessment Confidence: %.3f\n', rec.confidence);
         end
         if isfield(rec, 'reasoning')
             fprintf('Reasoning: %s\n', rec.reasoning);

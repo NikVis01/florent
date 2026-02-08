@@ -91,7 +91,7 @@ function fig = plotStabilityNetwork(data, stabilityData, saveFig, axesHandle)
     G = digraph(adj, nodeIds);
     
     % Calculate node sizes (proportional to stability, with minimum size)
-    nodeSizes = 30 + 200 * stability; % Scale stability to node size
+    nodeSizes = 1 + 20 * stability; % Scale stability to node size
     
     % Get edge weights for thickness
     edgeWeights = G.Edges.Weight;

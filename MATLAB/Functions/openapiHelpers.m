@@ -811,27 +811,52 @@ function schemas = getEnhancedSchemas()
     
     if isempty(cachedEnhancedSchemas)
         try
-            % Get path to load_enhanced_schemas.m
+            % Try to find load_enhanced_schemas on path first
             scriptPath = which('load_enhanced_schemas');
+            
             if isempty(scriptPath)
-                % Try relative path
+                % Try relative path from this function's location
                 basePath = fileparts(mfilename('fullpath'));
-                scriptPath = fullfile(basePath, '..', '..', 'docs', 'openapi_export', 'matlab', 'load_enhanced_schemas.m');
+                % openapiHelpers.m is in MATLAB/Functions/
+                % Go up to MATLAB, then to project root, then to docs
+                matlabDir = fileparts(basePath);
+                projectRoot = fileparts(matlabDir);
+                scriptPath = fullfile(projectRoot, 'docs', 'openapi_export', 'matlab', 'load_enhanced_schemas.m');
             end
             
             if exist(scriptPath, 'file')
+                % Add the directory to path temporarily if needed
+                scriptDir = fileparts(scriptPath);
+                if ~isOnPath(scriptDir)
+                    addpath(scriptDir);
+                end
+                
+                % Now call the function
                 cachedEnhancedSchemas = load_enhanced_schemas();
             else
-                warning('load_enhanced_schemas.m not found. Continuing without enhanced schema validation.');
+                % Silently fail - schema validation is optional
                 cachedEnhancedSchemas = struct();
             end
         catch ME
-            warning('Failed to load enhanced schemas: %s\nContinuing without schema validation.', ME.message);
+            % Silently fail - schema validation is optional
             cachedEnhancedSchemas = struct();
         end
     end
     
     schemas = cachedEnhancedSchemas;
+end
+
+function isOnPath = isOnPath(dirPath)
+    % Helper to check if directory is on path
+    currentPath = path;
+    pathList = strsplit(currentPath, pathsep);
+    isOnPath = false;
+    for i = 1:length(pathList)
+        if strcmp(fullfile(pathList{i}), fullfile(dirPath))
+            isOnPath = true;
+            return;
+        end
+    end
 end
 
 function [isValid, errors] = validateAgainstSchema(data, schema)

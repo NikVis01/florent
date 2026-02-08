@@ -172,7 +172,7 @@ classdef FlorentAPIClientWrapper < handle
             end
             
             % Build request with inline data
-            request = struct();
+            % Ensure we have structs, not strings
             if ischar(firmData) || isstring(firmData)
                 % JSON string - parse it
                 firmData = jsondecode(firmData);
@@ -182,9 +182,22 @@ classdef FlorentAPIClientWrapper < handle
                 projectData = jsondecode(projectData);
             end
             
+            % Create request structure
+            request = struct();
             request.firm_data = firmData;
             request.project_data = projectData;
             request.budget = budget;
+            
+            % Validate request structure before sending
+            if ~isfield(request, 'firm_data') || isempty(request.firm_data)
+                error('Request missing firm_data');
+            end
+            if ~isfield(request, 'project_data') || isempty(request.project_data)
+                error('Request missing project_data');
+            end
+            if ~isfield(request, 'budget') || isempty(request.budget)
+                error('Request missing budget');
+            end
             
             % Call API
             response = obj.callAnalyzeEndpoint(request);
@@ -231,11 +244,54 @@ classdef FlorentAPIClientWrapper < handle
                     else
                         % Fallback to manual HTTP call
                         endpoint = sprintf('%s/analyze', obj.BaseUrl);
+                        
+                        % Log request size for debugging
+                        requestJson = jsonencode(request);
+                        requestSize = numel(requestJson);
+                        fprintf('  [DEBUG] Request size: %d bytes\n', requestSize);
+                        
                         options = weboptions(...
                             'Timeout', obj.Timeout, ...
                             'MediaType', 'application/json', ...
-                            'RequestMethod', 'post');
-                        response = webwrite(endpoint, request, options);
+                            'RequestMethod', 'post', ...
+                            'ContentType', 'json');
+                        try
+                            fprintf('  [DEBUG] Sending request to %s...\n', endpoint);
+                            fprintf('  [INFO] Analysis is running (this may take 5-10 minutes)...\n');
+                            fprintf('  [INFO] Check backend logs for progress updates\n');
+                            response = webwrite(endpoint, request, options);
+                            fprintf('  [DEBUG] Response received\n');
+                        catch ME
+                            % Try to extract more detailed error from response
+                            if contains(ME.message, '400') || contains(ME.message, 'Bad Request')
+                                % Log request details for debugging
+                                fprintf('  [DEBUG] 400 Bad Request Details:\n');
+                                fprintf('    Budget: %d\n', request.budget);
+                                fprintf('    Has firm_data: %s\n', char(string(isfield(request, 'firm_data'))));
+                                fprintf('    Has project_data: %s\n', char(string(isfield(request, 'project_data'))));
+                                if isfield(request, 'firm_data')
+                                    if isfield(request.firm_data, 'id')
+                                        fprintf('    Firm ID: %s\n', request.firm_data.id);
+                                    end
+                                end
+                                if isfield(request, 'project_data')
+                                    if isfield(request.project_data, 'id')
+                                        fprintf('    Project ID: %s\n', request.project_data.id);
+                                    end
+                                    if isfield(request.project_data, 'name')
+                                        fprintf('    Project Name: %s\n', request.project_data.name);
+                                    end
+                                end
+                                fprintf('  [INFO] This is likely a backend validation error.\n');
+                                fprintf('  [INFO] Check Python API server logs for detailed error message.\n');
+                                fprintf('  [INFO] The API may be rejecting the request due to:\n');
+                                fprintf('    - Missing required fields in JSON\n');
+                                fprintf('    - Invalid data format or types\n');
+                                fprintf('    - Resource exhaustion (memory/API limits)\n');
+                                fprintf('    - Backend state issue after first request\n');
+                            end
+                            rethrow(ME);
+                        end
                     end
                     
                     % Validate response structure

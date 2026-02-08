@@ -417,11 +417,14 @@ function dirs = getRequiredDirs()
     
     % Get MATLAB directory
     matlabDir = fileparts(fileparts(mfilename('fullpath')));
+    % Get project root (one level up from MATLAB)
+    projectRoot = fileparts(matlabDir);
     
     dirs = {
         fullfile(matlabDir, 'Functions');
         fullfile(matlabDir, 'Scripts');
         fullfile(matlabDir, 'Config');
+        fullfile(projectRoot, 'docs', 'openapi_export', 'matlab');  % Enhanced schemas loader
     };
 end
 

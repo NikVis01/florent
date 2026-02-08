@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import aiofiles
-from litestar import Litestar, post, get
+from litestar import Litestar, post, get, Request
 from litestar.exceptions import HTTPException
 from litestar.status_codes import (
     HTTP_400_BAD_REQUEST,
@@ -184,9 +184,24 @@ def parse_project(project_data: Dict[str, Any]) -> Project:
     Raises:
         HTTPException: If validation fails
     """
+    # Category mapping: map invalid categories to valid ones
+    CATEGORY_MAPPING = {
+        'engineering': 'technical',
+        'construction': 'technical',  # Construction is a technical operation
+        'capacity_building': 'operations',  # Capacity building is operational
+        'testing': 'technical',  # Testing is technical
+    }
+    
     try:
         country = Country(**project_data['country'])
-        ops = [OperationType(**op) for op in project_data['ops_requirements']]
+        # Map invalid categories to valid ones before creating OperationType objects
+        ops_data = []
+        for op in project_data['ops_requirements']:
+            op_copy = op.copy()
+            if 'category' in op_copy and op_copy['category'] in CATEGORY_MAPPING:
+                op_copy['category'] = CATEGORY_MAPPING[op_copy['category']]
+            ops_data.append(op_copy)
+        ops = [OperationType(**op) for op in ops_data]
         entry = ProjectEntry(**project_data['entry_criteria']) if project_data.get('entry_criteria') else None
         exit_criteria = ProjectExit(**project_data['success_criteria']) if project_data.get('success_criteria') else None
 
@@ -273,27 +288,94 @@ def build_infrastructure_graph(project: Project) -> Graph:
     return Graph(nodes=nodes_ordered, edges=edges)
 
 
+@get("/")
+async def health_check() -> str:
+    """Health check endpoint."""
+    return "Project Florent: OpenAI-Powered Risk Analysis Server is RUNNING."
+
+
 @post("/analyze")
-async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
+async def analyze_project(request: Request) -> Dict[str, Any]:
     """
     Main endpoint for risk analysis using Orchestrator V2.
-
-    Returns:
-        200: Successful analysis with full results
-        400: Invalid request data
-        404: Data files not found
-        500: Internal server error
+    
+    Note: We manually parse the request body to catch validation errors early.
     """
     try:
+        # Manually parse request body to catch validation errors
+        logger.info("received_request", path=request.url.path, method=request.method)
+        try:
+            body = await request.json()
+            logger.info("parsed_request_body", body_keys=list(body.keys()) if isinstance(body, dict) else "not_dict")
+        except Exception as e:
+            logger.error("failed_to_parse_request_body", error=str(e), exc_info=True)
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=f"Failed to parse request body: {str(e)}"
+            )
+        
+        # Validate request structure
+        try:
+            data = AnalysisRequest(**body)
+        except (PydanticValidationError, ValueError) as e:
+            # Handle both Pydantic validation errors and ValueError from model_post_init
+            if isinstance(e, PydanticValidationError):
+                error_details = []
+                for error in e.errors():
+                    loc = '.'.join(str(loc_part) for loc_part in error.get('loc', []))
+                    msg = error.get('msg', 'Validation error')
+                    error_details.append(f"{loc}: {msg}")
+                error_msg = '; '.join(error_details)
+            else:
+                # ValueError from model_post_init
+                error_msg = str(e)
+            
+            logger.error(
+                "request_validation_failed",
+                error=error_msg,
+                path=request.url.path,
+                method=request.method,
+                body_keys=list(body.keys()) if isinstance(body, dict) else None,
+                error_type=type(e).__name__
+            )
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=f"Request validation failed: {error_msg}"
+            )
+        
         logger.info("analysis_request_received", budget=data.budget)
 
         # Load data (async with proper error handling)
-        firm_data = await load_data_async(data.firm_data, data.firm_path)
-        project_data = await load_data_async(data.project_data, data.project_path)
+        try:
+            logger.info("loading_firm_data", has_firm_data=data.firm_data is not None, has_firm_path=data.firm_path is not None)
+            firm_data = await load_data_async(data.firm_data, data.firm_path)
+            logger.info("firm_data_loaded", firm_id=firm_data.get('id') if isinstance(firm_data, dict) else None)
+        except Exception as e:
+            logger.error("failed_to_load_firm_data", error=str(e), exc_info=True)
+            raise
+        
+        try:
+            logger.info("loading_project_data", has_project_data=data.project_data is not None, has_project_path=data.project_path is not None)
+            project_data = await load_data_async(data.project_data, data.project_path)
+            logger.info("project_data_loaded", project_id=project_data.get('id') if isinstance(project_data, dict) else None)
+        except Exception as e:
+            logger.error("failed_to_load_project_data", error=str(e), exc_info=True)
+            raise
 
         # Parse into entities
-        firm = parse_firm(firm_data)
-        project = parse_project(project_data)
+        try:
+            firm = parse_firm(firm_data)
+            logger.info("firm_parsed", firm_id=firm.id, firm_name=firm.name)
+        except Exception as e:
+            logger.error("failed_to_parse_firm", error=str(e), exc_info=True)
+            raise
+        
+        try:
+            project = parse_project(project_data)
+            logger.info("project_parsed", project_id=project.id, project_name=project.name)
+        except Exception as e:
+            logger.error("failed_to_parse_project", error=str(e), exc_info=True)
+            raise
 
         logger.info("entities_parsed", firm=firm.name, project=project.name)
 
@@ -338,12 +420,6 @@ async def analyze_project(data: AnalysisRequest) -> Dict[str, Any]:
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}"
         )
-
-
-@get("/")
-async def health_check() -> str:
-    """Health check endpoint."""
-    return "Project Florent: OpenAI-Powered Risk Analysis Server is RUNNING."
 
 
 app = Litestar(route_handlers=[health_check, analyze_project])

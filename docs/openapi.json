@@ -34,16 +34,6 @@
       "post": {
         "summary": "AnalyzeProject",
         "operationId": "AnalyzeAnalyzeProject",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnalysisRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "201": {
             "description": "Document created, URL follows",
@@ -56,44 +46,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad request syntax or unsupported method",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "status_code": {
-                      "type": "integer"
-                    },
-                    "detail": {
-                      "type": "string"
-                    },
-                    "extra": {
-                      "additionalProperties": {},
-                      "type": [
-                        "null",
-                        "object",
-                        "array"
-                      ]
-                    }
-                  },
-                  "type": "object",
-                  "required": [
-                    "detail",
-                    "status_code"
-                  ],
-                  "description": "Validation Exception",
-                  "examples": [
-                    {
-                      "status_code": 400,
-                      "detail": "Bad Request",
-                      "extra": {}
-                    }
-                  ]
-                }
-              }
-            }
           }
         },
         "deprecated": false
@@ -101,68 +53,6 @@
     }
   },
   "components": {
-    "schemas": {
-      "AnalysisRequest": {
-        "properties": {
-          "firm_data": {
-            "oneOf": [
-              {
-                "additionalProperties": {},
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "project_data": {
-            "oneOf": [
-              {
-                "additionalProperties": {},
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "firm_path": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "project_path": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "budget": {
-            "oneOf": [
-              {
-                "type": "integer",
-                "default": 100
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": 100
-          }
-        },
-        "type": "object",
-        "required": [],
-        "title": "AnalysisRequest"
-      }
-    }
+    "schemas": {}
   }
 }

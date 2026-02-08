@@ -77,54 +77,62 @@ function results = monteCarloFramework(data, perturbFunc, nIterations, useParall
                 end
             end
             
-            % Close existing pool to ensure fresh configuration
-            existingPool = gcp('nocreate');
-            if ~isempty(existingPool)
-                fprintf('Closing existing parallel pool to apply new configuration...\n');
-                delete(existingPool);
-            end
-            
-            % Create new parallel pool
-            pool = parpool('local');
-            useParallel = true;
-            
-            % Setup paths on all workers using centralized path manager
-            fprintf('Configuring parallel workers with required paths...\n');
-            workerPathResult = pathManager('setupWorkerPaths', pool);
-            
-            if ~workerPathResult.success
-                warning('Worker path setup had issues: %s', strjoin(workerPathResult.errors, '; '));
-                warning('Attempting verification...');
+            % Reuse existing pool if available, otherwise create one
+            pool = gcp('nocreate');
+            if isempty(pool)
+                % No existing pool - create one
+                fprintf('Creating parallel pool...\n');
+                pool = parpool('local');
+                useParallel = true;
                 
-                % Verify worker paths
-                workerVerifyResult = pathManager('verifyWorkerPaths', pool);
+                % Setup paths on all workers using centralized path manager
+                fprintf('Configuring parallel workers with required paths...\n');
+                workerPathResult = pathManager('setupWorkerPaths', pool);
                 
-                if ~workerVerifyResult.success
-                    warning('Worker path verification failed: %s', strjoin(workerVerifyResult.errors, '; '));
-                    warning('Falling back to sequential execution.');
-                    useParallel = false;
-                    try
-                        delete(pool);
-                    catch
+                if ~workerPathResult.success
+                    warning('Worker path setup had issues: %s', strjoin(workerPathResult.errors, '; '));
+                    warning('Attempting verification...');
+                    
+                    % Verify worker paths
+                    workerVerifyResult = pathManager('verifyWorkerPaths', pool);
+                    
+                    if ~workerVerifyResult.success
+                        warning('Worker path verification failed: %s', strjoin(workerVerifyResult.errors, '; '));
+                        warning('Falling back to sequential execution.');
+                        useParallel = false;
+                        try
+                            delete(pool);
+                        catch
+                        end
+                    else
+                        fprintf('Worker paths verified successfully\n');
                     end
                 else
-                    fprintf('Worker paths verified successfully\n');
+                    fprintf('Worker paths configured successfully\n');
                 end
             else
-                fprintf('Worker paths configured successfully\n');
+                % Pool exists - reuse it
+                fprintf('Reusing existing parallel pool with %d workers\n', pool.NumWorkers);
+                useParallel = true;
+                
+                % Verify worker paths are still configured
+                workerVerifyResult = pathManager('verifyWorkerPaths', pool);
+                if ~workerVerifyResult.success
+                    % Paths not configured - set them up
+                    fprintf('Configuring parallel workers with required paths...\n');
+                    workerPathResult = pathManager('setupWorkerPaths', pool);
+                    if ~workerPathResult.success
+                        warning('Worker path setup had issues: %s', strjoin(workerPathResult.errors, '; '));
+                    else
+                        fprintf('Worker paths configured successfully\n');
+                    end
+                end
             end
             
         catch ME
             warning('Parallel Computing Toolbox setup failed: %s. Running sequentially.', ME.message);
             useParallel = false;
-            % Try to close pool if it was created
-            try
-                pool = gcp('nocreate');
-                if ~isempty(pool)
-                    delete(pool);
-                end
-            catch
-            end
+            % Don't delete pool - let it persist for future use
         end
     end
     
