@@ -79,7 +79,6 @@ slprj/
 cat_*.m
 ml_*.m
 m_*.m
-output/
 diag/
 logs/
 *.log
