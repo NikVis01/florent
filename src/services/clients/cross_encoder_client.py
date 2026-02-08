@@ -73,6 +73,44 @@ class CrossEncoderClient:
             f"Description: {node.type.description}."
         )
 
+    def embed(self, text: str) -> List[float]:
+        """
+        Get BGE-M3 embedding for a single text.
+
+        Args:
+            text: Text to embed
+
+        Returns:
+            List of floats (vector)
+        """
+        try:
+            response = requests.post(
+                f"{self.endpoint}/vectors",
+                json={"text": text},
+                timeout=self.config.request_timeout
+            )
+            response.raise_for_status()
+            return response.json()["vector"]
+        except Exception as e:
+            logger.error("embed_failed", text=text[:50]+"...", error=str(e))
+            # Return a small zero vector if everything fails (BGE-M3 is 1024 dims)
+            return [0.0] * 1024
+
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        """
+        Get BGE-M3 embeddings for multiple texts.
+
+        Args:
+            texts: List of texts to embed
+
+        Returns:
+            List of vectors
+        """
+        # For simplicity and given the current TEI setup, we'll do sequential calls
+        # or we could use the /embed endpoint if TEI supports it across batches.
+        # Here we follow the logic in rerank().
+        return [self.embed(t) for t in texts]
+
     def rerank(self, query: str, passages: List[str]) -> List[CrossEncoderScore]:
         """
         Use BGE-M3 to score query-passage pairs via embeddings + cosine similarity.

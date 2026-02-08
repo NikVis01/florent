@@ -37,6 +37,9 @@ COLORS = {
     "warning": "#f9ab00",
     "danger": "#d93025",
     "primary": "#1a73e8",
+    "slate": "#3c4043",
+    "light_gray": "#f8f9fa",
+    "border": "#dadce0",
 }
 
 sns.set_theme(style="whitegrid", palette="muted")
@@ -83,7 +86,7 @@ def call_api(firm_path: str, project_path: str, budget: int, api_url: str) -> Di
 
 def create_summary_card(analysis: Dict[str, Any], output_dir: Path):
     """Create executive summary card."""
-    print("Creating summary card...")
+    # Summary card
 
     summary = analysis.get("summary", {})
     recommendation = analysis.get("recommendation", {})
@@ -163,7 +166,7 @@ def create_summary_card(analysis: Dict[str, Any], output_dir: Path):
 
 def create_risk_matrix(analysis: Dict[str, Any], output_dir: Path):
     """Create 2x2 risk matrix with jitter to prevent overlap."""
-    print("Creating risk matrix...")
+    # Risk matrix
 
     fig, ax = plt.subplots(figsize=(12, 10))
 
@@ -335,7 +338,7 @@ def create_network_graph_plotly(analysis: Dict[str, Any], output_dir: Path):
 
 def create_node_table(analysis: Dict[str, Any], output_dir: Path):
     """Create clean node assessment table with better density handling."""
-    print("Creating node table...")
+    # Node table
 
     node_assessments = analysis.get("node_assessments", {})
     if not node_assessments:
@@ -431,7 +434,7 @@ def create_node_table(analysis: Dict[str, Any], output_dir: Path):
 
 def create_distributions(analysis: Dict[str, Any], output_dir: Path):
     """Create risk and influence distributions."""
-    print("Creating distributions...")
+    # Distributions
 
     node_assessments = analysis.get("node_assessments", {})
     if not node_assessments:
@@ -442,25 +445,25 @@ def create_distributions(analysis: Dict[str, Any], output_dir: Path):
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
-    # Risk distribution
-    ax1.hist(risks, bins=12, color=COLORS['danger'], alpha=0.7, edgecolor='black')
-    ax1.axvline(np.mean(risks), color='black', linestyle='--', linewidth=2,
+    # Risk distribution (horizontal)
+    ax1.hist(risks, bins=12, color=COLORS['danger'], alpha=0.7, edgecolor='black', orientation='horizontal')
+    ax1.axhline(np.mean(risks), color='black', linestyle='--', linewidth=2,
                 label=f'Mean: {np.mean(risks):.2f}')
-    ax1.set_xlabel('Risk Level', fontsize=11, fontweight='bold')
-    ax1.set_ylabel('Count', fontsize=11, fontweight='bold')
+    ax1.set_ylabel('Risk Level', fontsize=11, fontweight='bold')
+    ax1.set_xlabel('Count', fontsize=11, fontweight='bold')
     ax1.set_title('Risk Distribution', fontsize=13, fontweight='bold')
     ax1.legend()
-    ax1.grid(axis='y', alpha=0.3)
+    ax1.grid(axis='x', alpha=0.3)
 
-    # Influence distribution
-    ax2.hist(influences, bins=12, color=COLORS['success'], alpha=0.7, edgecolor='black')
-    ax2.axvline(np.mean(influences), color='black', linestyle='--', linewidth=2,
+    # Influence distribution (horizontal)
+    ax2.hist(influences, bins=12, color=COLORS['success'], alpha=0.7, edgecolor='black', orientation='horizontal')
+    ax2.axhline(np.mean(influences), color='black', linestyle='--', linewidth=2,
                 label=f'Mean: {np.mean(influences):.2f}')
-    ax2.set_xlabel('Influence Score', fontsize=11, fontweight='bold')
-    ax2.set_ylabel('Count', fontsize=11, fontweight='bold')
+    ax2.set_ylabel('Influence Score', fontsize=11, fontweight='bold')
+    ax2.set_xlabel('Count', fontsize=11, fontweight='bold')
     ax2.set_title('Influence Distribution', fontsize=13, fontweight='bold')
     ax2.legend()
-    ax2.grid(axis='y', alpha=0.3)
+    ax2.grid(axis='x', alpha=0.3)
 
     plt.tight_layout()
     plt.savefig(output_dir / "distributions.png", dpi=300, bbox_inches='tight', facecolor='white')
@@ -469,7 +472,7 @@ def create_distributions(analysis: Dict[str, Any], output_dir: Path):
 
 def create_radar_chart(analysis: Dict[str, Any], output_dir: Path):
     """Create radar chart for overall project assessment."""
-    print("\n Creating radar chart...")
+    # Radar chart
 
     summary = analysis.get("summary", {})
 
@@ -511,13 +514,13 @@ def create_radar_chart(analysis: Dict[str, Any], output_dir: Path):
     plt.tight_layout()
     output_path = output_dir / "radar_chart.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    print(f"   Saved: {output_path}")
+    # Saved
     plt.close()
 
 
 def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
     """Create comparative bar chart for nodes."""
-    print("\n Creating node comparison chart...")
+    # Node comparison
 
     node_assessments = analysis.get("node_assessments", {})
     if not node_assessments:
@@ -530,10 +533,10 @@ def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
     risks = []
 
     for node_id, assessment in node_assessments.items():
-        name = assessment.get("name", node_id.replace("node_", "").replace("_", " ").title())
+        name = assessment.get("node_name", node_id.replace("node_", "").replace("_", " ").title())
         nodes.append(name)
-        influences.append(assessment.get("influence", 0.5))
-        risks.append(assessment.get("risk", 0.5))
+        influences.append(assessment.get("influence_score", 0.5))
+        risks.append(assessment.get("risk_level", 0.5))
 
     x = np.arange(len(nodes))
     width = 0.35
@@ -565,13 +568,13 @@ def create_node_comparison_bars(analysis: Dict[str, Any], output_dir: Path):
     plt.tight_layout()
     output_path = output_dir / "node_comparison.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    print(f"   Saved: {output_path}")
+    # Saved
     plt.close()
 
 
 def create_assessment_viz(analysis: Dict[str, Any], output_dir: Path):
     """Create project assessment visualization (focus on bankability)."""
-    print("\n Creating assessment visualization...")
+    # Assessment
 
     recommendation = analysis.get("recommendation", {})
     summary = analysis.get("summary", {})
@@ -647,7 +650,7 @@ def create_assessment_viz(analysis: Dict[str, Any], output_dir: Path):
 
     output_path = output_dir / "recommendation.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    print(f"   Saved: {output_path}")
+    # Saved
     plt.close()
 
 
@@ -930,7 +933,7 @@ def create_comprehensive_report(analysis: Dict[str, Any], output_dir: Path):
 
     output_path = output_dir / "comprehensive_report.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    print(f"   Saved: {output_path}")
+    # Saved
     plt.close()
 
 
@@ -948,16 +951,17 @@ def create_heatmap_correlation(analysis: Dict[str, Any], output_dir: Path):
     data_matrix = []
 
     for node_id, assessment in node_assessments.items():
-        name = assessment.get("name", node_id.replace("node_", "").replace("_", " ").title())
+        name = assessment.get("node_name", node_id.replace("node_", "").replace("_", " ").title())
         nodes.append(name)
         data_matrix.append([
-            assessment.get("influence", 0.5),
-            assessment.get("risk", 0.5),
+            assessment.get("influence_score", 0.5),
+            assessment.get("risk_level", 0.5),
+            assessment.get("cross_encoder_score", 0.5),
             1 if assessment.get("is_on_critical_path", False) else 0
         ])
 
     # Create correlation matrix
-    df = pd.DataFrame(data_matrix, columns=['Influence', 'Risk', 'Critical'])
+    df = pd.DataFrame(data_matrix, columns=['Influence', 'Risk', 'Cross-Encoder', 'Critical'])
     correlation = df.T.corr()
 
     fig, ax = plt.subplots(figsize=(12, 10))
@@ -985,7 +989,7 @@ def create_heatmap_correlation(analysis: Dict[str, Any], output_dir: Path):
     plt.tight_layout()
     output_path = output_dir / "correlation_heatmap.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    print(f"   Saved: {output_path}")
+    # Saved
     plt.close()
 
 
@@ -997,7 +1001,7 @@ def save_analysis_json(analysis: Dict[str, Any], output_dir: Path):
 
 def create_waterfall_chart(analysis: Dict[str, Any], output_dir: Path):
     """Create waterfall chart showing risk impact on bankability."""
-    print("Creating waterfall chart...")
+    # Waterfall
     
     summary = analysis.get("summary", {})
     base_score = 1.0
@@ -1068,9 +1072,7 @@ def main():
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("=" * 70)
-    print("Florent Analysis Visualizer - v2.0")
-    print("=" * 70 + "\n")
+    print("Running analysis visualization...")
 
     # Get analysis from API
     # analysis = call_api(args.firm, args.project, args.budget, args.api_url)
@@ -1083,12 +1085,8 @@ def main():
     else:
         analysis = call_api(args.firm, args.project, args.budget, args.api_url)
 
-    # Save/Update raw data
     save_analysis_json(analysis, output_dir)
-    print("Ensured analysis.json is present\n")
-
-    # Generate visualizations
-    print("Generating comprehensive visualization suite...\n")
+    print("Generating visualizations...")
 
     try:
         # Standard reports
@@ -1110,11 +1108,7 @@ def main():
         # Interactive
         create_network_graph_plotly(analysis, output_dir)
 
-        print("\n" + "=" * 70)
-        print("[SUCCESS] All visualizations generated successfully")
-        print("=" * 70)
-        print(f"\nLocation: {output_dir.absolute()}")
-        print()
+        print(f"\nDone. Output: {output_dir.absolute()}")
 
     except Exception as e:
         print(f"\n[ERROR] Visualization pipeline failed: {e}")

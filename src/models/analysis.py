@@ -30,6 +30,8 @@ class NodeAssessment(BaseModel):
     risk_level: float = Field(ge=0.0, le=1.0, description="Derived risk: Importance * (1.0 - Influence)")
     reasoning: str
     is_on_critical_path: bool = False
+    cross_encoder_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="BGE-M3 cross-encoder similarity score between firm and node")
+    embedding: Optional[List[float]] = Field(default=None, description="Node embedding vector from BGE-M3")
 
 
 class CriticalChain(BaseModel):

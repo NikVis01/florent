@@ -34,6 +34,7 @@ from src.services.agent.analysis.matrix_classifier import (
     RiskQuadrant,
 )
 from src.models.base import OperationType
+from src.services.clients.cross_encoder_client import CrossEncoderClient
 from src.settings import settings
 from src.services.logging import get_logger
 
@@ -100,6 +101,14 @@ class RiskOrchestrator:
 
         # Load discovery personas
         self.personas = DEFAULT_PERSONAS
+
+        # Initialize cross-encoder client if enabled
+        self.cross_encoder = None
+        if settings.USE_CROSS_ENCODER:
+            try:
+                self.cross_encoder = CrossEncoderClient()
+            except Exception as e:
+                logger.warning("cross_encoder_init_failed", error=str(e))
 
     def _cache_key(self, node: Node, firm_id: str, project_id: str) -> str:
         """Generate cache key for a node evaluation."""
@@ -170,6 +179,15 @@ class RiskOrchestrator:
                 # Track token usage
                 self.token_tracker.add_node_eval(self.config.tokens_per_eval)
 
+                # Calculate cross-encoder score if available
+                cross_encoder_score = None
+                if self.cross_encoder:
+                    try:
+                        score_result = self.cross_encoder.score_firm_node(self.firm, node)
+                        cross_encoder_score = score_result.cross_encoder_score
+                    except Exception as e:
+                        logger.warning("cross_encoder_score_failed", node_id=node.id, error=str(e))
+
                 assessment = NodeAssessment(
                     node_id=node.id,
                     node_name=node.name,
@@ -180,6 +198,8 @@ class RiskOrchestrator:
                     is_on_critical_path=self.critical_path_markers.get(node.id, CriticalPathMarker(
                         node_id=node.id, is_critical=False
                     )).is_critical,
+                    cross_encoder_score=cross_encoder_score,
+                    embedding=node.embedding if node.embedding else None,
                 )
 
                 # TRIGGER RECURSIVE DISCOVERY
@@ -206,6 +226,15 @@ class RiskOrchestrator:
                 else:
                     logger.error("dspy_call_exhausted", node_id=node.id)
                     # Use default scores on failure
+                    # Try to get cross-encoder score even on failure
+                    cross_encoder_score = None
+                    if self.cross_encoder:
+                        try:
+                            score_result = self.cross_encoder.score_firm_node(self.firm, node)
+                            cross_encoder_score = score_result.cross_encoder_score
+                        except Exception:
+                            pass
+
                     return NodeAssessment(
                         node_id=node.id,
                         node_name=node.name,
@@ -213,6 +242,8 @@ class RiskOrchestrator:
                         influence_score=self.config.default_influence,
                         risk_level=self.config.default_importance * (1.0 - self.config.default_influence),
                         reasoning=f"Failed after {self.max_retries} retries: {str(e)}",
+                        cross_encoder_score=cross_encoder_score,
+                        embedding=node.embedding if node.embedding else None,
                         is_on_critical_path=False
                     )
 
@@ -307,7 +338,8 @@ class RiskOrchestrator:
                         name=type_name,
                         category=category.lower(),
                         description=f"[{persona_name}] {desc}"
-                    )
+                    ),
+                    embedding=self.cross_encoder.embed(f"{name}. {desc}") if self.cross_encoder else []
                 )
 
                 # Inject into graph with configured weight
@@ -376,6 +408,13 @@ Description: {node.type.description}"""
         )
 
         try:
+            # Step 0: Populate embeddings for firm and project
+            if self.cross_encoder:
+                if not self.firm.embedding:
+                    self.firm.embedding = self.cross_encoder.embed(f"{self.firm.name}. {self.firm.description}")
+                if not self.project.embedding:
+                    self.project.embedding = self.cross_encoder.embed(f"{self.project.name}. {self.project.description}")
+
             # Step 1: Get entry/exit nodes
             self.execution_trace.start_phase(ExecutionPhase.GRAPH_BUILD)
             try:

@@ -2,6 +2,7 @@
 Firm-contextual graph builder using cross-encoder edge weighting.
 """
 import hashlib
+import re
 import dspy
 
 from src.models.entities import Firm, Project
@@ -68,7 +69,7 @@ class FirmContextualGraphBuilder:
                 id=entry_id,
                 name="Entry Point",
                 type=self.project.ops_requirements[0],
-                embedding=[0.1, 0.1, 0.1]
+                embedding=self.cross_encoder.embed(f"Entry Point. {self.project.ops_requirements[0].description}") if self.cross_encoder else [0.1, 0.1, 0.1]
             )
 
         # Ops nodes
@@ -79,7 +80,7 @@ class FirmContextualGraphBuilder:
                     id=op_id,
                     name=op.name,
                     type=op,
-                    embedding=[0.2, 0.2, 0.2]
+                    embedding=self.cross_encoder.embed(f"{op.name}. {op.description}") if self.cross_encoder else [0.2, 0.2, 0.2]
                 )
 
         # Exit node
@@ -90,7 +91,7 @@ class FirmContextualGraphBuilder:
                     id=exit_id,
                     name="Exit Point",
                     type=self.project.ops_requirements[-1],
-                    embedding=[0.9, 0.9, 0.9]
+                    embedding=self.cross_encoder.embed(f"Exit Point. {self.project.ops_requirements[-1].description}") if self.cross_encoder else [0.9, 0.9, 0.9]
                 )
 
         # Sequential edges (will be weighted by cross-encoder)
@@ -202,6 +203,9 @@ class FirmContextualGraphBuilder:
                 else:
                     continue
 
+                # Clean node name: remove numbered prefixes (e.g., "1. ", "2. Name: ")
+                name = re.sub(r'^\d+\.\s*(?:Name:\s*)?', '', name).strip()
+
                 node_id = f"disc_{hashlib.md5(name.encode()).hexdigest()[:8]}"
 
                 if any(n.id == node_id for n in graph.nodes):
@@ -224,7 +228,8 @@ class FirmContextualGraphBuilder:
                         name=type_name,
                         category=category.lower(),
                         description=desc
-                    )
+                    ),
+                    embedding=self.cross_encoder.embed(f"{name}. {desc}") if self.cross_encoder else []
                 )
                 new_nodes.append(new_node)
                 self.discovered_count += 1

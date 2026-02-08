@@ -6,10 +6,11 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ../.env  # Load from project root .env file
+      - ../.env # Load from project root .env file
     environment:
       # These can override .env if needed
-      - BGE_M3_URL=${BGE_M3_URL:-http://bge-m3:8080}
+      - BGE_M3_URL=http://bge-m3:8080
+      - CROSS_ENCODER_ENDPOINT=http://bge-m3:8080
     depends_on:
       bge-m3:
         condition: service_healthy

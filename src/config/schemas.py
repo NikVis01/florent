@@ -25,7 +25,7 @@ class CrossEncoderConfig:
     def from_env(cls) -> "CrossEncoderConfig":
         """Load configuration from environment variables."""
         return cls(
-            endpoint=os.getenv("CROSS_ENCODER_ENDPOINT", "http://localhost:8080"),
+            endpoint=os.getenv("CROSS_ENCODER_ENDPOINT", os.getenv("BGE_M3_URL", "http://localhost:8080")),
             enabled=os.getenv("USE_CROSS_ENCODER", "true").lower() == "true",
             health_timeout=float(os.getenv("CROSS_ENCODER_HEALTH_TIMEOUT", "2")),
             request_timeout=float(os.getenv("CROSS_ENCODER_REQUEST_TIMEOUT", "10")),

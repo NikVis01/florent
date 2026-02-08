@@ -19,6 +19,7 @@ from src.services.agent.core.orchestrator import AgentOrchestrator, NodeAssessme
 from src.services.agent.analysis.matrix_classifier import classify_all_nodes, RiskQuadrant
 from src.services.logging.logger import get_logger
 from src.settings import settings
+from src.services.clients.cross_encoder_client import CrossEncoderClient
 
 logger = get_logger(__name__)
 
@@ -64,11 +65,19 @@ def build_infrastructure_graph(project: Project) -> Graph:
         category=first_category,
         description="Initial feasibility study and site evaluation"
     )
+
+    client = None
+    if settings.USE_CROSS_ENCODER:
+        try:
+            client = CrossEncoderClient()
+        except Exception as e:
+            logger.warning("cross_encoder_init_failed", error=str(e))
+
     entry_node = Node(
         id=project.entry_criteria.entry_node_id,
         name="Site Survey",
         type=entry_op,
-        embedding=[0.1, 0.2, 0.3]
+        embedding=client.embed(f"Site Survey. {entry_op.description}") if client else [0.1, 0.2, 0.3]
     )
     nodes.append(entry_node)
 
@@ -78,7 +87,7 @@ def build_infrastructure_graph(project: Project) -> Graph:
             id=f"node_{op.category}_{i}",
             name=op.name,
             type=op,
-            embedding=[0.2 + i * 0.1, 0.3 + i * 0.1, 0.4 + i * 0.1]
+            embedding=client.embed(f"{op.name}. {op.description}") if client else [0.2 + i * 0.1, 0.3 + i * 0.1, 0.4 + i * 0.1]
         )
         nodes.append(node)
 
@@ -93,7 +102,7 @@ def build_infrastructure_graph(project: Project) -> Graph:
         id=project.success_criteria.exit_node_id,
         name="Operations Handover",
         type=exit_op,
-        embedding=[0.8, 0.9, 1.0]
+        embedding=client.embed(f"Operations Handover. {exit_op.description}") if client else [0.8, 0.9, 1.0]
     )
     nodes.append(exit_node)
 
@@ -334,6 +343,17 @@ def run_analysis(
     )
 
     try:
+        # Step 0: Populate embeddings for firm and project
+        if settings.USE_CROSS_ENCODER:
+            try:
+                client = CrossEncoderClient()
+                if not firm.embedding:
+                    firm.embedding = client.embed(f"{firm.name}. {firm.description}")
+                if not project.embedding:
+                    project.embedding = client.embed(f"{project.name}. {project.description}")
+            except Exception as e:
+                logger.warning("embedding_population_failed", error=str(e))
+
         # Step 1: Build infrastructure graph
         logger.info("step_1_building_graph")
         graph = build_infrastructure_graph(project)

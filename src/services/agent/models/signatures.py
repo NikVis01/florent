@@ -31,6 +31,6 @@ class DiscoverySignature(dspy.Signature):
     existing_graph_context = dspy.InputField(desc="Summary of nodes already in the infrastructure graph")
     persona = dspy.InputField(desc="Perspective of the analyst (e.g., 'Technical Expert', 'Financial Auditor', 'Regulatory Consultant')")
     valid_types = dspy.InputField(desc="Restricted list of valid infrastructure service types/categories to use")
-    
-    hidden_dependencies = dspy.OutputField(desc="List of missing infrastructure nodes (Name, Type, Description)")
+
+    hidden_dependencies = dspy.OutputField(desc="List of missing infrastructure nodes in CSV format: Name, Category, Type, Description. DO NOT number the lines. DO NOT use prefixes like '1.' or '2.' or 'Name:'. Each line should start directly with the node name.")
     reasoning = dspy.OutputField(desc="Reasoning for why these hidden dependencies are likely present")
