@@ -26,16 +26,21 @@ class FirmContextualGraphBuilder:
         firm: Firm,
         project: Project,
         use_cross_encoder: bool = True,
-        gap_threshold: float = settings.GRAPH_GAP_THRESHOLD,
-        max_iterations: int = settings.GRAPH_MAX_ITERATIONS,
-        max_discovered_nodes: int = settings.GRAPH_MAX_DISCOVERED_NODES,
+        gap_threshold: float = None,
+        max_iterations: int = None,
+        max_discovered_nodes: int = None,
     ):
         self.firm = firm
         self.project = project
+
+        # Load configuration
+        self.config = settings.graph_builder
         self.use_cross_encoder = use_cross_encoder and settings.USE_CROSS_ENCODER
-        self.gap_threshold = gap_threshold
-        self.max_iterations = max_iterations
-        self.max_discovered_nodes = max_discovered_nodes
+
+        # Use config defaults if not provided
+        self.gap_threshold = gap_threshold if gap_threshold is not None else self.config.gap_threshold
+        self.max_iterations = max_iterations if max_iterations is not None else self.config.max_iterations
+        self.max_discovered_nodes = max_discovered_nodes if max_discovered_nodes is not None else self.config.max_discovered_nodes
 
         self.discovered_count = 0
         self.cross_encoder = None
@@ -43,8 +48,8 @@ class FirmContextualGraphBuilder:
 
         if self.use_cross_encoder:
             try:
-                self.cross_encoder = CrossEncoderClient(settings.CROSS_ENCODER_ENDPOINT)
-                logger.info("cross_encoder_enabled", endpoint=settings.CROSS_ENCODER_ENDPOINT)
+                self.cross_encoder = CrossEncoderClient()  # Uses settings.cross_encoder by default
+                logger.info("cross_encoder_enabled", endpoint=self.cross_encoder.endpoint)
             except Exception as e:
                 logger.warning("cross_encoder_disabled", error=str(e))
                 self.use_cross_encoder = False
@@ -98,7 +103,7 @@ class FirmContextualGraphBuilder:
                 edges.append(Edge(
                     source=nodes_ordered[i],
                     target=nodes_ordered[i + 1],
-                    weight=0.8,  # Default, will be replaced
+                    weight=self.config.default_edge_weight,
                     relationship="sequence"
                 ))
 
@@ -111,11 +116,12 @@ class FirmContextualGraphBuilder:
             return
 
         entry_node = graph.get_entry_nodes()[0]
-        decay_factor = 0.9
+        decay_factor = self.config.distance_decay_factor
 
         for edge in graph.edges:
-            # Get cross-encoder similarity
-            similarity = self.cross_encoder.score_firm_node(self.firm, edge.target)
+            # Get cross-encoder similarity (returns FirmNodeScore)
+            score_result = self.cross_encoder.score_firm_node(self.firm, edge.target)
+            similarity = score_result.cross_encoder_score
 
             # Apply distance decay
             try:
@@ -182,7 +188,7 @@ class FirmContextualGraphBuilder:
             lines = [line.strip() for line in result.hidden_dependencies.split('\n') if ',' in line]
             new_nodes = []
 
-            for line in lines[:3]:  # Max 3 nodes per gap
+            for line in lines[:self.config.max_nodes_per_gap]:
                 if self.discovered_count >= self.max_discovered_nodes:
                     break
 
@@ -259,19 +265,21 @@ class FirmContextualGraphBuilder:
         prev_node = source
         for i, new_node in enumerate(new_nodes):
             # Edge from previous to new
-            weight = 0.6  # Default weight for discovered edges
+            weight = self.config.discovered_default_weight
             if self.cross_encoder:
-                similarity = self.cross_encoder.score_firm_node(self.firm, new_node)
-                weight = max(0.4, similarity)  # Minimum 0.4 for discovered nodes
+                score_result = self.cross_encoder.score_firm_node(self.firm, new_node)
+                similarity = score_result.cross_encoder_score
+                weight = max(self.config.discovered_min_weight, similarity)
 
             graph.add_edge(prev_node, new_node, weight=weight, relationship="discovered", validate=False)
             prev_node = new_node
 
         # Final edge to target
-        final_weight = 0.7
+        final_weight = self.config.bridge_gap_weight
         if self.cross_encoder:
-            similarity = self.cross_encoder.score_firm_node(self.firm, target)
-            final_weight = max(0.5, similarity)
+            score_result = self.cross_encoder.score_firm_node(self.firm, target)
+            similarity = score_result.cross_encoder_score
+            final_weight = max(self.config.bridge_gap_min_weight, similarity)
 
         graph.add_edge(prev_node, target, weight=final_weight, relationship="bridges_gap", validate=False)
 
@@ -324,7 +332,7 @@ class FirmContextualGraphBuilder:
             )
 
             # Discover nodes for each gap
-            for gap_edge in gaps[:5]:  # Limit to 5 gaps per iteration
+            for gap_edge in gaps[:self.config.max_gaps_per_iteration]:
                 gap_size = self.gap_threshold - gap_edge.weight
 
                 new_nodes = await self._discover_nodes_for_gap(

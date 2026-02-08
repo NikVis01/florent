@@ -129,14 +129,13 @@ class TestAIClientDotenv(unittest.TestCase):
     @patch('dotenv.load_dotenv')
     def test_load_dotenv_called(self, mock_load_dotenv):
         """Test that load_dotenv is called when config module is imported."""
-        import importlib
         # Clear modules from cache to force reload
         for module in ['src.config', 'src.services.clients.ai_client', 'src.settings', 'src.services.logging', 'src.services.logging.logger']:
             if module in sys.modules:
                 del sys.modules[module]
 
         # Import should trigger load_dotenv via src.config
-        import src.config
+        import src.config  # noqa: F401
 
         # Verify load_dotenv was called
         mock_load_dotenv.assert_called()

@@ -56,10 +56,10 @@ async def main():
     print("Building firm-contextual graph with cross-encoder...")
     graph = await build_firm_contextual_graph(firm, project)
 
-    print(f"\nGraph built:")
+    print("\nGraph built:")
     print(f"  Nodes: {len(graph.nodes)}")
     print(f"  Edges: {len(graph.edges)}")
-    print(f"\nEdge weights:")
+    print("\nEdge weights:")
     for edge in graph.edges:
         print(f"  {edge.source.id} -> {edge.target.id}: {edge.weight:.3f}")
 

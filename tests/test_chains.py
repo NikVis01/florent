@@ -6,7 +6,7 @@ Tests path finding, risk calculation, and filtering logic.
 
 import pytest
 from unittest.mock import patch
-from src.models.graph import Graph, Node, Edge
+from src.models.graph import Graph, Node
 from src.models.base import OperationType
 from src.services.analysis.chains import (
     find_critical_chains,

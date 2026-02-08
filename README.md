@@ -82,6 +82,42 @@ cp .env.example .env
 # Edit .env and add OPENAI_API_KEY
 ```
 
+### Configuration
+
+Florent uses a **centralized configuration system** with 41 tunable parameters:
+
+```bash
+# Core settings
+OPENAI_API_KEY=your_key_here
+LLM_MODEL=gpt-4o-mini
+
+# Tune matrix classification
+MATRIX_INFLUENCE_THRESHOLD=0.6
+MATRIX_IMPORTANCE_THRESHOLD=0.6
+
+# Tune risk propagation
+PIPELINE_RISK_PROPAGATION_FACTOR=0.5
+PIPELINE_DEFAULT_BUDGET=100
+
+# See docs/CONFIGURATION.md for all 41 parameters
+```
+
+Access configuration in code:
+
+```python
+from src.settings import settings
+
+# Type-safe config access
+max_retries = settings.agent.max_retries
+threshold = settings.matrix.influence_threshold
+
+# Token cost tracking
+orchestrator.token_tracker.get_breakdown()
+# {"total_tokens": 4500, "total_cost_usd": 0.0068}
+```
+
+📖 **[Full Configuration Guide](docs/CONFIGURATION.md)**
+
 ### Cross-Encoder Service
 
 BGE-M3 model runs automatically when using `./run.sh`. The docker-compose setup in `docker/docker-compose-api.yaml` includes both the API server and BGE-M3 model.

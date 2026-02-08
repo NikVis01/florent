@@ -5,10 +5,51 @@ This demonstrates end-to-end usage of the risk propagation system.
 """
 
 import pytest
+from typing import Dict, Any
 from src.models.graph import Node, Edge, Graph
-from src.models.base import OperationType
 from src.services.analysis.propagation import propagate_risk
-from src.services.analysis.matrix import generate_matrix
+from src.services.agent.analysis.matrix_classifier import classify_all_nodes, RiskQuadrant
+
+
+def generate_matrix(propagated_assessments: Dict[str, Dict[str, Any]]) -> Dict[str, list]:
+    """
+    Helper function to convert propagate_risk output to matrix classification format.
+
+    Bridges the old API (dict with "risk" and "influence") to the new API
+    (NodeAssessment with "importance_score" and "influence_score").
+
+    Args:
+        propagated_assessments: Dict from propagate_risk with "risk" and "influence" keys
+
+    Returns:
+        Dict mapping quadrant names to lists of node IDs
+    """
+    # Create mock NodeAssessment objects for classification
+    from types import SimpleNamespace
+
+    mock_assessments = {}
+    node_names = {}
+
+    for node_id, data in propagated_assessments.items():
+        # Convert risk -> importance_score, influence -> influence_score
+        mock_assessments[node_id] = SimpleNamespace(
+            importance_score=data.get("risk", 0.5),
+            influence_score=data.get("influence", 0.5)
+        )
+        node_names[node_id] = node_id
+
+    # Classify using new API
+    classifications = classify_all_nodes(mock_assessments, node_names)
+
+    # Convert RiskQuadrant enum to simple string format expected by tests
+    result = {
+        "Type A": [c.node_id for c in classifications.get(RiskQuadrant.TYPE_A, [])],
+        "Type B": [c.node_id for c in classifications.get(RiskQuadrant.TYPE_B, [])],
+        "Type C": [c.node_id for c in classifications.get(RiskQuadrant.TYPE_C, [])],
+        "Type D": [c.node_id for c in classifications.get(RiskQuadrant.TYPE_D, [])]
+    }
+
+    return result
 
 
 @pytest.mark.integration

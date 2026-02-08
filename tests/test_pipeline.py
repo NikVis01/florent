@@ -7,7 +7,7 @@ Tests the end-to-end flow from firm/project data through analysis output.
 import sys
 import os
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add src to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,7 +21,6 @@ from src.services.pipeline import (
     detect_critical_chains,
     run_analysis
 )
-from src.services.analysis.matrix import generate_matrix
 from src.services.agent.core.orchestrator import NodeAssessment
 
 
@@ -146,10 +145,12 @@ class TestRiskPropagation(unittest.TestCase):
         )
 
         # High risk at entry node
+        # NodeAssessment(influence, importance, reasoning)
+        # risk_level is calculated as: importance × (1 - influence)
         assessments = {
-            "A": NodeAssessment(0.5, 0.9, "High risk entry"),
-            "B": NodeAssessment(0.5, 0.5, "Medium risk"),
-            "C": NodeAssessment(0.5, 0.3, "Low risk")
+            "A": NodeAssessment(0.1, 0.9, "High importance, low influence"),  # risk = 0.9 × 0.9 = 0.81
+            "B": NodeAssessment(0.5, 0.5, "Medium importance, medium influence"),  # risk = 0.5 × 0.5 = 0.25
+            "C": NodeAssessment(0.7, 0.3, "Low importance, high influence")  # risk = 0.3 × 0.3 = 0.09
         }
 
         propagated = propagate_risk(graph, assessments)
@@ -159,8 +160,8 @@ class TestRiskPropagation(unittest.TestCase):
         self.assertIn("B", propagated)
         self.assertIn("C", propagated)
 
-        # Entry node should have its local risk
-        self.assertAlmostEqual(propagated["A"], 0.9, places=1)
+        # Entry node A should have high risk (low influence, high importance)
+        self.assertGreater(propagated["A"], 0.7)  # Should be ~0.81
 
         # Downstream nodes should have compounded risk
         self.assertGreater(propagated["B"], assessments["B"].risk_level)

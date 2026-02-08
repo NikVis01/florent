@@ -6,7 +6,6 @@ Tests both the topological risk calculation and full graph propagation.
 
 import pytest
 from src.models.graph import Node, Edge, Graph
-from src.models.base import OperationType
 from src.services.math.risk import calculate_topological_risk
 from src.services.analysis.propagation import propagate_risk, _topological_sort
 

@@ -5,10 +5,12 @@ from src.services.agent.models.signatures import NodeSignature
 import dspy
 
 class NodeAssessment:
-    def __init__(self, influence_score: float, risk_level: float, reasoning: str):
+    def __init__(self, influence_score: float, importance_score: float, reasoning: str):
         self.influence_score = influence_score
-        self.risk_level = risk_level
+        self.importance_score = importance_score
         self.reasoning = reasoning
+        # Calculate derived risk: Importance * (1 - Influence)
+        self.risk_level = importance_score * (1.0 - influence_score)
 
 class AgentOrchestrator:
     """
@@ -72,14 +74,14 @@ class AgentOrchestrator:
                 default=0.5
             )
 
-            # Parse risk assessment
-            risk = self._parse_numeric_value(
+            # Parse importance (risk assessment is actually importance/criticality)
+            importance = self._parse_numeric_value(
                 result.risk_assessment if hasattr(result, 'risk_assessment') else "0.5",
                 default=0.5
             )
 
             reasoning = result.reasoning if hasattr(result, 'reasoning') else "No reasoning provided"
-            return NodeAssessment(influence, risk, reasoning)
+            return NodeAssessment(influence, importance, reasoning)
         except Exception as e:
             print(f"Error evaluating node {node.id}: {e}")
             return NodeAssessment(0.5, 0.5, "Fallback assessment used due to evaluation error")

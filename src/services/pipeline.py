@@ -18,6 +18,7 @@ from src.models.base import OperationType
 from src.services.agent.core.orchestrator import AgentOrchestrator, NodeAssessment
 from src.services.agent.analysis.matrix_classifier import classify_all_nodes, RiskQuadrant
 from src.services.logging.logger import get_logger
+from src.settings import settings
 
 logger = get_logger(__name__)
 
@@ -50,11 +51,13 @@ def build_infrastructure_graph(project: Project) -> Graph:
     if not project.entry_criteria or not project.success_criteria:
         raise ValueError(f"Project {project.id} lacks entry/exit criteria")
 
+    # Load pipeline config
+    config = settings.pipeline
+
     # Create nodes for each operational phase
     nodes = []
 
     # Entry node (site survey / initial assessment)
-    # Use the first operation type's category if available, otherwise default to financing
     first_category = project.ops_requirements[0].category if project.ops_requirements else "financing"
     entry_op = OperationType(
         name="Site Survey & Assessment",
@@ -80,7 +83,6 @@ def build_infrastructure_graph(project: Project) -> Graph:
         nodes.append(node)
 
     # Exit node (operations handover / completion)
-    # Use the last operation type's category if available, otherwise default to financing
     last_category = project.ops_requirements[-1].category if project.ops_requirements else "financing"
     exit_op = OperationType(
         name="Operations Handover",
@@ -95,14 +97,15 @@ def build_infrastructure_graph(project: Project) -> Graph:
     )
     nodes.append(exit_node)
 
-    # Create linear dependency chain (entry -> ops -> exit)
+    # Create linear dependency chain with configured weights
     edges = []
     for i in range(len(nodes) - 1):
-        weight = 0.9 - (i * 0.05)  # Decreasing weights for later edges
+        # Apply weight decay: initial_weight - (i * decay)
+        weight = config.initial_edge_weight - (i * config.edge_weight_decay)
         edge = Edge(
             source=nodes[i],
             target=nodes[i + 1],
-            weight=max(0.6, weight),  # Minimum weight of 0.6
+            weight=max(config.min_edge_weight, weight),
             relationship="prerequisite"
         )
         edges.append(edge)
@@ -141,6 +144,9 @@ def propagate_risk(
     """
     logger.info("propagating_risk", num_nodes=len(node_assessments))
 
+    # Load config
+    config = settings.pipeline
+
     propagated_risk = {}
 
     # Topological sort for correct propagation order
@@ -164,7 +170,7 @@ def propagate_risk(
         assessment = node_assessments.get(node.id)
         if not assessment:
             logger.warning("missing_assessment", node_id=node.id)
-            local_risk = 0.5
+            local_risk = config.default_failure_likelihood
         else:
             local_risk = assessment.risk_level
 
@@ -175,11 +181,14 @@ def propagate_risk(
             propagated_risk[node.id] = local_risk
         else:
             # Compound risk from parents
-            parent_risks = [propagated_risk.get(p.id, 0.5) for p in parents]
+            parent_risks = [propagated_risk.get(p.id, config.default_failure_likelihood) for p in parents]
             max_parent_risk = max(parent_risks)
-            # Combined risk: amplifies when both local and upstream are high
-            # Formula: local_risk + (max_parent_risk * local_risk) - ensures upstream risk compounds
-            propagated_risk[node.id] = min(1.0, local_risk + (max_parent_risk * local_risk * 0.5))
+            # Combined risk using configured propagation factor
+            # Formula: local_risk + (max_parent_risk * local_risk * factor)
+            propagated_risk[node.id] = min(
+                1.0,
+                local_risk + (max_parent_risk * local_risk * config.risk_propagation_factor)
+            )
 
     logger.info(
         "risk_propagated",
@@ -192,7 +201,7 @@ def propagate_risk(
 def detect_critical_chains(
     graph: Graph,
     propagated_risk: Dict[str, float],
-    threshold: float = 0.1
+    threshold: float = None
 ) -> List[Dict[str, Any]]:
     """
     Detect critical dependency chains with high aggregate risk.
@@ -204,11 +213,15 @@ def detect_critical_chains(
     Args:
         graph: Infrastructure DAG
         propagated_risk: Map of node_id to propagated risk
-        threshold: Minimum risk to consider chain critical
+        threshold: Minimum risk to consider chain critical (uses config if None)
 
     Returns:
         List of critical chain dictionaries with nodes and metrics
     """
+    # Use config threshold if not provided
+    if threshold is None:
+        threshold = settings.pipeline.critical_chain_threshold
+
     logger.info("detecting_critical_chains", threshold=threshold)
 
     critical_chains = []
@@ -221,7 +234,10 @@ def detect_critical_chains(
             path = _find_path(graph, entry, exit_node)
             if path:
                 # Calculate aggregate risk along path
-                path_risks = [propagated_risk.get(node_id, 0.5) for node_id in path]
+                path_risks = [
+                    propagated_risk.get(node_id, settings.pipeline.default_failure_likelihood)
+                    for node_id in path
+                ]
                 aggregate_risk = sum(path_risks) / len(path_risks)
 
                 if aggregate_risk >= threshold:
@@ -272,7 +288,7 @@ def _find_path(graph: Graph, start: Node, end: Node) -> List[str]:
 def run_analysis(
     firm: Firm,
     project: Project,
-    budget: int = 100
+    budget: int = None
 ) -> Dict[str, Any]:
     """
     Execute complete analysis pipeline.
@@ -289,7 +305,7 @@ def run_analysis(
     Args:
         firm: Firm entity with capabilities and context
         project: Project entity with requirements and infrastructure
-        budget: Number of AI evaluation calls to make (default: 100)
+        budget: Number of AI evaluation calls to make (uses config default if None)
 
     Returns:
         Dictionary containing:
@@ -301,6 +317,15 @@ def run_analysis(
     Raises:
         ValueError: If inputs are invalid or pipeline fails
     """
+    # Load config
+    pipeline_config = settings.pipeline
+    matrix_config = settings.matrix
+    bidding_config = settings.bidding
+
+    # Use default budget if not provided
+    if budget is None:
+        budget = pipeline_config.default_budget
+
     logger.info(
         "analysis_pipeline_started",
         firm_id=firm.id,
@@ -330,24 +355,23 @@ def run_analysis(
         logger.info("step_4_propagating_risk")
         propagated_risk = propagate_risk(graph, node_assessments_raw)
 
-        # Step 5: Generate action matrix
+        # Step 5: Generate action matrix using configured thresholds
         logger.info("step_5_generating_matrix")
-        # Create minimal dict for matrix generation
-        matrix_input = {
-            node_id: {
-                "influence": assessment.influence_score,
-                "risk": assessment.risk_level
-            }
-            for node_id, assessment in node_assessments_raw.items()
-        }
-        action_matrix = generate_matrix(matrix_input)
+        node_names = {node.id: node.name for node in graph.nodes}
+
+        matrix_classifications = classify_all_nodes(
+            node_assessments_raw,
+            node_names,
+            influence_threshold=matrix_config.influence_threshold,
+            importance_threshold=matrix_config.importance_threshold
+        )
 
         logger.info(
             "matrix_generated",
-            type_a=len(action_matrix["Type A"]),
-            type_b=len(action_matrix["Type B"]),
-            type_c=len(action_matrix["Type C"]),
-            type_d=len(action_matrix["Type D"])
+            type_a=len(matrix_classifications.get(RiskQuadrant.TYPE_A, [])),
+            type_b=len(matrix_classifications.get(RiskQuadrant.TYPE_B, [])),
+            type_c=len(matrix_classifications.get(RiskQuadrant.TYPE_C, [])),
+            type_d=len(matrix_classifications.get(RiskQuadrant.TYPE_D, []))
         )
 
         # Step 6: Detect critical chains
@@ -373,6 +397,14 @@ def run_analysis(
         # Calculate overall bankability (inverse of average risk)
         bankability = 1.0 - avg_risk
 
+        # Convert matrix_classifications to legacy format for recommendations
+        action_matrix = {
+            "Type A": [n.node_id for n in matrix_classifications.get(RiskQuadrant.TYPE_A, [])],
+            "Type B": [n.node_id for n in matrix_classifications.get(RiskQuadrant.TYPE_B, [])],
+            "Type C": [n.node_id for n in matrix_classifications.get(RiskQuadrant.TYPE_C, [])],
+            "Type D": [n.node_id for n in matrix_classifications.get(RiskQuadrant.TYPE_D, [])]
+        }
+
         summary = {
             "firm_id": firm.id,
             "project_id": project.id,
@@ -387,9 +419,9 @@ def run_analysis(
             "recommendations": _generate_recommendations(action_matrix, critical_chains, bankability)
         }
 
-        # Add explicit recommendation for visualizer
+        # Add explicit recommendation with configured threshold
         recommendation = {
-            "should_bid": bankability >= 0.7,
+            "should_bid": bankability >= bidding_config.min_bankability_threshold,
             "confidence": bankability,
             "key_risks": summary["recommendations"][:2],
             "key_opportunities": [r for r in summary["recommendations"] if "strong" in r.lower()][:2]
@@ -404,7 +436,7 @@ def run_analysis(
 
         return {
             "node_assessments": node_assessments,
-            "matrix_classifications": action_matrix,  # This variable should be renamed or the function updated
+            "matrix_classifications": action_matrix,
             "critical_chains": critical_chains,
             "summary": summary,
             "recommendation": recommendation
@@ -426,12 +458,15 @@ def _generate_recommendations(
     bankability: float
 ) -> List[str]:
     """Generate strategic recommendations based on analysis."""
+    # Load bidding config for thresholds
+    bidding_config = settings.bidding
+
     recommendations = []
 
-    # Bankability assessment
-    if bankability >= 0.8:
+    # Bankability assessment with configured thresholds
+    if bankability >= bidding_config.bankability_high:
         recommendations.append("Project shows strong bankability - proceed with confidence")
-    elif bankability >= 0.6:
+    elif bankability >= bidding_config.bankability_medium:
         recommendations.append("Project is moderately bankable - implement risk controls")
     else:
         recommendations.append("Project has significant risk - consider restructuring or declining")

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Technical Infrastructure Expert",
+    "description": "Focuses on hardware, software, and technical dependencies for infrastructure projects",
+    "expertise_areas": [
+      "infrastructure",
+      "technical",
+      "engineering",
+      "construction",
+      "manufacturing",
+      "it_systems",
+      "networking"
+    ],
+    "bias_towards": ["technical"],
+    "discovery_weight": 1.0
+  },
+  {
+    "name": "Financial Risk & Compliance Auditor",
+    "description": "Identifies financial and regulatory hidden dependencies that affect project viability",
+    "expertise_areas": [
+      "finance",
+      "compliance",
+      "regulatory",
+      "auditing",
+      "accounting",
+      "banking",
+      "insurance"
+    ],
+    "bias_towards": ["financial"],
+    "discovery_weight": 0.9
+  },
+  {
+    "name": "Geopolitical & Regulatory Consultant",
+    "description": "Uncovers political and cross-border dependencies in international infrastructure projects",
+    "expertise_areas": [
+      "geopolitical",
+      "regulatory",
+      "international",
+      "policy",
+      "law",
+      "government",
+      "diplomacy"
+    ],
+    "bias_towards": ["political"],
+    "discovery_weight": 0.85
+  },
+  {
+    "name": "Supply Chain & Logistics Expert",
+    "description": "Identifies supply chain and logistics dependencies critical for project execution",
+    "expertise_areas": [
+      "supply_chain",
+      "logistics",
+      "transportation",
+      "shipping",
+      "procurement",
+      "inventory",
+      "distribution"
+    ],
+    "bias_towards": ["supply_chain"],
+    "discovery_weight": 0.95
+  }
+]
