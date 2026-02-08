@@ -75,6 +75,9 @@ function request = buildAnalysisRequest(projectId, firmId, budget, firmData, pro
                 % It's an ID - construct simple path string without checking if file exists
                 % API backend will handle path resolution and file loading
                 request.firm_path = sprintf('src/data/poc/%s.json', firmIdStr);
+                warning('buildAnalysisRequest:PathNotValidated', ...
+                    'Constructed firm_path without validation: %s. API backend will validate the path.', ...
+                    request.firm_path);
             end
         else
             warning('Invalid firmId type. Expected string path or ID.');
@@ -98,6 +101,9 @@ function request = buildAnalysisRequest(projectId, firmId, budget, firmData, pro
                 % It's an ID - construct simple path string without checking if file exists
                 % API backend will handle path resolution and file loading
                 request.project_path = sprintf('src/data/poc/%s.json', projectIdStr);
+                warning('buildAnalysisRequest:PathNotValidated', ...
+                    'Constructed project_path without validation: %s. API backend will validate the path.', ...
+                    request.project_path);
             end
         else
             warning('Invalid projectId type. Expected string path or ID.');

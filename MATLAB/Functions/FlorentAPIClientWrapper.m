@@ -144,7 +144,9 @@ classdef FlorentAPIClientWrapper < handle
                     error('API response missing analysis field');
                 end
             else
-                % Transform to legacy format (backward compatibility)
+                % Transform to legacy format (DEPRECATED - use OpenAPI format instead)
+                warning('FlorentAPIClientWrapper:DeprecatedFormat', ...
+                    'Using deprecated parseAnalysisResponse. Use OpenAPI format (useOpenAPIFormat=true) instead.');
                 data = parseAnalysisResponse(response, projectId, firmId);
             end
         end
@@ -203,7 +205,9 @@ classdef FlorentAPIClientWrapper < handle
                     error('API response missing analysis field');
                 end
             else
-                % Transform to legacy format (backward compatibility)
+                % Transform to legacy format (DEPRECATED - use OpenAPI format instead)
+                warning('FlorentAPIClientWrapper:DeprecatedFormat', ...
+                    'Using deprecated parseAnalysisResponse. Use OpenAPI format (useOpenAPIFormat=true) instead.');
                 data = parseAnalysisResponse(response, projectId, firmId);
             end
         end
@@ -265,18 +269,37 @@ classdef FlorentAPIClientWrapper < handle
                     
                     % Check if it's a retryable error
                     if attempt < obj.RetryAttempts
-                        % Check error type
-                        errorMsg = ME.message;
-                        if contains(errorMsg, 'timeout', 'IgnoreCase', true) || ...
-                           contains(errorMsg, 'network', 'IgnoreCase', true) || ...
-                           contains(errorMsg, 'connection', 'IgnoreCase', true)
+                        % Check error type with more robust classification
+                        errorMsg = lower(ME.message);
+                        errorIdentifier = ME.identifier;
+                        
+                        % Retryable errors: timeouts, network issues, connection problems
+                        isRetryable = false;
+                        retryablePatterns = {'timeout', 'timed out', 'network', 'connection', ...
+                            'connection refused', 'connection reset', 'connection aborted', ...
+                            'eof', 'socket', 'dns', 'host', 'unreachable', 'temporary failure'};
+                        
+                        for i = 1:length(retryablePatterns)
+                            if contains(errorMsg, retryablePatterns{i}, 'IgnoreCase', true)
+                                isRetryable = true;
+                                break;
+                            end
+                        end
+                        
+                        % Also check for HTTP 5xx errors in error message (if present)
+                        if contains(errorMsg, '500') || contains(errorMsg, '502') || ...
+                           contains(errorMsg, '503') || contains(errorMsg, '504')
+                            isRetryable = true;
+                        end
+                        
+                        if isRetryable
                             % Retryable error
                             fprintf('Attempt %d failed: %s. Retrying in %d seconds...\n', ...
-                                attempt, errorMsg, obj.RetryDelay);
+                                attempt, ME.message, obj.RetryDelay);
                             pause(obj.RetryDelay);
                             continue;
                         else
-                            % Non-retryable error
+                            % Non-retryable error (client errors, validation errors, etc.)
                             break;
                         end
                     end

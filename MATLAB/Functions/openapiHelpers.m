@@ -124,14 +124,11 @@ function influence = getInfluenceScore(analysis, nodeId)
         assessment = analysis.node_assessments.(nodeId);
         if isfield(assessment, 'influence_score')
             influence = assessment.influence_score;
-        elseif isfield(assessment, 'influence')
-            % Fallback for backward compatibility
-            influence = assessment.influence;
         else
-            influence = 0.5; % Default
+            influence = NaN; % Missing data indicator
         end
     else
-        influence = 0.5;
+        influence = NaN; % Missing data indicator
     end
 end
 
@@ -154,14 +151,11 @@ function risk = getRiskLevel(analysis, nodeId)
         assessment = analysis.node_assessments.(nodeId);
         if isfield(assessment, 'risk_level')
             risk = assessment.risk_level;
-        elseif isfield(assessment, 'risk')
-            % Fallback for backward compatibility
-            risk = assessment.risk;
         else
-            risk = 0.5; % Default
+            risk = NaN; % Missing data indicator
         end
     else
-        risk = 0.5;
+        risk = NaN; % Missing data indicator
     end
 end
 
@@ -184,14 +178,11 @@ function importance = getImportanceScore(analysis, nodeId)
         assessment = analysis.node_assessments.(nodeId);
         if isfield(assessment, 'importance_score')
             importance = assessment.importance_score;
-        elseif isfield(assessment, 'importance')
-            % Fallback for backward compatibility
-            importance = assessment.importance;
         else
-            importance = 0.5; % Default
+            importance = NaN; % Missing data indicator
         end
     else
-        importance = 0.5;
+        importance = NaN; % Missing data indicator
     end
 end
 
@@ -214,11 +205,8 @@ function isCritical = getIsOnCriticalPath(analysis, nodeId)
         assessment = analysis.node_assessments.(nodeId);
         if isfield(assessment, 'is_on_critical_path')
             isCritical = assessment.is_on_critical_path;
-        elseif isfield(assessment, 'isOnCriticalPath')
-            % Fallback for backward compatibility
-            isCritical = assessment.isOnCriticalPath;
         else
-            isCritical = false; % Default
+            isCritical = false; % Default for boolean
         end
     else
         isCritical = false;
@@ -233,7 +221,9 @@ function matrixType = getMatrixType(analysis, nodeId)
     %   nodeId - Node identifier (string)
     %
     % Returns:
-    %   matrixType - String 'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D', or empty if not found
+    %   matrixType - String quadrant key, or empty if not found
+    %
+    % Performance: Builds reverse lookup map once per call for O(1) lookup
     
     if nargin < 2
         error('getMatrixType requires analysis and nodeId');
@@ -245,10 +235,13 @@ function matrixType = getMatrixType(analysis, nodeId)
         return;
     end
     
+    % Build reverse lookup map (node_id -> quadrant) once for efficient lookup
+    % This replaces the O(n*m) nested loop search with O(n) map building + O(1) lookup
+    nodeToQuadrantMap = containers.Map();
     matrix = analysis.matrix_classifications;
     quadrantKeys = fieldnames(matrix);
     
-    % Search through each quadrant
+    % Build reverse map: node_id -> quadrant key
     for q = 1:length(quadrantKeys)
         quadrantKey = quadrantKeys{q};
         nodeList = matrix.(quadrantKey);
@@ -258,22 +251,23 @@ function matrixType = getMatrixType(analysis, nodeId)
             for n = 1:length(nodeList)
                 nodeClass = nodeList{n};
                 if isstruct(nodeClass) && isfield(nodeClass, 'node_id')
-                    if strcmp(nodeClass.node_id, nodeId)
-                        matrixType = quadrantKey;
-                        return;
-                    end
+                    nodeToQuadrantMap(nodeClass.node_id) = quadrantKey;
                 end
             end
         elseif isstruct(nodeList) && length(nodeList) > 0
             % Handle struct array
             for n = 1:length(nodeList)
                 nodeClass = nodeList(n);
-                if isfield(nodeClass, 'node_id') && strcmp(nodeClass.node_id, nodeId)
-                    matrixType = quadrantKey;
-                    return;
+                if isfield(nodeClass, 'node_id')
+                    nodeToQuadrantMap(nodeClass.node_id) = quadrantKey;
                 end
             end
         end
+    end
+    
+    % Lookup node in map (O(1) operation)
+    if isKey(nodeToQuadrantMap, nodeId)
+        matrixType = nodeToQuadrantMap(nodeId);
     end
 end
 
@@ -290,9 +284,6 @@ function chains = getAllChains(analysis)
     
     if isfield(analysis, 'all_chains')
         chains = analysis.all_chains;
-    elseif isfield(analysis, 'critical_chains')
-        % Fallback for backward compatibility
-        chains = analysis.critical_chains;
     end
 end
 
@@ -639,11 +630,7 @@ function adjMatrix = getAdjacencyMatrix(analysis)
     topology = getGraphTopology(analysis);
     if ~isempty(topology) && isfield(topology, 'adjacency_matrix')
         adjMatrix = topology.adjacency_matrix;
-        % Convert cell array to numeric matrix if needed
-        if iscell(adjMatrix)
-            n = length(adjMatrix);
-            adjMatrix = cell2mat(adjMatrix);
-        end
+        % Python always sends numeric array (List[List[float]]), no conversion needed
     end
 end
 

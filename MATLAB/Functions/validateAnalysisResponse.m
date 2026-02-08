@@ -87,15 +87,15 @@ function [isValid, errors, warnings] = validateAnalysisResponse(response)
                 assessment = nodeAssessments.(nodeId);
                 
                 % Check for new API field names (influence_score, risk_level)
-                % Also check for old field names for backward compatibility
-                hasInfluence = isfield(assessment, 'influence_score') || isfield(assessment, 'influence');
-                hasRisk = isfield(assessment, 'risk_level') || isfield(assessment, 'risk');
+                % Python API only uses new field names
+                hasInfluence = isfield(assessment, 'influence_score');
+                hasRisk = isfield(assessment, 'risk_level');
                 
                 if ~hasInfluence
-                    warnings{end+1} = sprintf('Node %s missing influence_score or influence field', nodeId);
+                    warnings{end+1} = sprintf('Node %s missing influence_score field', nodeId);
                 end
                 if ~hasRisk
-                    warnings{end+1} = sprintf('Node %s missing risk_level or risk field', nodeId);
+                    warnings{end+1} = sprintf('Node %s missing risk_level field', nodeId);
                 end
                 if ~isfield(assessment, 'reasoning')
                     warnings{end+1} = sprintf('Node %s missing reasoning field', nodeId);
@@ -119,17 +119,25 @@ function [isValid, errors, warnings] = validateAnalysisResponse(response)
             if ~isstruct(matrix)
                 warnings{end+1} = 'matrix_classifications should be a struct/dict';
             else
-                % Check for expected quadrant keys (TYPE_A, TYPE_B, TYPE_C, TYPE_D)
+                % Check for expected quadrant keys using exact matching
+                % Python sends full enum values: "Type A (High Influence / High Importance)", etc.
                 quadrantKeys = fieldnames(matrix);
-                expectedQuadrants = {'TYPE_A', 'TYPE_B', 'TYPE_C', 'TYPE_D'};
+                expectedQuadrants = {
+                    'Type A (High Influence / High Importance)';
+                    'Type B (High Influence / Low Importance)';
+                    'Type C (Low Influence / High Importance)';
+                    'Type D (Low Influence / Low Importance)'
+                };
                 foundQuadrants = false;
                 for i = 1:length(quadrantKeys)
                     key = quadrantKeys{i};
-                    if contains(key, 'TYPE_A') || contains(key, 'TYPE_B') || ...
-                       contains(key, 'TYPE_C') || contains(key, 'TYPE_D') || ...
-                       contains(key, 'Type A') || contains(key, 'Type B') || ...
-                       contains(key, 'Type C') || contains(key, 'Type D')
-                        foundQuadrants = true;
+                    for j = 1:length(expectedQuadrants)
+                        if strcmp(key, expectedQuadrants{j})
+                            foundQuadrants = true;
+                            break;
+                        end
+                    end
+                    if foundQuadrants
                         break;
                     end
                 end

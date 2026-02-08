@@ -73,19 +73,12 @@ function data = parseAnalysisResponse(response, projectId, firmId)
             % API returns influence_score, risk_level, importance_score
             if isfield(assessment, 'influence_score')
                 data.riskScores.influence(i) = assessment.influence_score;
-            elseif isfield(assessment, 'influence')
-                % Fallback for backward compatibility
-                data.riskScores.influence(i) = assessment.influence;
             end
             
             if isfield(assessment, 'risk_level')
                 data.riskScores.risk(i) = assessment.risk_level;
                 % Use risk_level as local failure probability estimate
                 data.riskScores.localFailureProb(i) = assessment.risk_level;
-            elseif isfield(assessment, 'risk')
-                % Fallback for backward compatibility
-                data.riskScores.risk(i) = assessment.risk;
-                data.riskScores.localFailureProb(i) = assessment.risk;
             end
             
             % Extract importance_score (new API field)
@@ -185,27 +178,16 @@ function graph = buildGraphFromAnalysis(analysis, riskScores)
         end
         
         % Build edges from critical chains
-        % API returns all_chains (not critical_chains) with node_ids (not nodes)
+        % API returns all_chains with node_ids as struct array
         edges = {};
         chains = [];
         if isfield(analysis, 'all_chains') && ~isempty(analysis.all_chains)
             chains = analysis.all_chains;
-        elseif isfield(analysis, 'critical_chains') && ~isempty(analysis.critical_chains)
-            % Fallback for backward compatibility
-            chains = analysis.critical_chains;
         end
         
         if ~isempty(chains)
-            % Handle both cell array and struct array formats
-            if iscell(chains)
-                % Cell array of chain structs
-                for chainIdx = 1:length(chains)
-                    chain = chains{chainIdx};
-                    if isstruct(chain)
-                        edges = processChain(chain, edges);
-                    end
-                end
-            elseif isstruct(chains)
+            % Python always sends struct array format
+            if isstruct(chains)
                 % Struct array - check if it's a scalar struct or array
                 if length(chains) == 1 && isscalar(chains)
                     % Single struct
@@ -242,12 +224,10 @@ end
 function edges = processChain(chain, edges)
     % PROCESSCHAIN Process a single chain and add edges to edges array
     
-    % Handle both node_ids (new API) and nodes (old format)
+    % Python API only sends node_ids
     chainNodes = [];
     if isfield(chain, 'node_ids') && ~isempty(chain.node_ids)
         chainNodes = chain.node_ids;
-    elseif isfield(chain, 'nodes') && ~isempty(chain.nodes)
-        chainNodes = chain.nodes;
     end
     
     if ~isempty(chainNodes) && length(chainNodes) > 1
@@ -255,9 +235,6 @@ function edges = processChain(chain, edges)
         chainWeight = 1.0; % Default weight
         if isfield(chain, 'cumulative_risk')
             chainWeight = chain.cumulative_risk;
-        elseif isfield(chain, 'aggregate_risk')
-            % Fallback for backward compatibility
-            chainWeight = chain.aggregate_risk;
         end
         
         % Create edges between consecutive nodes in chain
@@ -387,14 +364,15 @@ function classifications = parseMatrixClassifications(matrixClassifications, ris
                     if isstring(nodeId)
                         nodeId = char(nodeId);
                     end
-                    % Map quadrant enum to MATLAB format
-                    if contains(quadrantKey, 'TYPE_A') || contains(quadrantKey, 'Type A')
+                    % Map quadrant enum to MATLAB format using exact matching
+                    % Python sends full enum values: "Type A (High Influence / High Importance)", etc.
+                    if strcmp(quadrantKey, 'Type A (High Influence / High Importance)')
                         nodeToQuadrant(nodeId) = 'Q1'; % High Risk, High Influence - Mitigate
-                    elseif contains(quadrantKey, 'TYPE_B') || contains(quadrantKey, 'Type B')
+                    elseif strcmp(quadrantKey, 'Type B (High Influence / Low Importance)')
                         nodeToQuadrant(nodeId) = 'Q2'; % Low Risk, High Influence - Automate
-                    elseif contains(quadrantKey, 'TYPE_C') || contains(quadrantKey, 'Type C')
+                    elseif strcmp(quadrantKey, 'Type C (Low Influence / High Importance)')
                         nodeToQuadrant(nodeId) = 'Q3'; % High Risk, Low Influence - Contingency
-                    elseif contains(quadrantKey, 'TYPE_D') || contains(quadrantKey, 'Type D')
+                    elseif strcmp(quadrantKey, 'Type D (Low Influence / Low Importance)')
                         nodeToQuadrant(nodeId) = 'Q4'; % Low Risk, Low Influence - Delegate
                     end
                 end
@@ -409,14 +387,15 @@ function classifications = parseMatrixClassifications(matrixClassifications, ris
                     if isstring(nodeId)
                         nodeId = char(nodeId);
                     end
-                    % Map quadrant enum to MATLAB format
-                    if contains(quadrantKey, 'TYPE_A') || contains(quadrantKey, 'Type A')
+                    % Map quadrant enum to MATLAB format using exact matching
+                    % Python sends full enum values: "Type A (High Influence / High Importance)", etc.
+                    if strcmp(quadrantKey, 'Type A (High Influence / High Importance)')
                         nodeToQuadrant(nodeId) = 'Q1';
-                    elseif contains(quadrantKey, 'TYPE_B') || contains(quadrantKey, 'Type B')
+                    elseif strcmp(quadrantKey, 'Type B (High Influence / Low Importance)')
                         nodeToQuadrant(nodeId) = 'Q2';
-                    elseif contains(quadrantKey, 'TYPE_C') || contains(quadrantKey, 'Type C')
+                    elseif strcmp(quadrantKey, 'Type C (Low Influence / High Importance)')
                         nodeToQuadrant(nodeId) = 'Q3';
-                    elseif contains(quadrantKey, 'TYPE_D') || contains(quadrantKey, 'Type D')
+                    elseif strcmp(quadrantKey, 'Type D (Low Influence / Low Importance)')
                         nodeToQuadrant(nodeId) = 'Q4';
                     end
                 end
