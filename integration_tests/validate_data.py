@@ -282,19 +282,19 @@ class DataValidator:
         if self.errors:
             print(f"\nERRORS ({len(self.errors)}):")
             for error in self.errors:
-                print(f"  ✗ {error}")
+                print(f"  [X] {error}")
 
         if self.warnings:
             print(f"\nWARNINGS ({len(self.warnings)}):")
             for warning in self.warnings:
-                print(f"  ⚠ {warning}")
+                print(f"  [WARNING] {warning}")
 
         if not self.errors and not self.warnings:
-            print("\n✓ All validation checks passed!")
+            print("\n[OK] All validation checks passed!")
         elif not self.errors:
-            print(f"\n✓ No errors found ({len(self.warnings)} warnings)")
+            print(f"\n[OK] No errors found ({len(self.warnings)} warnings)")
         else:
-            print(f"\n✗ Validation failed with {len(self.errors)} errors")
+            print(f"\n[X] Validation failed with {len(self.errors)} errors")
 
         print("=" * 70 + "\n")
 

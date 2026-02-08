@@ -180,11 +180,11 @@ async def main():
             print("=" * 80)
             return 0
         else:
-            print("\n❌ SOME TESTS FAILED")
+            print("\n[ERROR] SOME TESTS FAILED")
             return 1
 
     except Exception as e:
-        print(f"\n❌ ERROR: {e}")
+        print(f"\n[ERROR] ERROR: {e}")
         import traceback
         traceback.print_exc()
         return 1

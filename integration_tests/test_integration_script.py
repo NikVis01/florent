@@ -33,8 +33,8 @@ def main():
         with open(poc_dir / "project.json") as f:
             project_data = json.load(f)
 
-        print(f"\n✓ Loaded firm: {firm_data['name']}")
-        print(f"✓ Loaded project: {project_data['name']}")
+        print(f"\n[OK] Loaded firm: {firm_data['name']}")
+        print(f"[OK] Loaded project: {project_data['name']}")
 
         # Parse firm
         timeline_key = 'preferred_project_timeline' if 'preferred_project_timeline' in firm_data else 'prefered_project_timeline'
@@ -63,8 +63,8 @@ def main():
             success_criteria=ProjectExit(**project_data['success_criteria'])
         )
 
-        print(f"✓ Parsed firm entity: {firm.id}")
-        print(f"✓ Parsed project entity: {project.id}")
+        print(f"[OK] Parsed firm entity: {firm.id}")
+        print(f"[OK] Parsed project entity: {project.id}")
 
         # Run analysis
         print("\nRunning analysis pipeline...")
@@ -79,17 +79,17 @@ def main():
         assert 'action_matrix' in result, "Missing action_matrix"
         assert 'critical_chains' in result, "Missing critical_chains"
         assert 'summary' in result, "Missing summary"
-        print("✓ All required fields present")
+        print("[OK] All required fields present")
 
         summary = result['summary']
         assert summary['firm_id'] == firm.id, "Firm ID mismatch"
         assert summary['project_id'] == project.id, "Project ID mismatch"
         assert 0 <= summary['overall_bankability'] <= 1, "Invalid bankability"
-        print("✓ Summary data valid")
+        print("[OK] Summary data valid")
 
         matrix = result['action_matrix']
         assert all(key in matrix for key in ['mitigate', 'automate', 'contingency', 'delegate']), "Missing matrix quadrants"
-        print("✓ Action matrix valid")
+        print("[OK] Action matrix valid")
 
         print("\n" + "=" * 80)
         print("SUMMARY")
@@ -113,13 +113,13 @@ def main():
             print(f"  {i}. {rec}")
 
         print("\n" + "=" * 80)
-        print("INTEGRATION TEST PASSED ✓")
+        print("INTEGRATION TEST PASSED [OK]")
         print("=" * 80)
 
         return 0
 
     except Exception as e:
-        print(f"\n❌ TEST FAILED: {e}")
+        print(f"\n[ERROR] TEST FAILED: {e}")
         import traceback
         traceback.print_exc()
         return 1
